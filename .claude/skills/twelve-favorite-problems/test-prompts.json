@@ -1,0 +1,52 @@
+{
+  "skill": "twelve-favorite-problems",
+  "version": "0.1.0",
+  "source_book": "《打造第二大脑》 — 蒂亚戈·福特",
+  "darwin_compatible": true,
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "我每天花一两个小时刷知乎和B站，看了很多内容但感觉什么都没留下。怎么让刷内容的时间更有价值？",
+      "expected_behavior": "应激活 twelve-favorite-problems，引导用户列出自己最感兴趣的开放式问题，用这些问题作为信息过滤器",
+      "notes": "典型的'信息消费无目的'场景"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "我对很多领域都感兴趣——心理学、投资、烹饪、摄影——但都觉得学得不深。怎么找到自己真正应该专注的方向？",
+      "expected_behavior": "应激活 twelve-favorite-problems，帮助用户挖掘深层的好奇心问题（童年兴趣、忘记时间的话题等），用问题清单来聚焦学习方向",
+      "notes": "'样样通样样松'是兴趣问题法的典型触发"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "我订阅了几十个Newsletter和RSS源，每天光刷一遍就要两三个小时。怎么判断哪些值得保留哪些该取消？",
+      "expected_behavior": "应激活 twelve-favorite-problems，建议用问题清单测试每个信息源——连续一段时间对某个源的内容没有'这能帮我回答XX问题'的感觉→取消订阅",
+      "notes": "信息源筛选是兴趣问题的直接应用"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "我今年想学Python、考PMP证书、健身减重10公斤。怎么制定一个可行的年度学习计划？",
+      "expected_behavior": "不应激活本skill，这是具体技能学习的目标管理问题，兴趣问题是长期开放式的思考方向而非年度OKR",
+      "notes": "诱饵：目标设定而非好奇心引导"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "有什么好书推荐吗？我想拓展一下视野。",
+      "expected_behavior": "不应激活本skill，这是纯粹的荐书请求，兴趣问题法需要先帮助用户找到自己的问题再让用户自己判断读什么",
+      "notes": "诱饵：索取推荐而非学习方法"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "我是一个程序员，日常工作就是解决技术问题。我的'12个问题'会不会都是技术相关的，这样就起不到跨领域启发的作用了？怎么让问题清单真正跨领域？",
+      "expected_behavior": "可激活本skill，建议追溯童年兴趣、询问非技术朋友觉得你最'奇怪'的关注点、故意加入至少3个与编程无关的问题（如'如何讲一个好故事？''为什么有些社区比另一些更有凝聚力？'）",
+      "notes": "边界：如何避免问题清单成为'专业回音室'"
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "notes": "3条should_trigger + 2条should_not_trigger + 1条edge_case。"
+}

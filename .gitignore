@@ -1,0 +1,9 @@
+# 大文件
+*.pdf
+*.zip
+*.txt
+
+# Obsidian
+.obsidian/workspace*.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
