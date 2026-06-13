@@ -31,16 +31,46 @@ Hub 是第二大脑系统的**唯一入口**，负责三件事：
 **Hub 的独特价值**：记住上下文（hub-state.json）、编排多 skill 协作、确保写入格式一致。
 
 ---
+## 第零步：定位 Vault（最先执行）
 
-## 第一步：加载上下文
-
-每次被激活时，Hub 必须先加载状态：
+每次被激活时，Hub 必须先确定 Vault 位置：
 
 ```
-1. 检查 D:\second-brain\第二大脑\.obsidian\hub-state.json 是否存在
-2. 若存在 → 读取 active_projects, last_operations, preferences, twelve_problems
-3. 若不存在 → 使用默认值（空项目列表、空操作历史），并创建该文件
-4. 将状态加载到当前会话上下文中（供后续所有步骤引用）
+1. 读取项目目录下的权威配置文件:
+   {项目根目录}/.claude/hub-state.json
+   例: D:\aiCoding\projects\second-brain\.claude\hub-state.json
+
+2. 从配置中提取关键变量:
+   vault_path = preferences.vault_path   (例: D:\second-brain\第二大脑)
+   vault_name = preferences.vault_name   (例: 第二大脑)
+   active_projects = active_projects
+   twelve_problems = twelve_problems
+
+3. 若 hub-state.json 不存在 → 使用默认值创建:
+   vault_path: null  (首次使用需引导用户配置)
+   vault_name: null
+   active_projects: []
+   twelve_problems: []
+
+4. 将以上变量加载到当前会话上下文（供后续所有步骤引用）
+```
+
+**Vault 路径未配置时的引导流程**：
+> 若 vault_path 为 null，询问用户：
+> "请告诉我你的 Obsidian Vault 路径和名称（例：D:\MyVault，名称：我的笔记）"
+> 将用户回答写入 hub-state.json 的 preferences 中，然后继续。
+
+---
+
+## 第一步：加载 Vault 运行时状态
+
+```
+1. 根据 vault_path 拼接 Vault 内的状态文件路径:
+   {vault_path}\.obsidian\hub-state.json
+
+2. 读取 Vault 内状态文件（与项目配置合并）
+   - 若存在 → 读取 last_operations 等运行时数据
+   - 若不存在 → 以项目配置为准，自动创建该文件
 ```
 
 ---
@@ -88,7 +118,7 @@ Hub 是第二大脑系统的**唯一入口**，负责三件事：
    例: "灵感-AI分镜脚本草稿_2026-06-12-1430"
 
 4. [obsidian-cli] 写入笔记:
-   obsidian vault="第二大脑" create name="{标题}" content="{模板内容}" folder="{归属文件夹}" silent
+   obsidian vault="{vault_name}" create name="{标题}" content="{模板内容}" folder="{归属文件夹}" silent
 
    模板内容:
    ---
@@ -111,7 +141,7 @@ Hub 是第二大脑系统的**唯一入口**，负责三件事：
    保留最近 20 条
 
 6. [Hub] 反馈用户:
-   "已记入「{归属}」{位置} → [打开笔记](obsidian://open?vault=第二大脑&file={path})"
+   "已记入「{归属}」{位置} → [打开笔记](obsidian://open?vault={vault_name}&file={path})"
 ```
 
 ### 场景 2：保存外源内容
@@ -158,11 +188,11 @@ Hub 是第二大脑系统的**唯一入口**，负责三件事：
 ```
 流程:
 1. [obsidian-cli] 找到目标笔记:
-   obsidian vault="第二大脑" search query="{关键词}" limit=10
+   obsidian vault="{vault_name}" search query="{关键词}" limit=10
    向用户确认要提炼的是哪篇
 
 2. [obsidian-cli] 读取当前内容:
-   obsidian vault="第二大脑" read file="{笔记名}"
+   obsidian vault="{vault_name}" read file="{笔记名}"
 
 3. [progressive-summarization] 逐层提炼:
    问用户: "要做到第几层？"
@@ -187,8 +217,8 @@ Hub 是第二大脑系统的**唯一入口**，负责三件事：
    "你想创作什么？大概什么方向/主题？"
 
 2. [intermediate-packets] 检索已有素材:
-   [obsidian-cli] search query="{主题关键词}" vault="第二大脑"
-   [obsidian-cli] search query="{相关概念}" vault="第二大脑"
+   [obsidian-cli] search query="{主题关键词}" vault="{vault_name}"
+   [obsidian-cli] search query="{相关概念}" vault="{vault_name}"
    汇总匹配的笔记列表
 
 3. [creative-workflow] 思想群岛:
@@ -197,9 +227,9 @@ Hub 是第二大脑系统的**唯一入口**，负责三件事：
    然后引导用户排序 + 搭建逻辑桥梁 → 形成大纲
 
 4. [obsidian-cli] 创建项目文件夹和文件:
-   obsidian vault="第二大脑" create name="{项目名}/01-素材清单" ...
-   obsidian vault="第二大脑" create name="{项目名}/02-大纲" ...
-   obsidian vault="第二大脑" create name="{项目名}/03-草稿" ...
+   obsidian vault="{vault_name}" create name="{项目名}/01-素材清单" ...
+   obsidian vault="{vault_name}" create name="{项目名}/02-大纲" ...
+   obsidian vault="{vault_name}" create name="{项目名}/03-草稿" ...
 
 5. [creative-workflow] 海明威之桥:
    在大纲文件末尾添加:
@@ -246,7 +276,7 @@ Hub 是第二大脑系统的**唯一入口**，负责三件事：
 ```
 流程:
 1. [obsidian-cli] 全文搜索:
-   obsidian vault="第二大脑" search query="{关键词}" limit=20
+   obsidian vault="{vault_name}" search query="{关键词}" limit=20
 
 2. [twelve-favorite-problems] 关联匹配（如果用户有定义问题清单）:
    加载 hub-state.json 中的 twelve_problems
@@ -290,24 +320,24 @@ distill_level: {{0 | 1 | 2 | 3 | 4}}
 
 ```bash
 # 创建新笔记
-obsidian vault="第二大脑" create \
+obsidian vault="{vault_name}" create \
   name="{文件夹路径}/{文件名}" \
   content="{模板渲染后的完整 Markdown}" \
   silent
 
 # 更新已有笔记（提炼后）
-obsidian vault="第二大脑" read file="{笔记名}"
+obsidian vault="{vault_name}" read file="{笔记名}"
 # → 修改内容后 →
-obsidian vault="第二大脑" edit file="{笔记名}" content="{新内容}"
+obsidian vault="{vault_name}" edit file="{笔记名}" content="{新内容}"
 
 # 移动笔记（收件箱→项目）
-obsidian vault="第二大脑" file:move file="{笔记名}" to="{目标文件夹}"
+obsidian vault="{vault_name}" file:move file="{笔记名}" to="{目标文件夹}"
 
 # 搜索
-obsidian vault="第二大脑" search query="{关键词}" limit=20
+obsidian vault="{vault_name}" search query="{关键词}" limit=20
 
 # 追加内容（灵感追加到已有笔记）
-obsidian vault="第二大脑" append file="{笔记名}" content="{追加内容}"
+obsidian vault="{vault_name}" append file="{笔记名}" content="{追加内容}"
 ```
 
 ### 4.3 frontmatter status 字段生命周期
@@ -390,5 +420,6 @@ second-brain-hub (本 skill)
 
 - **创建日期**: 2026-06-13
 - **依赖 skill**: 14 个（9 方法论 + 5 Obsidian）
-- **Vault 路径**: `D:\second-brain\第二大脑`
-- **状态文件**: `.obsidian/hub-state.json`
+- **Vault 路径**: 由 `{项目}/.claude/hub-state.json` 中 `preferences.vault_path` 动态指定
+- **Vault 名称**: 由 `preferences.vault_name` 动态指定
+- **状态文件**: `{vault_path}\.obsidian\hub-state.json` + `.claude/hub-state.json`
