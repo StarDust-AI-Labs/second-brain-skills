@@ -1,0 +1,52 @@
+{
+  "skill": "diverge-converge",
+  "version": "0.1.0",
+  "source_book": "《打造第二大脑》 — 蒂亚戈·福特",
+  "darwin_compatible": true,
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "我最近在写一篇公众号文章，已经收集了一堆资料——文章链接、金句截图、数据图表，但快两周了就是动不了笔。每次打开编辑器就想去搜更多资料。怎么破？",
+      "expected_behavior": "应激活 diverge-converge，诊断用户卡在'发散→聚合'的切换点，给出切换策略：宣布发散结束、关闭新信息入口、用思想群岛排列现有素材、设定最小交付目标",
+      "notes": "典型的'一直在收集从不开始写'场景，发散聚合模型的经典应用"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "我有好几个业余项目都开了头——一个博客、一个开源项目、一个播客——但没有一个做完的。每次开始都很兴奋，但做了一两周就扔下了。这是什么问题？",
+      "expected_behavior": "应激活 diverge-converge，解释发散模式的吸引力（探索的快感）vs聚合模式的困难（做减法的痛苦），特别是高创造力人群的切换障碍",
+      "notes": "'项目墓地'场景——多个项目无法完成是发散聚合失衡的典型表现"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "我做一个决策的时候，总是觉得信息还不够充分，不断去查更多资料。结果越查越不知道怎么决定了。",
+      "expected_behavior": "应激活 diverge-converge，指出用户用发散行为逃避聚合决策，给出切换策略",
+      "notes": "决策瘫痪场景——与创作的发散聚合逻辑相同"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "我现在的项目有明确的截止日期，老板每天催进度，但我就是提不起劲来做。有什么激励方法？",
+      "expected_behavior": "不应激活本skill，这是动力/拖延问题而非模式切换问题——有外部DDL的压力情境下，用户可能是倦怠而非卡在发散模式",
+      "notes": "诱饵：动力问题而非模式切换问题"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "有什么好的头脑风暴方法推荐吗？我想和团队做一次创意发散。",
+      "expected_behavior": "不应激活本skill，这是具体的头脑风暴技巧咨询，发散聚合是解释模型而非头脑风暴工具",
+      "notes": "诱饵：头脑风暴技巧而非创作模式诊断"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "我在做一个创新项目，感觉现在收集的素材还不够多，但投资人说下周就要看到prototype。我该继续做研究还是赶紧做东西出来？",
+      "expected_behavior": "可激活本skill，帮助用户判断'素材是否已经足够聚合'（素材开始重复？能列出3个以上方案？），并用压缩范围策略建议先交付一个MVP",
+      "notes": "边界：外部时间压力下的模式切换决策"
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "notes": "3条should_trigger + 2条should_not_trigger + 1条edge_case。"
+}
