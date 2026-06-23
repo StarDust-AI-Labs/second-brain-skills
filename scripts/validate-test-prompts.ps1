@@ -1,6 +1,7 @@
 param(
     [string]$PrimaryPath = ".agents/skills/second-brain-hub/test-prompts.json",
-    [string]$MirrorPath = ".claude/skills/second-brain-hub/test-prompts.json"
+    [string]$MirrorPath = ".claude/skills/second-brain-hub/test-prompts.json",
+    [string]$StateExamplePath = ".claude/hub-state.example.json"
 )
 
 $ErrorActionPreference = "Stop"
@@ -99,11 +100,27 @@ if ($null -ne $mirror) {
     }
 }
 
+if (Test-Path -LiteralPath $StateExamplePath) {
+    $stateExample = Get-Content -Raw -Encoding UTF8 -LiteralPath $StateExamplePath | ConvertFrom-Json
+    if (-not ($stateExample.PSObject.Properties.Name -contains "preferences")) {
+        throw "State example is missing preferences: $StateExamplePath"
+    }
+    if ($null -ne $stateExample.preferences.vault_path) {
+        throw "State example must not include a real vault_path"
+    }
+    if ($null -ne $stateExample.preferences.vault_name) {
+        throw "State example must not include a real vault_name"
+    }
+} else {
+    throw "Missing state example: $StateExamplePath"
+}
+
 Write-Output "Hub test prompts valid."
 Write-Output "Primary: $PrimaryPath"
 if ($null -ne $mirror) {
     Write-Output "Mirror: $MirrorPath"
 }
+Write-Output "State example: $StateExamplePath"
 Write-Output "Total cases: $($primary.Count)"
 Write-Output "Scene coverage:"
 foreach ($key in ($sceneCounts.Keys | Sort-Object)) {

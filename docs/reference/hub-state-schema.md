@@ -1,7 +1,8 @@
 # Hub State Schema
 
 - 当前版本: 1.1
-- 权威项目级状态文件: `.claude/hub-state.json`
+- 可提交模板: `.claude/hub-state.example.json`
+- 本地项目级状态文件: `.claude/hub-state.json`
 - Vault 运行态状态文件: `{vault_path}/.obsidian/hub-state.json`
 - Legacy fallback: `.Codex/hub-state.json`
 
@@ -11,9 +12,9 @@
 
 ### 项目级状态
 
-`.claude/hub-state.json` 是 Hub 的权威配置来源，用于保存跨会话偏好和 Vault 定位信息。
+`.claude/hub-state.example.json` 是可提交的配置模板，不能包含真实机器路径。
 
-它应该提交到当前项目仓库，方便 Codex/Claude 在同一项目上下文中读取。
+`.claude/hub-state.json` 是 Hub 的本地配置来源，用于保存跨会话偏好和 Vault 定位信息。它应该由用户在安装后从 example 文件复制生成，不应提交到版本库。
 
 ### Vault 运行态状态
 
@@ -32,7 +33,7 @@
 ```json
 {
   "version": "1.1",
-  "updated": "2026-06-17",
+  "updated": "2026-06-23",
   "active_projects": [],
   "inbox_count": 0,
   "inbox_last_cleared": null,
@@ -61,8 +62,8 @@
 
 ```json
 {
-  "vault_path": "D:\\second-brain\\第二大脑",
-  "vault_name": "第二大脑",
+  "vault_path": null,
+  "vault_name": null,
   "default_distill_level": 1,
   "weekly_review_day": "friday",
   "inbox_warning_threshold": 15,
@@ -90,7 +91,7 @@
 ```json
 {
   "action": "capture_external",
-  "path": "📂 项目/第二大脑体系搭建/Skills规范与设计模式_2026-06-14.md",
+  "path": "📂 项目/<项目名>/示例笔记.md",
   "time": "2026-06-14",
   "source": "https://example.com/article",
   "distill_level": 1
@@ -185,7 +186,7 @@
 
 ## 8. 安全约定
 
-- `vault_path` 是本地路径，可以提交到个人项目仓库；如果未来公开发布模板，应改为示例值或 `.example` 文件。
+- `vault_path` 是本地路径，不应提交到可安装 Skill 包；提交 `.claude/hub-state.example.json`，真实 `.claude/hub-state.json` 放入 `.gitignore`。
 - Hub 不应在没有用户确认时批量移动或删除 Vault 内容。
 - 删除操作应优先移动到 `.trash` 或 `📂 存档/_待删除/`，不直接永久删除。
 - 状态文件 JSON 必须保持可解析；修改后应运行:

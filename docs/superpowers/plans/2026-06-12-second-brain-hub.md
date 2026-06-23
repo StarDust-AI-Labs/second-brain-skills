@@ -1,4 +1,4 @@
-# Second Brain Hub Implementation Plan
+﻿# Second Brain Hub Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -9,9 +9,9 @@
 **Tech Stack:** Markdown skill files, Obsidian CLI, bash for vault setup
 
 **Deliverables:**
-- `D:\aiCoding\projects\second-brain\.claude\skills\second-brain-hub\SKILL.md`
-- `D:\aiCoding\projects\second-brain\.claude\skills\second-brain-hub\test-prompts.json`
-- `D:\second-brain\第二大脑\.obsidian\hub-state.json` (context memory)
+- `<SECOND_BRAIN_PROJECT>\.claude\skills\second-brain-hub\SKILL.md`
+- `<SECOND_BRAIN_PROJECT>\.claude\skills\second-brain-hub\test-prompts.json`
+- `<SECOND_BRAIN_VAULT>\.obsidian\hub-state.json` (context memory)
 - Vault PARA folder structure (5 top-level folders + migration)
 
 ---
@@ -23,31 +23,31 @@
 | `second-brain-hub/SKILL.md` | Intent classification, scene routing table, step-by-step orchestration instructions for Claude, unified Obsidian write pipeline, response format rules |
 | `second-brain-hub/test-prompts.json` | 20 test prompts covering all 6 scenes + edge cases + intent boundary tests |
 | `hub-state.json` | Cross-session memory: active projects list, last 5 operations, user preferences |
-| Vault folder structure | Physical PARA folders created via bash in `D:\second-brain\第二大脑\` |
+| Vault folder structure | Physical PARA folders created via bash in `<SECOND_BRAIN_VAULT>\` |
 
 ---
 
 ### Task 1: Set Up Vault PARA Folder Structure
 
 **Files:**
-- Create: `D:\second-brain\第二大脑\📥 收件箱\` (empty, placeholder `.gitkeep`)
-- Create: `D:\second-brain\第二大脑\📂 项目\第二大脑体系搭建\`
-- Create: `D:\second-brain\第二大脑\📂 项目\AI视频创作\`
-- Create: `D:\second-brain\第二大脑\📂 项目\阅读分享\`
-- Create: `D:\second-brain\第二大脑\📂 领域\AI技术\`
-- Create: `D:\second-brain\第二大脑\📂 领域\内容创作\`
-- Create: `D:\second-brain\第二大脑\📂 领域\知识管理\`
-- Create: `D:\second-brain\第二大脑\📂 领域\职业发展\`
-- Create: `D:\second-brain\第二大脑\📂 资源\AI前沿\`
-- Create: `D:\second-brain\第二大脑\📂 资源\视频创作方法论\`
-- Create: `D:\second-brain\第二大脑\📂 资源\写作素材\`
-- Create: `D:\second-brain\第二大脑\📂 存档\2024-2025\`
-- Create: `D:\second-brain\第二大脑\.obsidian\hub-state.json`
+- Create: `<SECOND_BRAIN_VAULT>\📥 收件箱\` (empty, placeholder `.gitkeep`)
+- Create: `<SECOND_BRAIN_VAULT>\📂 项目\第二大脑体系搭建\`
+- Create: `<SECOND_BRAIN_VAULT>\📂 项目\AI视频创作\`
+- Create: `<SECOND_BRAIN_VAULT>\📂 项目\阅读分享\`
+- Create: `<SECOND_BRAIN_VAULT>\📂 领域\AI技术\`
+- Create: `<SECOND_BRAIN_VAULT>\📂 领域\内容创作\`
+- Create: `<SECOND_BRAIN_VAULT>\📂 领域\知识管理\`
+- Create: `<SECOND_BRAIN_VAULT>\📂 领域\职业发展\`
+- Create: `<SECOND_BRAIN_VAULT>\📂 资源\AI前沿\`
+- Create: `<SECOND_BRAIN_VAULT>\📂 资源\视频创作方法论\`
+- Create: `<SECOND_BRAIN_VAULT>\📂 资源\写作素材\`
+- Create: `<SECOND_BRAIN_VAULT>\📂 存档\2024-2025\`
+- Create: `<SECOND_BRAIN_VAULT>\.obsidian\hub-state.json`
 
 - [ ] **Step 1: Create the top-level PARA directories**
 
 ```bash
-cd "D:\second-brain\第二大脑"
+cd "<SECOND_BRAIN_VAULT>"
 mkdir -p "📥 收件箱"
 mkdir -p "📂 项目"
 mkdir -p "📂 领域"
@@ -91,7 +91,7 @@ mkdir -p "📂 存档/2024-2025"
 Move all current root-level files and folders (except the new PARA folders and `.obsidian`) into `📂 存档/2024-2025/`:
 
 ```bash
-cd "D:\second-brain\第二大脑"
+cd "<SECOND_BRAIN_VAULT>"
 # Move root markdown files to archive
 mv "AI创作方向.md" "📂 存档/2024-2025/"
 mv "AI创作思路.md" "📂 存档/2024-2025/"
@@ -109,7 +109,7 @@ mv "阅读分享计划" "📂 存档/2024-2025/"
 
 Expected result:
 ```
-D:\second-brain\第二大脑\
+<SECOND_BRAIN_VAULT>\
 ├── 欢迎.md                        (untouched)
 ├── 📥 收件箱/                      (empty)
 ├── 📂 项目/                        (3 subdirs, empty)
@@ -123,7 +123,7 @@ D:\second-brain\第二大脑\
 - [ ] **Step 7: Activate the 3 current projects — copy active files from archive**
 
 ```bash
-cd "D:\second-brain\第二大脑"
+cd "<SECOND_BRAIN_VAULT>"
 # Project 1: 第二大脑体系搭建
 cp "📂 存档/2024-2025/AI技术实战/AI大脑项目.md" "📂 项目/第二大脑体系搭建/"
 cp "📂 存档/2024-2025/视频文稿/制作第二大脑.md" "📂 项目/第二大脑体系搭建/"
@@ -137,7 +137,7 @@ cp "📂 存档/2024-2025/AI视频创作思路/阅读计划.md" "📂 项目/阅
 
 - [ ] **Step 8: Create the initial hub-state.json**
 
-Write `D:\second-brain\第二大脑\.obsidian\hub-state.json`:
+Write `<SECOND_BRAIN_VAULT>\.obsidian\hub-state.json`:
 
 ```json
 {
@@ -162,7 +162,7 @@ Write `D:\second-brain\第二大脑\.obsidian\hub-state.json`:
 - [ ] **Step 9: Verify the final vault structure**
 
 ```bash
-cd "D:\second-brain\第二大脑"
+cd "<SECOND_BRAIN_VAULT>"
 find . -maxdepth 3 -not -path "*/.obsidian/*" -not -path "*/.trash*" | sort
 ```
 
@@ -171,7 +171,7 @@ Expected output: 5 top-level PARA folders, 3 projects with content, archive with
 - [ ] **Step 10: Commit vault changes**
 
 ```bash
-cd "D:\second-brain\第二大脑"
+cd "<SECOND_BRAIN_VAULT>"
 git add -A
 git commit -m "feat: reorganize vault with PARA structure + snapshot archive
 
@@ -186,19 +186,19 @@ git commit -m "feat: reorganize vault with PARA structure + snapshot archive
 ### Task 2: Create second-brain-hub SKILL.md
 
 **Files:**
-- Create: `D:\aiCoding\projects\second-brain\.claude\skills\second-brain-hub\SKILL.md`
+- Create: `<SECOND_BRAIN_PROJECT>\.claude\skills\second-brain-hub\SKILL.md`
 
 This is the core deliverable. The file must be complete with no placeholders — Claude can execute it directly.
 
 - [ ] **Step 1: Create the skill directory**
 
 ```bash
-mkdir -p "D:\aiCoding\projects\second-brain\.claude\skills\second-brain-hub"
+mkdir -p "<SECOND_BRAIN_PROJECT>\.claude\skills\second-brain-hub"
 ```
 
 - [ ] **Step 2: Write the complete SKILL.md**
 
-Write `D:\aiCoding\projects\second-brain\.claude\skills\second-brain-hub\SKILL.md` with the following content:
+Write `<SECOND_BRAIN_PROJECT>\.claude\skills\second-brain-hub\SKILL.md` with the following content:
 
 ```markdown
 ---
@@ -240,7 +240,7 @@ Hub 是第二大脑系统的**唯一入口**，负责三件事：
 每次被激活时，Hub 必须先加载状态：
 
 ```
-1. 检查 D:\second-brain\第二大脑\.obsidian\hub-state.json 是否存在
+1. 检查 <SECOND_BRAIN_VAULT>\.obsidian\hub-state.json 是否存在
 2. 若存在 → 读取 active_projects, last_operations, preferences, twelve_problems
 3. 若不存在 → 使用默认值（空项目列表、空操作历史），并创建该文件
 4. 将状态加载到当前会话上下文中（供后续所有步骤引用）
@@ -593,14 +593,14 @@ second-brain-hub (本 skill)
 
 - **创建日期**: 2026-06-12
 - **依赖 skill**: 14 个（9 方法论 + 5 Obsidian）
-- **Vault 路径**: `D:\second-brain\第二大脑`
+- **Vault 路径**: `<SECOND_BRAIN_VAULT>`
 - **状态文件**: `.obsidian/hub-state.json`
 ```
 
 - [ ] **Step 3: Verify the SKILL.md is valid markdown with correct frontmatter**
 
 ```bash
-cd "D:\aiCoding\projects\second-brain"
+cd "<SECOND_BRAIN_PROJECT>"
 head -10 .claude/skills/second-brain-hub/SKILL.md
 ```
 
@@ -609,7 +609,7 @@ Expected: Valid YAML frontmatter with `name: second-brain-hub`, `description`, `
 - [ ] **Step 4: Commit the new skill**
 
 ```bash
-cd "D:\aiCoding\projects\second-brain"
+cd "<SECOND_BRAIN_PROJECT>"
 git add .claude/skills/second-brain-hub/SKILL.md
 git commit -m "feat: add second-brain-hub skill — central orchestrator for all knowledge management
 
@@ -626,11 +626,11 @@ git commit -m "feat: add second-brain-hub skill — central orchestrator for all
 ### Task 3: Create test-prompts.json
 
 **Files:**
-- Create: `D:\aiCoding\projects\second-brain\.claude\skills\second-brain-hub\test-prompts.json`
+- Create: `<SECOND_BRAIN_PROJECT>\.claude\skills\second-brain-hub\test-prompts.json`
 
 - [ ] **Step 1: Write the test prompts file**
 
-Write `D:\aiCoding\projects\second-brain\.claude\skills\second-brain-hub\test-prompts.json`:
+Write `<SECOND_BRAIN_PROJECT>\.claude\skills\second-brain-hub\test-prompts.json`:
 
 ```json
 [
@@ -782,7 +782,7 @@ Write `D:\aiCoding\projects\second-brain\.claude\skills\second-brain-hub\test-pr
 - [ ] **Step 2: Verify the JSON is valid**
 
 ```bash
-cd "D:\aiCoding\projects\second-brain"
+cd "<SECOND_BRAIN_PROJECT>"
 python -c "import json; json.load(open('.claude/skills/second-brain-hub/test-prompts.json', encoding='utf-8')); print('Valid JSON,', len(json.load(open('.claude/skills/second-brain-hub/test-prompts.json', encoding='utf-8'))), 'test cases')"
 ```
 
@@ -791,7 +791,7 @@ Expected: `Valid JSON, 20 test cases`
 - [ ] **Step 3: Commit**
 
 ```bash
-cd "D:\aiCoding\projects\second-brain"
+cd "<SECOND_BRAIN_PROJECT>"
 git add .claude/skills/second-brain-hub/test-prompts.json
 git commit -m "test: add 20 test prompts for second-brain-hub covering all 6 scenes + edge cases"
 ```
@@ -809,21 +809,21 @@ git commit -m "test: add 20 test prompts for second-brain-hub covering all 6 sce
 ```bash
 echo "=== Checking deliverables ==="
 echo "1. Hub SKILL.md:"
-ls -la "D:\aiCoding\projects\second-brain\.claude\skills\second-brain-hub\SKILL.md"
+ls -la "<SECOND_BRAIN_PROJECT>\.claude\skills\second-brain-hub\SKILL.md"
 echo ""
 echo "2. Test prompts:"
-ls -la "D:\aiCoding\projects\second-brain\.claude\skills\second-brain-hub\test-prompts.json"
+ls -la "<SECOND_BRAIN_PROJECT>\.claude\skills\second-brain-hub\test-prompts.json"
 echo ""
 echo "3. hub-state.json:"
-ls -la "D:\second-brain\第二大脑\.obsidian\hub-state.json"
+ls -la "<SECOND_BRAIN_VAULT>\.obsidian\hub-state.json"
 echo ""
 echo "4. Vault PARA structure:"
-ls -d "D:\second-brain\第二大脑\📥 收件箱" "D:\second-brain\第二大脑\📂 项目" "D:\second-brain\第二大脑\📂 领域" "D:\second-brain\第二大脑\📂 资源" "D:\second-brain\第二大脑\📂 存档"
+ls -d "<SECOND_BRAIN_VAULT>\📥 收件箱" "<SECOND_BRAIN_VAULT>\📂 项目" "<SECOND_BRAIN_VAULT>\📂 领域" "<SECOND_BRAIN_VAULT>\📂 资源" "<SECOND_BRAIN_VAULT>\📂 存档"
 echo ""
 echo "5. Active projects have content:"
-ls "D:\second-brain\第二大脑\📂 项目\第二大脑体系搭建\"
-ls "D:\second-brain\第二大脑\📂 项目\AI视频创作\"
-ls "D:\second-brain\第二大脑\📂 项目\阅读分享\"
+ls "<SECOND_BRAIN_VAULT>\📂 项目\第二大脑体系搭建\"
+ls "<SECOND_BRAIN_VAULT>\📂 项目\AI视频创作\"
+ls "<SECOND_BRAIN_VAULT>\📂 项目\阅读分享\"
 ```
 
 Expected: All 5 checks pass — every file and folder exists.
@@ -831,7 +831,7 @@ Expected: All 5 checks pass — every file and folder exists.
 - [ ] **Step 2: Validate SKILL.md frontmatter is parseable**
 
 ```bash
-cd "D:\aiCoding\projects\second-brain"
+cd "<SECOND_BRAIN_PROJECT>"
 python -c "
 import re
 with open('.claude/skills/second-brain-hub/SKILL.md', encoding='utf-8') as f:
@@ -854,7 +854,7 @@ Expected: `Frontmatter valid. All required fields present.`
 - [ ] **Step 3: Validate skill composes-with references are real**
 
 ```bash
-cd "D:\aiCoding\projects\second-brain\.claude\skills"
+cd "<SECOND_BRAIN_PROJECT>\.claude\skills"
 echo "Existing skills:"
 ls -d */ | sed 's/\///g'
 echo ""
@@ -867,7 +867,7 @@ Manually verify: every skill name listed in `related_skills` corresponds to an e
 - [ ] **Step 4: Check that existing methodology skills are UNCHANGED**
 
 ```bash
-cd "D:\aiCoding\projects\second-brain"
+cd "<SECOND_BRAIN_PROJECT>"
 git status .claude/skills/
 ```
 
@@ -876,7 +876,7 @@ Expected: Only `second-brain-hub/` shows as new. All other skill directories are
 - [ ] **Step 5: Final commit**
 
 ```bash
-cd "D:\aiCoding\projects\second-brain"
+cd "<SECOND_BRAIN_PROJECT>"
 git add -A
 git status
 ```
@@ -900,7 +900,7 @@ Task 1 (Vault setup) ──→ Task 2 (Hub SKILL.md) ──→ Task 3 (test prom
 
 After all tasks complete:
 
-1. `D:\second-brain\第二大脑\` has PARA folder structure with archived old content
+1. `<SECOND_BRAIN_VAULT>\` has PARA folder structure with archived old content
 2. `hub-state.json` exists and is valid JSON
 3. `second-brain-hub/SKILL.md` contains all 6 scene workflows with complete instructions
 4. `test-prompts.json` has 20 test cases covering all scenes + edge cases

@@ -3,7 +3,8 @@
 - 适用范围: `second-brain-hub` 的意图识别、场景路由、状态读取、Obsidian 写入/降级策略
 - 当前权威 Skill 源: `.agents/skills/second-brain-hub/`
 - Legacy mirror: `.claude/skills/second-brain-hub/`
-- 项目级状态: `.claude/hub-state.json`
+- 配置模板: `.claude/hub-state.example.json`
+- 本地项目级状态: `.claude/hub-state.json`
 
 ---
 
@@ -28,7 +29,7 @@
 
 ### 1.2 状态文件检查
 
-确认 `.claude/hub-state.json` 存在，并包含:
+确认 `.claude/hub-state.example.json` 存在，并包含:
 
 - `version`
 - `active_projects`
@@ -39,7 +40,9 @@
 - `preferences.inbox_warning_threshold`
 - `twelve_problems`
 
-如果缺失 `vault_path` 或 `vault_name`，Hub 必须先引导用户配置 Vault，不应继续写入。
+模板中的 `vault_path` 和 `vault_name` 应为 `null`。真实 `.claude/hub-state.json` 可在本地存在，但不应提交到版本库。
+
+如果运行时缺失 `vault_path` 或 `vault_name`，Hub 必须先引导用户配置 Vault，不应继续写入。
 
 ---
 
@@ -171,7 +174,7 @@
 
 1. `.\scripts\validate-test-prompts.ps1` 通过。
 2. `.agents` 与 `.claude` 的 Hub 测试提示一致。
-3. 状态文件路径说明全部指向 `.claude/hub-state.json`，`.Codex/hub-state.json` 只作为 legacy fallback。
+3. 安装包只提交 `.claude/hub-state.example.json`，真实 `.claude/hub-state.json` 被 `.gitignore` 忽略。
 4. 上述 8 个场景的意图识别和调度链人工复核通过。
 5. 所有批量写入/移动/删除都具备 preview/confirm/report 的安全边界。
 
