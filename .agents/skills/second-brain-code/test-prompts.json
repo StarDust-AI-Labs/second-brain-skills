@@ -1,0 +1,59 @@
+{
+  "skill": "second-brain-code",
+  "version": "0.1.0",
+  "source_book": "《打造第二大脑》 — 蒂亚戈·福特",
+  "darwin_compatible": true,
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "我每天都在看很多文章和视频，也做了不少笔记，但是感觉学了很多东西却用不出来，笔记散落在各个应用里找不到，怎么办？",
+      "expected_behavior": "应激活 second-brain-code，先诊断用户卡在CODE的哪个环节，然后引导用户走通对应步骤",
+      "notes": "典型的'信息消费但零产出'场景，CODE四步覆盖完整流程"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "我想建立一套个人知识管理系统，但不知道怎么开始，能给我一个整体框架吗？",
+      "expected_behavior": "应激活 second-brain-code，介绍CODE四步法则作为顶层路线图",
+      "notes": "用户明确要求'整体框架'和'知识管理系统'"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "我刚开始一份新工作，每天要学的东西太多了——公司流程、产品知识、行业背景。我该怎么做才能确保学到的内容不会几个月后就忘光？",
+      "expected_behavior": "应激活 second-brain-code，引导用户走通四步：只抓取关键信息→按项目组织→渐进提炼→尽快产出小成果",
+      "notes": "新环境信息过载的典型场景，CODE提供系统性应对方案"
+    },
+    {
+      "id": "should-trigger-04",
+      "type": "should_trigger",
+      "prompt": "我觉得自己一直在消费信息但从来不去创造东西，怎么从'消费者'变成'创作者'？",
+      "expected_behavior": "应激活 second-brain-code，重点阐述CODE第四步'表达'，以及发散→聚合的切换",
+      "notes": "明确表达了'从消费者变成创作者'的需求"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "Notion和Obsidian哪个更适合做笔记？能帮我对比一下吗？",
+      "expected_behavior": "不应激活本skill，这是工具对比问题，CODE是方法论不依赖特定工具",
+      "notes": "诱饵：工具选择问题而非方法论问题"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "我的电脑桌面太乱了，帮我整理一下文件。",
+      "expected_behavior": "不应激活本skill（或激活para-system），这是纯文件整理问题，用PARA系统更合适",
+      "notes": "诱饵：更具体的组织问题，应由para-system处理"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "我已经用GTD方法管理任务好几年了，最近听说'第二大脑'这个概念，想知道它和GTD有什么区别，我需要同时用两个系统吗？",
+      "expected_behavior": "可激活本skill，解释CODE和GTD的互补关系（GTD管任务流，CODE管知识流），并说明如何协同使用",
+      "notes": "边界：有成熟系统的用户询问兼容性，需要区分而非替代"
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "notes": "4条should_trigger + 2条should_not_trigger + 1条edge_case。CODE是最外层框架，trigger场景偏向'整体方法论需求'。"
+}

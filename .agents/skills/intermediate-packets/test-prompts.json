@@ -1,0 +1,52 @@
+{
+  "skill": "intermediate-packets",
+  "version": "0.1.0",
+  "source_book": "《打造第二大脑》 — 蒂亚戈·福特",
+  "darwin_compatible": true,
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "我每年都要写年终总结和明年计划，每次都从零开始特别痛苦。之前的总结做完就丢了，感觉每年都在重复造轮子。",
+      "expected_behavior": "应激活 intermediate-packets，引导用户将去年的总结分解为可复用的半熟素材（数据框架、故事模板、成果展示结构等），并保存到PARA的对应文件夹中",
+      "notes": "典型的重复性工作场景——'从零开始'的痛苦"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "我做了三年产品经理，换了两家公司，感觉没什么积累。简历上写不出像样的项目亮点，感觉自己一直在瞎忙。",
+      "expected_behavior": "应激活 intermediate-packets，分析用户在知识回收环节的缺失，引导建立'项目完成=知识回收'的习惯",
+      "notes": "职业成长中的'无积累感'是半熟素材思维的核心应用场景"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "我要准备一个客户提案，发现之前给别的客户做过类似的东西但找不到当时的文件了。怎么避免这种情况？",
+      "expected_behavior": "应激活 intermediate-packets，介绍五种半熟素材类型，引导用户从现在开始建立素材回收习惯",
+      "notes": "丢失历史成果的典型痛感"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "我需要管理公司的商业机密文档，有什么好方法确保它们安全又能方便取用？",
+      "expected_behavior": "不应激活本skill，半熟素材强调复用和分享，不适合严格保密的内容",
+      "notes": "诱饵：机密文档管理而非知识复用"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "能给我一个年度总结的模板吗？我直接照着填就行。",
+      "expected_behavior": "不应激活本skill（或简要提供模板后指出），本skill的核心是培养'资产化思维'和'知识回收习惯'，而非直接给模板",
+      "notes": "诱饵：索要模板而非学习方法论"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "我在一个高度标准化的行业工作（如会计师事务所），大部分交付物有固定格式和法规要求。这种情况下'半熟素材'还有意义吗？",
+      "expected_behavior": "可激活本skill，指出即使在标准化行业，过程中产生的分析框架、客户沟通模板、常见问题解答、审计checklist等都是可复用的半熟素材——标准化不意味着零复用",
+      "notes": "边界：高度标准化行业的适用性"
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "notes": "3条should_trigger + 2条should_not_trigger + 1条edge_case。"
+}

@@ -1,0 +1,52 @@
+{
+  "skill": "para-system",
+  "version": "0.1.0",
+  "source_book": "《打造第二大脑》 — 蒂亚戈·福特",
+  "darwin_compatible": true,
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "我的笔记应用里有好几百条笔记了，文件夹结构越建越乱，现在找个东西要翻半天。怎么建立一套合理的文件夹分类？",
+      "expected_behavior": "应激活 para-system，介绍PARA四分类法和'以行动为导向'的核心理念，引导用户建立项目/领域/资源/存档四个顶层文件夹",
+      "notes": "典型的文件夹混乱场景，PARA直接对症"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "我保存笔记的时候总是纠结该放哪个文件夹——按主题分的话一条笔记可能属于好几个主题。有没有更好的分类方法？",
+      "expected_behavior": "应激活 para-system，介绍PARA的'按可行动性而非按主题'分类原则",
+      "notes": "用户明确表达了'主题分类的困境'"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "我电脑下载文件夹里有几百个文件，桌面也堆满了，想整理但不知道从何下手。",
+      "expected_behavior": "应激活 para-system，建议将历史文件整体归档到一个'存档+日期'文件夹，然后为活跃项目建立新文件夹结构",
+      "notes": "数字空间混乱的经典场景"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "我们团队想搭建一个共享知识库，有什么好的组织方案推荐吗？",
+      "expected_behavior": "不应激活本skill，PARA是为个人设计的系统，团队共享需要协作编辑和权限管理",
+      "notes": "诱饵：团队场景而非个人场景"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "我应该怎么给笔记打标签？标签和文件夹怎么配合使用？",
+      "expected_behavior": "不应激活本skill（或提供标签的简要建议后引导至其他资源），标签系统不是PARA的核心推荐",
+      "notes": "诱饵：标签问题而非文件夹分类问题"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "我已经有一套按'工作/学习/生活/兴趣'分的文件夹系统用了两年了，虽然偶尔找不到东西但大体还好。听说PARA更好，我该不该全部重建？",
+      "expected_behavior": "可激活本skill，但应强调'不要为了PARA而PARA'——如果现有系统基本运转正常，可以对现有系统做PARA式的微调（如在'工作'下增加'项目'和'领域'子分类），而非全盘推倒重建",
+      "notes": "边界：已有稳定系统的用户是否应该迁移"
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "notes": "3条should_trigger + 2条should_not_trigger + 1条edge_case。"
+}

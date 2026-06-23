@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第二大脑 · 五层架构图 V8</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap');
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #09090b;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh;
+    font-family: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    padding: 48px 40px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .diagram-container { max-width: 1180px; width: 100%; }
+  .diagram-header { text-align: center; margin-bottom: 56px; }
+  .diagram-title {
+    color: #fafafa; font-size: 32px; font-weight: 700; letter-spacing: 3px;
+    text-shadow: 0 0 80px rgba(124,58,237,0.15);
+  }
+  .diagram-subtitle {
+    color: #52525b; font-size: 11px; margin-top: 10px;
+    letter-spacing: 8px; font-weight: 500; text-transform: uppercase;
+  }
+  .diagram-accent-line {
+    width: 48px; height: 2px;
+    background: linear-gradient(90deg, transparent, #7c3aed40, #0891b240, transparent);
+    margin: 18px auto 0; border-radius: 1px;
+  }
+  svg { width: 100%; height: auto; display: block; }
+</style>
+</head>
+<body>
+<div class="diagram-container">
+  <div class="diagram-header">
+    <div class="diagram-title">🧠 第二大脑 · 五层架构</div>
+    <div class="diagram-subtitle">输入层 → Agent层 → 方法论层 → 工具层 → 存储层</div>
+    <div class="diagram-accent-line"></div>
+  </div>
+
+  <svg viewBox="0 0 1160 1140" xmlns="http://www.w3.org/2000/svg">
+
+    <defs>
+      <!-- ============================================================ -->
+      <!-- DESIGN TOKENS (from ui-ux-pro-max data)
+           Style: Dark Mode OLED + Glassmorphism + Dimensional Layering
+           Palette: Custom warm-tech blend
+           Elevation: 4 levels (e1=elevation-1 ... e4=elevation-4)
+           Spacing: 8px grid (8, 16, 24, 32, 48, 64)
+           Radius: 6(sm) 10(md) 14(lg) 20(xl)
+           Typography: Inter + Noto Sans SC, 10-32px scale
+      ============================================================ -->
+
+      <!-- === ELEVATION SHADOWS (Dimensional Layering pattern) === -->
+      <filter id="e1" x="-4%" y="-4%" width="108%" height="112%">
+        <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#000" flood-opacity="0.30"/>
+      </filter>
+      <filter id="e2" x="-6%" y="-6%" width="112%" height="116%">
+        <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#000" flood-opacity="0.40"/>
+      </filter>
+      <filter id="e3" x="-8%" y="-8%" width="116%" height="124%">
+        <feDropShadow dx="0" dy="4" stdDeviation="12" flood-color="#000" flood-opacity="0.50"/>
+      </filter>
+      <filter id="e4" x="-10%" y="-10%" width="120%" height="132%">
+        <feDropShadow dx="0" dy="6" stdDeviation="20" flood-color="#000" flood-opacity="0.60"/>
+      </filter>
+
+      <!-- === GLASSMORPHISM BLUR (subtle, for accent cards) === -->
+      <filter id="glass-blur">
+        <feGaussianBlur stdDeviation="1.5"/>
+      </filter>
+
+      <!-- === NOISE TEXTURE (film grain, refined) === -->
+      <filter id="grain" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch" result="n"/>
+        <feColorMatrix type="saturate" values="0" in="n" result="gn"/>
+        <feComponentTransfer in="gn"><feFuncA type="linear" slope="0.028"/></feComponentTransfer>
+      </filter>
+
+      <!-- ============================================================ -->
+      <!-- COLOR SYSTEM (warm-tech Morandi)
+           Input   — Slate Blue     #94a3b8
+           Agent   — Violet         #8b8ab8
+           Method  — Warm Sand      #b8a890
+           Tool    — Sage           #8aaa90
+           Storage — Dusty Rose     #b89090
+      ============================================================ -->
+
+      <!-- Layer backgrounds — Glassmorphism-inspired translucent fills -->
+      <linearGradient id="bg-input" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#94a3b8;stop-opacity:0.08"/>
+        <stop offset="100%" style="stop-color:#94a3b8;stop-opacity:0.02"/>
+      </linearGradient>
+      <linearGradient id="bg-agent" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#8b8ab8;stop-opacity:0.10"/>
+        <stop offset="100%" style="stop-color:#8b8ab8;stop-opacity:0.03"/>
+      </linearGradient>
+      <linearGradient id="bg-method" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#b8a890;stop-opacity:0.08"/>
+        <stop offset="100%" style="stop-color:#b8a890;stop-opacity:0.02"/>
+      </linearGradient>
+      <linearGradient id="bg-tool" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#8aaa90;stop-opacity:0.08"/>
+        <stop offset="100%" style="stop-color:#8aaa90;stop-opacity:0.02"/>
+      </linearGradient>
+      <linearGradient id="bg-storage" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#b89090;stop-opacity:0.08"/>
+        <stop offset="100%" style="stop-color:#b89090;stop-opacity:0.02"/>
+      </linearGradient>
+
+      <!-- Card fills -->
+      <linearGradient id="card" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#18181b"/>
+        <stop offset="100%" style="stop-color:#121214"/>
+      </linearGradient>
+      <linearGradient id="card-raised" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#1c1c1f"/>
+        <stop offset="100%" style="stop-color:#151518"/>
+      </linearGradient>
+
+      <!-- Tag pill fills -->
+      <linearGradient id="tag-input" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#94a3b8;stop-opacity:0.55"/>
+        <stop offset="100%" style="stop-color:#94a3b8;stop-opacity:0.35"/>
+      </linearGradient>
+      <linearGradient id="tag-agent" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#8b8ab8;stop-opacity:0.55"/>
+        <stop offset="100%" style="stop-color:#8b8ab8;stop-opacity:0.35"/>
+      </linearGradient>
+      <linearGradient id="tag-method" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#b8a890;stop-opacity:0.55"/>
+        <stop offset="100%" style="stop-color:#b8a890;stop-opacity:0.35"/>
+      </linearGradient>
+      <linearGradient id="tag-tool" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#8aaa90;stop-opacity:0.55"/>
+        <stop offset="100%" style="stop-color:#8aaa90;stop-opacity:0.35"/>
+      </linearGradient>
+      <linearGradient id="tag-storage" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#b89090;stop-opacity:0.55"/>
+        <stop offset="100%" style="stop-color:#b89090;stop-opacity:0.35"/>
+      </linearGradient>
+
+      <!-- === ARROWS === -->
+      <marker id="arr-input" viewBox="0 0 10 10" refX="5" refY="0" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0 0 L5 8 L10 0" fill="#94a3b8" fill-opacity="0.45"/>
+      </marker>
+      <marker id="arr-agent" viewBox="0 0 10 10" refX="5" refY="0" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0 0 L5 8 L10 0" fill="#8b8ab8" fill-opacity="0.45"/>
+      </marker>
+      <marker id="arr-method" viewBox="0 0 10 10" refX="5" refY="0" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0 0 L5 8 L10 0" fill="#b8a890" fill-opacity="0.45"/>
+      </marker>
+      <marker id="arr-tool" viewBox="0 0 10 10" refX="5" refY="0" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0 0 L5 8 L10 0" fill="#8aaa90" fill-opacity="0.45"/>
+      </marker>
+
+      <!-- ============================================================ -->
+      <!-- REUSABLE GRID SYSTEM — 8px base unit -->
+      <!-- Layer: x=48, w=1064, inner-padding=24 -->
+      <!-- Card: w varies, gap=16 or 24 -->
+      <!-- ============================================================ -->
+    </defs>
+
+    <!-- === GRAIN OVERLAY === -->
+    <rect x="0" y="0" width="1160" height="1140" filter="url(#grain)" style="pointer-events:none"/>
+
+    <!-- ============================================================ -->
+    <!-- L1: INPUT LAYER -->
+    <!-- ============================================================ -->
+    <g transform="translate(0, 0)">
+      <!-- Layer panel (elevation-1) -->
+      <rect x="48" y="0" width="1064" height="112" rx="12" fill="url(#bg-input)" stroke="#94a3b8" stroke-opacity="0.18" stroke-width="0.8" filter="url(#e1)"/>
+
+      <!-- Tag pill -->
+      <rect x="48" y="0" width="112" height="32" rx="12" fill="url(#tag-input)"/>
+      <text x="104" y="21" text-anchor="middle" fill="#fafafa" font-size="12" font-weight="600" letter-spacing="1.5" font-family="'Inter','Noto Sans SC',sans-serif">📥 输入层</text>
+      <line x1="168" y1="16" x2="1104" y2="16" stroke="#94a3b8" stroke-opacity="0.06" stroke-width="0.5"/>
+
+      <!-- 4 cards (elevation-2, equal 152w, gap 16 → 4×152 + 3×16 + 2×24 = 608+48+48 = 704... let me recalculate) -->
+      <!-- Available: 1064 - 48padding = 1016. 4 cards: 4×226 + 3×16 = 904+48 = 952. Close enough. Let me use 226w. -->
+      <!-- Actually let me recalculate: total inner = 1064, padding each side = 24, so 1016.
+           4 cards at w each, 3 gaps at 16. 4w + 48 = 1016 → w = 242. That's good. -->
+      <g filter="url(#e2)">
+        <!-- Card template: w=242, h=72, rx=8 -->
+        <rect x="72" y="26" width="242" height="72" rx="8" fill="url(#card)" stroke="#94a3b8" stroke-opacity="0.22" stroke-width="0.8"/>
+        <line x1="74" y1="27" x2="312" y2="27" stroke="#fafafa" stroke-opacity="0.015" stroke-width="0.5"/>
+        <text x="193" y="58" text-anchor="middle" font-size="20">🎙️</text>
+        <text x="193" y="82" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">语音转写</text>
+
+        <rect x="330" y="26" width="242" height="72" rx="8" fill="url(#card)" stroke="#94a3b8" stroke-opacity="0.22" stroke-width="0.8"/>
+        <line x1="332" y1="27" x2="570" y2="27" stroke="#fafafa" stroke-opacity="0.015" stroke-width="0.5"/>
+        <text x="451" y="58" text-anchor="middle" font-size="20">🔗</text>
+        <text x="451" y="82" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">网页链接</text>
+
+        <rect x="588" y="26" width="242" height="72" rx="8" fill="url(#card)" stroke="#94a3b8" stroke-opacity="0.22" stroke-width="0.8"/>
+        <line x1="590" y1="27" x2="828" y2="27" stroke="#fafafa" stroke-opacity="0.015" stroke-width="0.5"/>
+        <text x="709" y="58" text-anchor="middle" font-size="20">📄</text>
+        <text x="709" y="82" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">文件上传</text>
+
+        <rect x="846" y="26" width="242" height="72" rx="8" fill="url(#card)" stroke="#94a3b8" stroke-opacity="0.22" stroke-width="0.8"/>
+        <line x1="848" y1="27" x2="1086" y2="27" stroke="#fafafa" stroke-opacity="0.015" stroke-width="0.5"/>
+        <text x="967" y="58" text-anchor="middle" font-size="20">💬</text>
+        <text x="967" y="82" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">聊天消息</text>
+      </g>
+    </g>
+
+    <!-- L1→L2 Connector -->
+    <line x1="580" y1="114" x2="580" y2="162" stroke="#94a3b8" stroke-opacity="0.22" stroke-width="1.2" stroke-dasharray="3,6"/>
+    <circle cx="580" cy="138" r="3" fill="#09090b" stroke="#94a3b8" stroke-opacity="0.32" stroke-width="1.2"/>
+
+    <!-- ============================================================ -->
+    <!-- L2: AGENT LAYER -->
+    <!-- ============================================================ -->
+    <g transform="translate(0, 170)">
+      <rect x="48" y="0" width="1064" height="196" rx="12" fill="url(#bg-agent)" stroke="#8b8ab8" stroke-opacity="0.20" stroke-width="0.8" filter="url(#e1)"/>
+
+      <rect x="48" y="0" width="112" height="32" rx="12" fill="url(#tag-agent)"/>
+      <text x="104" y="21" text-anchor="middle" fill="#fafafa" font-size="12" font-weight="600" letter-spacing="1.5" font-family="'Inter','Noto Sans SC',sans-serif">🤖 Agent层</text>
+      <line x1="168" y1="16" x2="1104" y2="16" stroke="#8b8ab8" stroke-opacity="0.06" stroke-width="0.5"/>
+
+      <!-- Hub card (elevation-4 — highest) -->
+      <rect x="160" y="24" width="840" height="156" rx="12" fill="url(#card-raised)" stroke="#8b8ab8" stroke-opacity="0.28" stroke-width="1" filter="url(#e4)"/>
+      <!-- Top rim highlight -->
+      <line x1="162" y1="25" x2="998" y2="25" stroke="#fafafa" stroke-opacity="0.02" stroke-width="0.5"/>
+      <!-- Title area -->
+      <rect x="162" y="26" width="836" height="44" rx="10" fill="#8b8ab8" fill-opacity="0.05"/>
+      <text x="580" y="54" text-anchor="middle" fill="#a5a4cc" font-size="17" font-weight="700" letter-spacing="1.5" font-family="'Inter','Noto Sans SC',sans-serif">🧭 second-brain-hub · 中枢调度器</text>
+      <line x1="200" y1="72" x2="960" y2="72" stroke="#8b8ab8" stroke-opacity="0.08" stroke-width="0.8"/>
+
+      <!-- 4 capabilities (elevation-2 cards inside elevation-4) -->
+      <rect x="182" y="88" width="188" height="78" rx="8" fill="#0c0c10" fill-opacity="0.7" stroke="#8b8ab8" stroke-opacity="0.20" stroke-width="0.8" filter="url(#e2)"/>
+      <circle cx="276" cy="114" r="14" fill="#8b8ab8" fill-opacity="0.06" stroke="#8b8ab8" stroke-opacity="0.16" stroke-width="0.8"/>
+      <text x="276" y="119" text-anchor="middle" font-size="14">🎯</text>
+      <text x="276" y="142" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">意图识别</text>
+      <text x="276" y="158" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter',sans-serif">Intent Recognition</text>
+
+      <rect x="390" y="88" width="188" height="78" rx="8" fill="#0c0c10" fill-opacity="0.7" stroke="#8b8ab8" stroke-opacity="0.20" stroke-width="0.8" filter="url(#e2)"/>
+      <circle cx="484" cy="114" r="14" fill="#8b8ab8" fill-opacity="0.06" stroke="#8b8ab8" stroke-opacity="0.16" stroke-width="0.8"/>
+      <text x="484" y="119" text-anchor="middle" font-size="14">🔀</text>
+      <text x="484" y="142" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">场景路由</text>
+      <text x="484" y="158" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter',sans-serif">Scene Routing</text>
+
+      <rect x="598" y="88" width="188" height="78" rx="8" fill="#0c0c10" fill-opacity="0.7" stroke="#8b8ab8" stroke-opacity="0.20" stroke-width="0.8" filter="url(#e2)"/>
+      <circle cx="692" cy="114" r="14" fill="#8b8ab8" fill-opacity="0.06" stroke="#8b8ab8" stroke-opacity="0.16" stroke-width="0.8"/>
+      <text x="692" y="119" text-anchor="middle" font-size="14">🧠</text>
+      <text x="692" y="142" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">上下文记忆</text>
+      <text x="692" y="158" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter',sans-serif">hub-state.json</text>
+
+      <rect x="806" y="88" width="172" height="78" rx="8" fill="#0c0c10" fill-opacity="0.7" stroke="#8b8ab8" stroke-opacity="0.20" stroke-width="0.8" filter="url(#e2)"/>
+      <circle cx="892" cy="114" r="14" fill="#8b8ab8" fill-opacity="0.06" stroke="#8b8ab8" stroke-opacity="0.16" stroke-width="0.8"/>
+      <text x="892" y="119" text-anchor="middle" font-size="14">✍️</text>
+      <text x="892" y="142" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">统一写入</text>
+      <text x="892" y="158" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter',sans-serif">Write Pipeline</text>
+    </g>
+
+    <!-- L2→L3 -->
+    <line x1="580" y1="368" x2="580" y2="416" stroke="#8b8ab8" stroke-opacity="0.22" stroke-width="1.2" stroke-dasharray="3,6"/>
+    <circle cx="580" cy="392" r="3" fill="#09090b" stroke="#8b8ab8" stroke-opacity="0.32" stroke-width="1.2"/>
+
+    <!-- ============================================================ -->
+    <!-- L3: METHODOLOGY LAYER -->
+    <!-- ============================================================ -->
+    <g transform="translate(0, 424)">
+      <rect x="48" y="0" width="1064" height="288" rx="12" fill="url(#bg-method)" stroke="#b8a890" stroke-opacity="0.18" stroke-width="0.8" filter="url(#e1)"/>
+
+      <rect x="48" y="0" width="112" height="32" rx="12" fill="url(#tag-method)"/>
+      <text x="104" y="21" text-anchor="middle" fill="#fafafa" font-size="12" font-weight="600" letter-spacing="1.5" font-family="'Inter','Noto Sans SC',sans-serif">📚 方法论层</text>
+      <line x1="168" y1="16" x2="1104" y2="16" stroke="#b8a890" stroke-opacity="0.06" stroke-width="0.5"/>
+
+      <text x="580" y="23" text-anchor="middle" fill="#b8a890" fill-opacity="0.28" font-size="10.5" font-weight="500" letter-spacing="8" font-family="'Inter','Noto Sans SC',sans-serif">C · O · D · E  信管法则</text>
+
+      <!-- 4 pillars: 1016 available / 4 columns. 4×244 + 3×16 = 976+48 = 1024. That's 8 too much.
+           Let me use: 4×240 + 3×16 = 960+48 = 1008. Margin = (1016-1008)/2 = 4. Good.
+           Start x = 72+4 = 76. -->
+      <g filter="url(#e2)">
+        <!-- Capture -->
+        <rect x="76" y="48" width="240" height="116" rx="8" fill="url(#card)" stroke="#b8a890" stroke-opacity="0.22" stroke-width="0.8"/>
+        <line x1="78" y1="49" x2="314" y2="49" stroke="#fafafa" stroke-opacity="0.013" stroke-width="0.5"/>
+        <rect x="76" y="48" width="240" height="32" rx="8" fill="#b8a890" fill-opacity="0.06"/>
+        <text x="196" y="69" text-anchor="middle" fill="#c4b49c" font-size="12.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">📋 Capture · 抓取</text>
+        <text x="196" y="93" text-anchor="middle" fill="#e4e4e7" font-size="11.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">capture-criteria</text>
+        <text x="196" y="111" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">共鸣原则 · 四标准判断</text>
+        <text x="196" y="133" text-anchor="middle" fill="#e4e4e7" font-size="11.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">twelve-favorite-problems</text>
+        <text x="196" y="151" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">好奇心导航信息消费</text>
+
+        <!-- Organize -->
+        <rect x="332" y="48" width="240" height="116" rx="8" fill="url(#card)" stroke="#b8a890" stroke-opacity="0.22" stroke-width="0.8"/>
+        <line x1="334" y1="49" x2="570" y2="49" stroke="#fafafa" stroke-opacity="0.013" stroke-width="0.5"/>
+        <rect x="332" y="48" width="240" height="32" rx="8" fill="#b8a890" fill-opacity="0.06"/>
+        <text x="452" y="69" text-anchor="middle" fill="#c4b49c" font-size="12.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">🗂️ Organize · 组织</text>
+        <text x="452" y="93" text-anchor="middle" fill="#e4e4e7" font-size="11.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">para-system</text>
+        <text x="452" y="111" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">项目 / 领域 / 资源 / 存档</text>
+        <text x="452" y="133" text-anchor="middle" fill="#e4e4e7" font-size="11.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">progressive-summarization</text>
+        <text x="452" y="151" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">四层级笔记提炼技术</text>
+
+        <!-- Distill -->
+        <rect x="588" y="48" width="240" height="116" rx="8" fill="url(#card)" stroke="#b8a890" stroke-opacity="0.22" stroke-width="0.8"/>
+        <line x1="590" y1="49" x2="826" y2="49" stroke="#fafafa" stroke-opacity="0.013" stroke-width="0.5"/>
+        <rect x="588" y="48" width="240" height="32" rx="8" fill="#b8a890" fill-opacity="0.06"/>
+        <text x="708" y="69" text-anchor="middle" fill="#c4b49c" font-size="12.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">✨ Distill · 提炼</text>
+        <text x="708" y="93" text-anchor="middle" fill="#e4e4e7" font-size="11.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">progressive-summarization</text>
+        <text x="708" y="111" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">层级 3·高亮 + 4·纲要</text>
+        <text x="708" y="133" text-anchor="middle" fill="#e4e4e7" font-size="11.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">diverge-converge</text>
+        <text x="708" y="151" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">发散 → 聚合创作节律</text>
+
+        <!-- Express -->
+        <rect x="844" y="48" width="240" height="116" rx="8" fill="url(#card)" stroke="#b8a890" stroke-opacity="0.22" stroke-width="0.8"/>
+        <line x1="846" y1="49" x2="1082" y2="49" stroke="#fafafa" stroke-opacity="0.013" stroke-width="0.5"/>
+        <rect x="844" y="48" width="240" height="32" rx="8" fill="#b8a890" fill-opacity="0.06"/>
+        <text x="964" y="69" text-anchor="middle" fill="#c4b49c" font-size="12.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">🚀 Express · 表达</text>
+        <text x="964" y="93" text-anchor="middle" fill="#e4e4e7" font-size="11.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">intermediate-packets</text>
+        <text x="964" y="111" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">半熟素材 · 永不从零开始</text>
+        <text x="964" y="133" text-anchor="middle" fill="#e4e4e7" font-size="11.5" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">creative-workflow</text>
+        <text x="964" y="151" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">思想群岛 + 海明威之桥</text>
+      </g>
+
+      <!-- Bottom row: 2 cards -->
+      <g filter="url(#e2)">
+        <rect x="76" y="178" width="524" height="46" rx="8" fill="url(#card)" stroke="#b8a890" stroke-opacity="0.20" stroke-width="0.8"/>
+        <line x1="78" y1="179" x2="598" y2="179" stroke="#fafafa" stroke-opacity="0.012" stroke-width="0.5"/>
+        <text x="338" y="200" text-anchor="middle" fill="#c4b49c" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">🧭 second-brain-code  ·  CODE 顶层框架</text>
+        <text x="338" y="218" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">四阶段全流程编排 · 信息消费 → 知识创造</text>
+
+        <rect x="616" y="178" width="468" height="46" rx="8" fill="url(#card)" stroke="#b8a890" stroke-opacity="0.20" stroke-width="0.8"/>
+        <line x1="618" y1="179" x2="1082" y2="179" stroke="#fafafa" stroke-opacity="0.012" stroke-width="0.5"/>
+        <text x="850" y="200" text-anchor="middle" fill="#c4b49c" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">🔄 knowledge-lifecycle  ·  系统维护</text>
+        <text x="850" y="218" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">周月回顾 + 处处留意 · 知识库自生长</text>
+      </g>
+
+      <!-- Knowledge cycle arc -->
+      <path d="M 1104 201 C 1118 201, 1118 58, 1104 58" stroke="#b8a890" stroke-opacity="0.14" stroke-width="1" fill="none" stroke-dasharray="3,7"/>
+      <circle cx="1117" cy="130" r="1.5" fill="#b8a890" fill-opacity="0.20"/>
+    </g>
+
+    <!-- L3→L4 -->
+    <line x1="580" y1="714" x2="580" y2="760" stroke="#b8a890" stroke-opacity="0.22" stroke-width="1.2" stroke-dasharray="3,6"/>
+    <circle cx="580" cy="737" r="3" fill="#09090b" stroke="#b8a890" stroke-opacity="0.32" stroke-width="1.2"/>
+
+    <!-- ============================================================ -->
+    <!-- L4: TOOLS LAYER -->
+    <!-- ============================================================ -->
+    <g transform="translate(0, 768)">
+      <rect x="48" y="0" width="1064" height="152" rx="12" fill="url(#bg-tool)" stroke="#8aaa90" stroke-opacity="0.18" stroke-width="0.8" filter="url(#e1)"/>
+
+      <rect x="48" y="0" width="112" height="32" rx="12" fill="url(#tag-tool)"/>
+      <text x="104" y="21" text-anchor="middle" fill="#fafafa" font-size="12" font-weight="600" letter-spacing="1.5" font-family="'Inter','Noto Sans SC',sans-serif">🔧 工具层</text>
+      <line x1="168" y1="16" x2="1104" y2="16" stroke="#8aaa90" stroke-opacity="0.06" stroke-width="0.5"/>
+
+      <text x="580" y="23" text-anchor="middle" fill="#8aaa90" fill-opacity="0.28" font-size="10.5" font-weight="500" letter-spacing="6" font-family="'Inter','Noto Sans SC',sans-serif">Obsidian 工具链</text>
+
+      <!-- 5 cards: 5×190 + 4×12 = 950+48 = 998. Margin = (1016-998)/2 = 9.
+           Start x = 72+9 = 81. -->
+      <g filter="url(#e2)">
+        <rect x="81" y="44" width="190" height="92" rx="8" fill="url(#card)" stroke="#8aaa90" stroke-opacity="0.24" stroke-width="0.8"/>
+        <line x1="83" y1="45" x2="269" y2="45" stroke="#fafafa" stroke-opacity="0.013" stroke-width="0.5"/>
+        <text x="176" y="76" text-anchor="middle" font-size="20">⌨️</text>
+        <text x="176" y="100" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">obsidian-cli</text>
+        <text x="176" y="120" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">命令行读写操作</text>
+
+        <rect x="283" y="44" width="190" height="92" rx="8" fill="url(#card)" stroke="#8aaa90" stroke-opacity="0.24" stroke-width="0.8"/>
+        <line x1="285" y1="45" x2="471" y2="45" stroke="#fafafa" stroke-opacity="0.013" stroke-width="0.5"/>
+        <text x="378" y="76" text-anchor="middle" font-size="20">📝</text>
+        <text x="378" y="100" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">obsidian-markdown</text>
+        <text x="378" y="120" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">wiki / properties / callouts</text>
+
+        <rect x="485" y="44" width="190" height="92" rx="8" fill="url(#card)" stroke="#8aaa90" stroke-opacity="0.24" stroke-width="0.8"/>
+        <line x1="487" y1="45" x2="673" y2="45" stroke="#fafafa" stroke-opacity="0.013" stroke-width="0.5"/>
+        <text x="580" y="76" text-anchor="middle" font-size="20">🗃️</text>
+        <text x="580" y="100" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">obsidian-bases</text>
+        <text x="580" y="120" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">数据库视图操作</text>
+
+        <rect x="687" y="44" width="190" height="92" rx="8" fill="url(#card)" stroke="#8aaa90" stroke-opacity="0.24" stroke-width="0.8"/>
+        <line x1="689" y1="45" x2="875" y2="45" stroke="#fafafa" stroke-opacity="0.013" stroke-width="0.5"/>
+        <text x="782" y="76" text-anchor="middle" font-size="20">🎨</text>
+        <text x="782" y="100" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">json-canvas</text>
+        <text x="782" y="120" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">可视化画布</text>
+
+        <rect x="889" y="44" width="190" height="92" rx="8" fill="url(#card)" stroke="#8aaa90" stroke-opacity="0.24" stroke-width="0.8"/>
+        <line x1="891" y1="45" x2="1077" y2="45" stroke="#fafafa" stroke-opacity="0.013" stroke-width="0.5"/>
+        <text x="984" y="76" text-anchor="middle" font-size="20">🌐</text>
+        <text x="984" y="100" text-anchor="middle" fill="#e4e4e7" font-size="13" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">defuddle</text>
+        <text x="984" y="120" text-anchor="middle" fill="#71717a" font-size="10.5" font-family="'Inter','Noto Sans SC',sans-serif">网页 → Markdown</text>
+      </g>
+    </g>
+
+    <!-- L4→L5 -->
+    <line x1="580" y1="922" x2="580" y2="966" stroke="#8aaa90" stroke-opacity="0.22" stroke-width="1.2" stroke-dasharray="3,6"/>
+    <circle cx="580" cy="944" r="3" fill="#09090b" stroke="#8aaa90" stroke-opacity="0.32" stroke-width="1.2"/>
+
+    <!-- ============================================================ -->
+    <!-- L5: STORAGE LAYER -->
+    <!-- ============================================================ -->
+    <g transform="translate(0, 974)">
+      <rect x="48" y="0" width="1064" height="134" rx="12" fill="url(#bg-storage)" stroke="#b89090" stroke-opacity="0.18" stroke-width="0.8" filter="url(#e1)"/>
+
+      <rect x="48" y="0" width="112" height="32" rx="12" fill="url(#tag-storage)"/>
+      <text x="104" y="21" text-anchor="middle" fill="#fafafa" font-size="12" font-weight="600" letter-spacing="1.5" font-family="'Inter','Noto Sans SC',sans-serif">💾 存储层</text>
+      <line x1="168" y1="16" x2="1104" y2="16" stroke="#b89090" stroke-opacity="0.06" stroke-width="0.5"/>
+
+      <!-- Vault (elevation-3) -->
+      <rect x="140" y="22" width="880" height="98" rx="12" fill="url(#card-raised)" stroke="#b89090" stroke-opacity="0.28" stroke-width="1" filter="url(#e3)"/>
+      <line x1="142" y1="23" x2="1018" y2="23" stroke="#fafafa" stroke-opacity="0.018" stroke-width="0.5"/>
+      <!-- Title bar -->
+      <rect x="142" y="24" width="876" height="38" rx="10" fill="#b89090" fill-opacity="0.04"/>
+      <text x="580" y="49" text-anchor="middle" fill="#c4a0a0" font-size="16" font-weight="700" letter-spacing="1.5" font-family="'Inter','Noto Sans SC',sans-serif">🗄️ Obsidian Vault · 第二大脑笔记库</text>
+
+      <!-- 5 items -->
+      <rect x="164" y="70" width="158" height="38" rx="6" fill="#0c0c10" fill-opacity="0.5" stroke="#b89090" stroke-opacity="0.18" stroke-width="0.8"/>
+      <text x="243" y="94" text-anchor="middle" fill="#e4e4e7" font-size="12" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">📁 PARA 目录结构</text>
+
+      <rect x="336" y="70" width="158" height="38" rx="6" fill="#0c0c10" fill-opacity="0.5" stroke="#b89090" stroke-opacity="0.18" stroke-width="0.8"/>
+      <text x="415" y="94" text-anchor="middle" fill="#e4e4e7" font-size="12" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">📄 .md 笔记文件</text>
+
+      <rect x="508" y="70" width="174" height="38" rx="6" fill="#0c0c10" fill-opacity="0.5" stroke="#b89090" stroke-opacity="0.18" stroke-width="0.8"/>
+      <text x="595" y="94" text-anchor="middle" fill="#e4e4e7" font-size="12" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">🗃️ hub-state.json</text>
+
+      <rect x="696" y="70" width="158" height="38" rx="6" fill="#0c0c10" fill-opacity="0.5" stroke="#b89090" stroke-opacity="0.18" stroke-width="0.8"/>
+      <text x="775" y="94" text-anchor="middle" fill="#e4e4e7" font-size="12" font-weight="600" font-family="'Inter','Noto Sans SC',sans-serif">🎨 .canvas 画布</text>
+
+      <rect x="868" y="70" width="128" height="38" rx="6" fill="#0c0c10" fill-opacity="0.5" stroke="#b89090" stroke-opacity="0.18" stroke-width="0.8"/>
+      <text x="932" y="94" text-anchor="middle" fill="#52525b" font-size="12" font-family="'Inter','Noto Sans SC',sans-serif">...</text>
+    </g>
+
+    <!-- ============================================================ -->
+    <!-- LEFT TIMELINE -->
+    <!-- ============================================================ -->
+    <g>
+      <line x1="30" y1="56" x2="30" y2="1108" stroke="#27272a" stroke-width="0.8"/>
+      <circle cx="30" cy="56" r="5.5" fill="#09090b" stroke="#94a3b8" stroke-opacity="0.45" stroke-width="1.5"/>
+      <circle cx="30" cy="268" r="5.5" fill="#09090b" stroke="#8b8ab8" stroke-opacity="0.45" stroke-width="1.5"/>
+      <circle cx="30" cy="568" r="5.5" fill="#09090b" stroke="#b8a890" stroke-opacity="0.45" stroke-width="1.5"/>
+      <circle cx="30" cy="844" r="5.5" fill="#09090b" stroke="#8aaa90" stroke-opacity="0.45" stroke-width="1.5"/>
+      <circle cx="30" cy="1041" r="5.5" fill="#09090b" stroke="#b89090" stroke-opacity="0.45" stroke-width="1.5"/>
+    </g>
+
+    <!-- ============================================================ -->
+    <!-- RIGHT: FLOW LABELS -->
+    <!-- ============================================================ -->
+    <g>
+      <text x="1142" y="380" fill="#3f3f46" font-size="9.5" font-weight="600" letter-spacing="4" font-family="'Inter',sans-serif" transform="rotate(-90, 1142, 380)">DATA ↓</text>
+      <line x1="1145" y1="450" x2="1145" y2="840" stroke="#27272a" stroke-opacity="0.40" stroke-width="0.8"/>
+
+      <text x="1130" y="840" fill="#b8a890" fill-opacity="0.18" font-size="9.5" font-weight="600" letter-spacing="4" font-family="'Inter',sans-serif" transform="rotate(-90, 1130, 840)">FEEDBACK ↑</text>
+      <line x1="1133" y1="820" x2="1133" y2="470" stroke="#b8a890" stroke-opacity="0.10" stroke-width="0.8" stroke-dasharray="4,10"/>
+    </g>
+
+    <!-- ============================================================ -->
+    <!-- BOTTOM: SCENE BAR -->
+    <!-- ============================================================ -->
+    <g transform="translate(0, 1116)">
+      <rect x="160" y="0" width="840" height="22" rx="6" fill="#18181b" stroke="#27272a" stroke-opacity="0.35" stroke-width="0.6"/>
+      <line x1="162" y1="1" x2="998" y2="1" stroke="#fafafa" stroke-opacity="0.008" stroke-width="0.5"/>
+      <text x="580" y="15" text-anchor="middle" fill="#52525b" font-size="10.5" font-weight="500" letter-spacing="0.5" font-family="'Inter','Noto Sans SC',sans-serif">
+        🔖 灵感速记  ·  📄 保存外源  ·  ✂️ 提炼加工  ·  ✍️ 创作启动  ·  📊 回顾整理  ·  🔍 探索查询
+      </text>
+    </g>
+
+    <!-- ============================================================ -->
+    <!-- VERSION TAG -->
+    <!-- ============================================================ -->
+    <text x="1150" y="1135" text-anchor="end" fill="#27272a" fill-opacity="0.5" font-size="8" font-family="'Inter',sans-serif" letter-spacing="2">V8</text>
+
+  </svg>
+</div>
+</body>
+</html>

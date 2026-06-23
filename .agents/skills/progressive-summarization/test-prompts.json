@@ -1,0 +1,52 @@
+{
+  "skill": "progressive-summarization",
+  "version": "0.1.0",
+  "source_book": "《打造第二大脑》 — 蒂亚戈·福特",
+  "darwin_compatible": true,
+  "test_cases": [
+    {
+      "id": "should-trigger-01",
+      "type": "should_trigger",
+      "prompt": "我读了很多书也做了笔记，但过几个月再看这些笔记时，发现还是得从头到尾重新读一遍才能想起来讲了什么，做笔记的时间感觉白费了。",
+      "expected_behavior": "应激活 progressive-summarization，介绍分层提炼技术，让用户对一条笔记尝试加粗+高亮处理",
+      "notes": "典型的'笔记有但不可用'场景"
+    },
+    {
+      "id": "should-trigger-02",
+      "type": "should_trigger",
+      "prompt": "我要在团队里做一个读书分享，书是三个月前看的，笔记有好几页。怎么快速提取最重要的内容？",
+      "expected_behavior": "应激活 progressive-summarization，引导用户对笔记执行第2-3层提炼（加粗+高亮），将几页笔记压缩为可在10分钟内回顾的精华",
+      "notes": "有明确输出目标的提炼场景——这是渐进式归纳法的最佳应用时机"
+    },
+    {
+      "id": "should-trigger-03",
+      "type": "should_trigger",
+      "prompt": "我有个习惯，看完文章会把大段大段的文字复制到笔记里。现在笔记越来越长，根本看不下去。怎么改善？",
+      "expected_behavior": "应激活 progressive-summarization，强调'笔记篇幅不超过原文10%'原则，并介绍四层级递进提炼",
+      "notes": "典型的过度抓取导致的笔记膨胀问题"
+    },
+    {
+      "id": "should-not-trigger-01",
+      "type": "should_not_trigger",
+      "prompt": "我在读一本很难的哲学书，想在书上直接做详细的边注和批注，有什么好的标注方法？",
+      "expected_behavior": "不应激活本skill，这是学术精读场景，需要完整保留上下文和详细注释，渐进式归纳法不适用于'第一次读就需要深度标注'的场景",
+      "notes": "诱饵：学术精读而非笔记提炼"
+    },
+    {
+      "id": "should-not-trigger-02",
+      "type": "should_not_trigger",
+      "prompt": "我想整理一下整个笔记库，把所有笔记都画上重点，需要多长时间？",
+      "expected_behavior": "不应激活本skill（至少不应鼓励全库提炼），应警告'漫无目的的提炼'是最大的陷阱——只在有明确创作目标时才深度提炼",
+      "notes": "诱饵：批量全库整理——正是书中警告的反模式"
+    },
+    {
+      "id": "edge-01",
+      "type": "edge_case",
+      "prompt": "我用AI工具（如Notion AI或ChatGPT）自动总结文章和书籍，这样还需要手动做渐进式归纳吗？",
+      "expected_behavior": "可激活但不强制——AI总结可以作为第1层（原始摘录的替代），但作者主张'用自己的话写纲要'（第4层）对深度理解和未来使用更有效。可以建议AI辅助第1层、人工完成第2-4层",
+      "notes": "边界：AI工具的介入改变了传统提炼流程"
+    }
+  ],
+  "minimum_pass_rate": 0.8,
+  "notes": "3条should_trigger + 2条should_not_trigger + 1条edge_case。"
+}
