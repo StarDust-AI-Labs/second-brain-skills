@@ -1,0 +1,195 @@
+# Hub 端到端验收运行手册
+
+- 适用范围: `second-brain-hub` 的意图识别、场景路由、状态读取、Obsidian 写入/降级策略
+- 当前权威 Skill 源: `.agents/skills/second-brain-hub/`
+- Legacy mirror: `.claude/skills/second-brain-hub/`
+- 项目级状态: `.claude/hub-state.json`
+
+---
+
+## 1. 每次修改 Hub 后必须做的检查
+
+### 1.1 测试提示结构校验
+
+在仓库根目录执行:
+
+```powershell
+.\scripts\validate-test-prompts.ps1
+```
+
+通过标准:
+
+- JSON 可解析。
+- 每条用例包含 `id`、`scene`、`input`。
+- 每条用例包含 `expected_intent` 或 `expected_behavior`。
+- `id` 无重复。
+- 覆盖灵感速记、保存外源、提炼加工、创作启动、收件箱处理、回顾整理、探索查询、不确定、不应触发。
+- `.agents` 与 `.claude` 两份 Hub 测试提示一致。
+
+### 1.2 状态文件检查
+
+确认 `.claude/hub-state.json` 存在，并包含:
+
+- `version`
+- `active_projects`
+- `last_operations`
+- `preferences.vault_path`
+- `preferences.vault_name`
+- `preferences.default_distill_level`
+- `preferences.inbox_warning_threshold`
+- `twelve_problems`
+
+如果缺失 `vault_path` 或 `vault_name`，Hub 必须先引导用户配置 Vault，不应继续写入。
+
+---
+
+## 2. 人工端到端验收场景
+
+人工验收不要求一次性真实写入所有笔记；可以先做 dry-run，确认 Hub 的决策、路径和反馈格式正确。
+
+### 场景 A: 灵感速记
+
+输入:
+
+```text
+记一下，刚想到可以用 AI 自动生成视频分镜脚本
+```
+
+预期:
+
+- 识别为 `灵感速记`。
+- 使用 active_projects 提示归属，优先推断为 `AI视频创作`。
+- 不强制调用 `capture-criteria`。
+- 输出应包含目标路径、标题、frontmatter 核心字段和下一步反馈。
+
+### 场景 B: 保存外源
+
+输入:
+
+```text
+保存这篇文章 https://example.com/blog/second-brain-tips
+```
+
+预期:
+
+- 识别为 `保存外源`。
+- 调度链包含 `defuddle -> capture-criteria -> para-system -> progressive-summarization -> obsidian-cli`。
+- 如果 defuddle 不可用，应要求用户粘贴正文，而不是中断。
+- 输出应说明保存位置、摘录比例、`distill_level`。
+
+### 场景 C: 提炼加工
+
+输入:
+
+```text
+给这篇笔记画一下重点，加粗关键句
+```
+
+预期:
+
+- 识别为 `提炼加工`。
+- 默认执行 L1+L2，或根据用户指定层级执行。
+- 更新 `status` 与 `distill_level`。
+- 不应把没有 URL 的“总结”误判为保存外源。
+
+### 场景 D: 创作启动
+
+输入:
+
+```text
+帮我做一个关于第二大脑的分享 PPT 大纲
+```
+
+预期:
+
+- 识别为 `创作启动`。
+- 调度链包含素材检索、渐进提炼、思想群岛、海明威之桥。
+- 输出至少包含素材清单、大纲、草稿/下一步行动的写入计划。
+
+### 场景 E: 收件箱处理
+
+输入:
+
+```text
+帮我清理一下收件箱
+```
+
+预期:
+
+- 识别为 `收件箱处理`，不是 `回顾整理`。
+- 先列出收件箱概览。
+- 超过阈值时建议批量模式。
+- 批量移动或删除前必须展示 preview 并等待确认。
+
+### 场景 F: 回顾整理
+
+输入:
+
+```text
+回顾一下这周做了什么
+```
+
+预期:
+
+- 识别为 `回顾整理`。
+- 仅读取并报告收件箱数量，不直接处理收件箱。
+- 输出结构包含本周核心、收件箱、活跃项目、需要关注。
+
+### 场景 G: 探索查询
+
+输入:
+
+```text
+找一下关于 AI 视频创作的笔记
+```
+
+预期:
+
+- 识别为 `探索查询`。
+- 使用 Obsidian 搜索。
+- 如果 `twelve_problems` 已配置，应尝试匹配相关问题编号。
+
+### 场景 H: 不应触发 Hub
+
+输入:
+
+```text
+今天天气怎么样
+```
+
+预期:
+
+- 不触发 Hub。
+- 不读写 Vault。
+- 直接回答或调用天气能力。
+
+---
+
+## 3. 通过标准
+
+一次 Hub 版本可以标记为通过验收，当且仅当:
+
+1. `.\scripts\validate-test-prompts.ps1` 通过。
+2. `.agents` 与 `.claude` 的 Hub 测试提示一致。
+3. 状态文件路径说明全部指向 `.claude/hub-state.json`，`.Codex/hub-state.json` 只作为 legacy fallback。
+4. 上述 8 个场景的意图识别和调度链人工复核通过。
+5. 所有批量写入/移动/删除都具备 preview/confirm/report 的安全边界。
+
+---
+
+## 4. 记录验收结果
+
+每次版本完成后，在 `docs/superpowers/reports/` 下新增验收报告，建议命名:
+
+```text
+YYYY-MM-DD-second-brain-hub-vX.Y-acceptance.md
+```
+
+报告至少包含:
+
+- 版本范围。
+- 涉及文件。
+- 测试命令与结果。
+- 人工验收场景。
+- 已知风险。
+- 下一步建议。

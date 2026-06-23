@@ -1,12 +1,13 @@
 # 🧠 第二大脑 · Skill 生态
 
-> 基于蒂亚戈·福特《打造第二大脑》构建的 Claude Code 知识管理技能体系——将"信息消费"转化为"知识创造"。
+> 基于蒂亚戈·福特《打造第二大脑》构建的 Claude Code 知识管理技能体系——将"信息消费"转化为"知识创造"，基于obsidian技能全面掌管你的数字笔记。
 
 ---
 
 ## 项目简介
 
-本项目是一套完整的**个人知识管理（PKM）Skill 体系**，运行在 Claude Code 平台上。它将《打造第二大脑》中的 CODE 信管法则蒸馏为 9 个可执行的方法论 Skill + 5 个 Obsidian 工具 Skill，并通过一个中枢调度器（`second-brain-hub`）统一编排，最终将知识写入 Obsidian 笔记库。
+本项目是一套完整的**个人知识管理（PKM）Skill 体系**，运行在 Claude Code 平台上。
+它将《打造第二大脑》中的 CODE 信管法则蒸馏为 9 个可执行的方法论 Skill + 5 个 Obsidian 工具 Skill，并通过一个中枢调度器（`second-brain-hub`）统一编排，最终将知识写入 Obsidian 笔记库。
 
 **核心理念**：信息管理的终点不是"知道"，而是"做出"。
 
@@ -14,29 +15,45 @@
 
 ## 架构概览
 
+> 五层架构：输入层 → Agent层 → 方法论层 → 工具层 → 存储层
+
 ```
-用户输入（语音/链接/文本）
-        │
-        ▼
-┌─────────────────────────┐
-│   second-brain-hub      │  ← 中枢调度器
-│   意图识别 · 场景路由     │
-│   上下文记忆 · 统一写入    │
-└────┬────────────────────┘
-     │ 调度
-     ▼
-┌──────────────┐   ┌──────────────────┐
-│ 9个方法论Skill │   │ 5个Obsidian Skill │
-│ (CODE体系)    │   │ (工具层)          │
-└──────┬───────┘   └────────┬─────────┘
-       │                    │
-       └────────┬───────────┘
-                ▼
-     ┌─────────────────┐
-     │  Obsidian Vault  │
-     │  第二大脑笔记库    │
-     └─────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  📥 输入层                                           │
+│  语音转写 · 网页链接 · 文件上传 · 聊天消息               │
+├─────────────────────────────────────────────────────┤
+│  🤖 Agent层                                         │
+│  ┌─────────────────────────────────────────────┐    │
+│  │  🧭 second-brain-hub · 中枢调度器              │    │
+│  │  意图识别 · 场景路由 · 上下文记忆 · 统一写入     │    │
+│  └─────────────────────────────────────────────┘    │
+├─────────────────────────────────────────────────────┤
+│  📚 方法论层  (C·O·D·E 信管法则)                     │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐│
+│  │📋 抓取    │ │🗂️ 组织   │ │✨ 提炼    │ │🚀 表达   ││
+│  │capture   │ │Organize  │ │Distill   │ │Express   ││
+│  │criteria  │ │para-     │ │prog-     │ │inter-    ││
+│  │twelve-   │ │system    │ │ressive-  │ │mediate-  ││
+│  │problems  │ │          │ │summari-  │ │packets   ││
+│  │          │ │          │ │zation    │ │creative- ││
+│  │          │ │          │ │diverge-  │ │workflow  ││
+│  │          │ │          │ │converge  │ │          ││
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘│
+│  🧭 second-brain-code  ·  🔄 knowledge-lifecycle    │
+├─────────────────────────────────────────────────────┤
+│  🔧 工具层 (Obsidian 工具链)                          │
+│  obsidian-cli · obsidian-markdown · obsidian-bases  │
+│  json-canvas  ·  defuddle                           │
+├─────────────────────────────────────────────────────┤
+│  💾 存储层                                           │
+│  ┌─────────────────────────────────────────────┐    │
+│  │  🗄️ Obsidian Vault · 第二大脑笔记库          │    │
+│  │  PARA目录 · .md笔记 · hub-state.json · .canvas  │
+│  └─────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────┘
 ```
+
+> 🎨 完整 SVG 架构图：[architecture-diagram-v8.html](docs/architecture-diagram-v8.html)
 
 ---
 
@@ -91,7 +108,7 @@
 
 ```
 second-brain/
-├── .claude/skills/          # Claude Code Skill 文件
+├── .agents/skills/          # 当前 Codex 运行时权威 Skill 源
 │   ├── second-brain-hub/    # 中枢调度器（MVP核心）
 │   ├── second-brain-code/   # CODE 信管法则
 │   ├── capture-criteria/    # 抓取标准
@@ -103,9 +120,15 @@ second-brain/
 │   ├── intermediate-packets/
 │   ├── knowledge-lifecycle/
 │   └── obsidian-skills-main/ # 5个Obsidian工具skill
+├── .claude/                 # Claude Code legacy mirror + Hub 状态文件
+│   ├── hub-state.json       # 项目级 Hub 配置（Vault 路径、偏好、活跃项目）
+│   └── skills/              # legacy mirror；变更时需与 .agents/skills 同步
 ├── docs/superpowers/        # 设计文档
 │   ├── specs/               # 设计方案
 │   └── plans/               # 实施计划
+├── docs/runbooks/           # 人工验收与运行手册
+├── docs/reference/          # 状态 schema、字段规范
+├── scripts/                 # 轻量验证脚本
 ├── books/                   # 拆书审计记录
 │   └── building-second-brain/
 │       ├── INDEX.md         # Skill索引+依赖图
@@ -113,6 +136,16 @@ second-brain/
 │       └── rejected/        # 被淘汰的候选
 └── CLAUDE.md                # 项目指令
 ```
+
+---
+
+## 运行时约定
+
+- **权威 Skill 源**：当前 Codex 环境以 `.agents/skills/` 为准。
+- **Legacy mirror**：`.claude/skills/` 保留给 Claude Code 历史兼容；修改 Hub 或方法论 Skill 时，两边必须同步。
+- **项目级状态文件**：`.claude/hub-state.json` 是 Hub 的权威配置，保存 `vault_path`、`vault_name`、`active_projects`、偏好和 12 问题清单。
+- **Vault 运行态状态**：`{vault_path}/.obsidian/hub-state.json` 保存 Vault 内运行记录；不存在时由 Hub 根据项目级配置创建。
+- **旧路径兼容**：历史文档中出现的 `.Codex/hub-state.json` 已降级为 legacy fallback，不再作为权威路径。
 
 ---
 
@@ -131,7 +164,7 @@ second-brain/
 | 阶段 | 内容 | 状态 |
 |------|------|------|
 | **MVP (P0)** | Vault PARA重组 + Hub中枢 + 灵感速记 + 保存外源 | ✅ 已完成 |
-| **v1.1 (P1)** | 收件箱批量处理 + 创作启动 + 渐进归纳深度集成 | 🔜 计划中 |
+| **v1.1 (P1)** | 收件箱批量处理 + 创作启动 + 渐进归纳深度集成 | ✅ 已完成 |
 | **v1.2 (P2)** | 周月回顾 + 12问题过滤 + Bases仪表盘 | 📋 计划中 |
 | **v2.0 (P3)** | Cron定时回顾 + 收件箱预警 + 项目停滞检测 | 📋 计划中 |
 
@@ -140,7 +173,7 @@ second-brain/
 ## 依赖环境
 
 - **Claude Code** — Skill 运行平台
-- **Obsidian** — 笔记存储与浏览（Vault 路径：`D:\second-brain\第二大脑\`）
+- **Obsidian** — 笔记存储与浏览（Vault 路径：用户配置的本地obsidian笔记存放目录）
 - **Obsidian CLI** — 命令行笔记操作（可选，有降级方案）
 
 ---
