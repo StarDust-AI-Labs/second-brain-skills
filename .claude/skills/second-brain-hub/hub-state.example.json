@@ -1,0 +1,19 @@
+{
+  "version": "1.1",
+  "updated": "2026-06-23",
+  "active_projects": [],
+  "inbox_count": 0,
+  "inbox_last_cleared": null,
+  "active_bridges": [],
+  "last_operations": [],
+  "preferences": {
+    "vault_path": null,
+    "vault_name": null,
+    "default_distill_level": 1,
+    "weekly_review_day": "friday",
+    "inbox_warning_threshold": 15,
+    "auto_distill_l2_on_revisit": true,
+    "auto_distill_l3_on_create": true
+  },
+  "twelve_problems": []
+}

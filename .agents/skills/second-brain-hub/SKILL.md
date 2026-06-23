@@ -31,27 +31,27 @@ Hub 是第二大脑系统的**唯一入口**，负责三件事：
 **Hub 的独特价值**：记住上下文（hub-state.json）、编排多 skill 协作、确保写入格式一致。
 
 ---
-## 第零步：定位 Vault（最先执行）
+## 第零步：加载配置并定位 Vault（最先执行）
 
-每次被激活时，Hub 必须先确定 Vault 位置：
+每次被激活时，Hub 必须先确定 Vault 位置。**不要在 Skill 内硬编码任何真实本地路径**；真实路径只能来自用户配置、环境变量或本地未提交的运行态状态文件。
 
 ```
-1. 读取项目目录下的权威配置文件:
-   {项目根目录}/.claude/hub-state.json
-   例: D:\aiCoding\projects\second-brain\.claude\hub-state.json
+1. 按以下优先级读取配置:
+   a. 本轮对话中用户显式提供的 vault_path / vault_name
+   b. 当前项目的本地运行态配置: {项目根目录}/.claude/hub-state.json
+   c. Skill 安装目录旁的本地运行态配置: {skill目录}/hub-state.json
+   d. 环境变量: SECOND_BRAIN_VAULT_PATH / SECOND_BRAIN_VAULT_NAME
+   e. Legacy fallback: {项目根目录}/.Codex/hub-state.json
 
-   兼容读取顺序:
-   - 首选: .claude/hub-state.json
-   - 兼容: .Codex/hub-state.json (legacy)
-   - 若两者同时存在, 以 .claude/hub-state.json 为准
+   若多个来源同时存在, 使用优先级最高的来源。
 
 2. 从配置中提取关键变量:
-   vault_path = preferences.vault_path   (例: D:\second-brain\第二大脑)
-   vault_name = preferences.vault_name   (例: 第二大脑)
+   vault_path = preferences.vault_path
+   vault_name = preferences.vault_name
    active_projects = active_projects
    twelve_problems = twelve_problems
 
-3. 若 hub-state.json 不存在 → 使用默认值创建:
+3. 若没有任何配置文件 → 参考 hub-state.example.json 创建本地 hub-state.json:
    vault_path: null  (首次使用需引导用户配置)
    vault_name: null
    active_projects: []
@@ -62,8 +62,13 @@ Hub 是第二大脑系统的**唯一入口**，负责三件事：
 
 **Vault 路径未配置时的引导流程**：
 > 若 vault_path 为 null，询问用户：
-> "请告诉我你的 Obsidian Vault 路径和名称（例：D:\MyVault，名称：我的笔记）"
-> 将用户回答写入 hub-state.json 的 preferences 中，然后继续。
+> "请告诉我你的 Obsidian Vault 绝对路径和 Vault 名称。"
+> 将用户回答写入本地 hub-state.json 的 preferences 中，然后继续。
+
+**安装包约束**：
+- Skill 仓库只应提交 `hub-state.example.json`，不应提交包含真实 `vault_path` 的 `hub-state.json`。
+- 文档和示例可以使用 `<你的 Vault 绝对路径>` 这类占位符，不要写入某台机器的真实路径。
+- 如果 agent 没有文件写入权限，就在本轮对话中记住配置，并提示用户稍后手动创建本地配置文件。
 
 ---
 
@@ -487,6 +492,6 @@ second-brain-hub (本 skill)
 
 - **创建日期**: 2026-06-13
 - **依赖 skill**: 14 个（9 方法论 + 5 Obsidian）
-- **Vault 路径**: 由 `{项目}/.claude/hub-state.json` 中 `preferences.vault_path` 动态指定
+- **Vault 路径**: 由本地 `hub-state.json`、环境变量或用户显式输入动态指定
 - **Vault 名称**: 由 `preferences.vault_name` 动态指定
-- **状态文件**: `{vault_path}\.obsidian\hub-state.json` + `.claude/hub-state.json`
+- **状态文件**: `{vault_path}\.obsidian\hub-state.json` + 本地 `hub-state.json`

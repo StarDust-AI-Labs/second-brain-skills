@@ -120,8 +120,9 @@ second-brain/
 │   ├── intermediate-packets/
 │   ├── knowledge-lifecycle/
 │   └── obsidian-skills-main/ # 5个Obsidian工具skill
-├── .claude/                 # Claude Code legacy mirror + Hub 状态文件
-│   ├── hub-state.json       # 项目级 Hub 配置（Vault 路径、偏好、活跃项目）
+├── .claude/                 # Claude Code legacy mirror + Hub 配置模板
+│   ├── hub-state.example.json # 可提交的配置模板
+│   ├── hub-state.json       # 本地运行态配置（不提交，首次运行时创建）
 │   └── skills/              # legacy mirror；变更时需与 .agents/skills 同步
 ├── docs/superpowers/        # 设计文档
 │   ├── specs/               # 设计方案
@@ -143,9 +144,42 @@ second-brain/
 
 - **权威 Skill 源**：当前 Codex 环境以 `.agents/skills/` 为准。
 - **Legacy mirror**：`.claude/skills/` 保留给 Claude Code 历史兼容；修改 Hub 或方法论 Skill 时，两边必须同步。
-- **项目级状态文件**：`.claude/hub-state.json` 是 Hub 的权威配置，保存 `vault_path`、`vault_name`、`active_projects`、偏好和 12 问题清单。
+- **配置模板**：`.claude/hub-state.example.json` 可随 Skill 一起安装，真实配置从模板复制生成。
+- **本地运行态配置**：`.claude/hub-state.json` 保存 `vault_path`、`vault_name`、`active_projects`、偏好和 12 问题清单，属于本地文件，不提交到版本库。
 - **Vault 运行态状态**：`{vault_path}/.obsidian/hub-state.json` 保存 Vault 内运行记录；不存在时由 Hub 根据项目级配置创建。
 - **旧路径兼容**：历史文档中出现的 `.Codex/hub-state.json` 已降级为 legacy fallback，不再作为权威路径。
+
+### 首次安装配置
+
+复制配置模板并填写你自己的 Obsidian Vault 信息。若安装的是整个项目，使用项目级模板：
+
+```powershell
+Copy-Item .claude\hub-state.example.json .claude\hub-state.json
+```
+
+若只把 `second-brain-hub` Skill 单独安装给 agent，复制 Skill 目录旁的模板：
+
+```powershell
+Copy-Item <second-brain-hub-skill-dir>\hub-state.example.json <second-brain-hub-skill-dir>\hub-state.json
+```
+
+然后编辑本地 `hub-state.json`：
+
+```json
+{
+  "preferences": {
+    "vault_path": "<你的 Obsidian Vault 绝对路径>",
+    "vault_name": "<你的 Obsidian Vault 名称>"
+  }
+}
+```
+
+也可以不创建文件，改用环境变量：
+
+```powershell
+$env:SECOND_BRAIN_VAULT_PATH = "<你的 Obsidian Vault 绝对路径>"
+$env:SECOND_BRAIN_VAULT_NAME = "<你的 Obsidian Vault 名称>"
+```
 
 ---
 

@@ -1,4 +1,4 @@
-# 第二大脑 Hub 系统设计方案
+﻿# 第二大脑 Hub 系统设计方案
 
 - **日期**: 2026-06-12
 - **版本**: v1.0
@@ -23,7 +23,7 @@
 |------|-------|------|
 | 方法论层 | second-brain-code, capture-criteria, twelve-favorite-problems, para-system, progressive-summarization, creative-workflow, diverge-converge, intermediate-packets, knowledge-lifecycle | 9 |
 | 工具层 | obsidian-markdown, obsidian-cli, obsidian-bases, json-canvas, defuddle | 5 |
-| 存储层 | `D:\second-brain\第二大脑\` (Obsidian Vault) | 1 |
+| 存储层 | `<SECOND_BRAIN_VAULT>\` (Obsidian Vault) | 1 |
 
 ### 1.3 核心问题
 
@@ -62,7 +62,7 @@ Coze 3.0 App (语音·网页·文件·聊天)
                            ▼
                   ┌─────────────────┐
                   │ Obsidian Vault  │
-                  │ D:\second-brain\│
+                  │ <SECOND_BRAIN_ROOT>\│
                   │ 第二大脑/        │
                   └─────────────────┘
 ```
@@ -92,7 +92,7 @@ Coze 3.0 App (语音·网页·文件·聊天)
 
 ### 3.2 上下文记忆
 
-Hub 维护 `D:\second-brain\第二大脑\.obsidian\hub-state.json`：
+Hub 维护 `<SECOND_BRAIN_VAULT>\.obsidian\hub-state.json`：
 
 ```json
 {
@@ -206,7 +206,7 @@ second-brain-code (总框架)
 ### 5.1 当前状态
 
 ```
-D:\second-brain\第二大脑\
+<SECOND_BRAIN_VAULT>\
 ├── 欢迎.md
 ├── 打造第二大脑-方法论笔记.md
 ├── AI创作方向.md / AI创作思路.md / AI宏大叙事.md
@@ -221,7 +221,7 @@ D:\second-brain\第二大脑\
 ### 5.2 目标结构
 
 ```
-D:\second-brain\第二大脑\
+<SECOND_BRAIN_VAULT>\
 ├── 📥 收件箱/
 ├── 📂 项目/
 │   ├── 第二大脑体系搭建/

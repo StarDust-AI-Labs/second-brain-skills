@@ -33,7 +33,7 @@
 
 - `.agents/skills` 下存在完整 Skill 体系，且当前 Codex 环境正在识别这些 Skill。
 - `.claude/skills` 下也存在一套 Skill，说明项目存在“双 Skill 源”的历史遗留。
-- `.claude/hub-state.json` 存在，并包含 `vault_path`、`vault_name`、`active_projects`、自动提炼偏好等 v1.1 状态。
+- `.claude/hub-state.json` 存在，并包含 `vault_path`、`vault_name`、`active_projects`、自动提炼偏好等 v1.1 状态。若要打包安装给其他 agent，应改为本地运行态配置，不随 Skill 包提交。
 - `second-brain-hub/SKILL.md` 里要求读取 `{项目根目录}/.Codex/hub-state.json`，但当前仓库没有 `.Codex` 目录。
 - `docs/superpowers/plans/2026-06-17-second-brain-hub-v1.1.md` 只有一句完成说明，缺少验收证据、变更清单和回归测试记录。
 - `test-prompts.json` 已扩展到 30 条，覆盖了主要意图和边界，但目前仍是“提示样例”，还没有自动化验证机制。
@@ -52,11 +52,12 @@
 - README 还在描述 `.claude/skills`，但当前可用 Skill 来源是 `.agents/skills`。
 
 建议:
-- 明确一个权威配置路径。建议在当前 Codex 项目中使用 `.agents/state/hub-state.json` 或继续保留 `.claude/hub-state.json`，但 Hub SKILL、README、计划文档必须一致。
+- 明确一个可提交配置模板和一个本地运行态配置路径。建议提交 `.claude/hub-state.example.json`，真实 `.claude/hub-state.json` 由用户安装后本地创建，并加入 `.gitignore`。
 - 如果需要兼容历史路径，可以定义读取优先级:
-  1. `.agents/state/hub-state.json`
-  2. `.claude/hub-state.json`
-  3. `.Codex/hub-state.json` legacy
+  1. 用户在当前对话中显式提供的 `vault_path` / `vault_name`
+  2. 本地 `.claude/hub-state.json`
+  3. 环境变量 `SECOND_BRAIN_VAULT_PATH` / `SECOND_BRAIN_VAULT_NAME`
+  4. `.Codex/hub-state.json` legacy
 - 在 Hub SKILL 中写清楚: 找到多个状态文件时以哪个为准，是否同步写回。
 
 理由:
@@ -150,7 +151,7 @@
   - 必填/可选。
   - 默认值。
   - 版本迁移策略。
-  - 敏感路径是否允许提交。
+  - 真实本地路径禁止进入可安装 Skill 包。
 - 每次新增字段时同步更新 schema。
 
 理由:
@@ -313,7 +314,7 @@
 2. 确定 `.agents/skills` 为权威 Skill 源，并在 README 中更新。
 3. 为 `test-prompts.json` 增加校验脚本或人工验收 runbook。
 4. 补写 v1.1 验收报告。
-5. 编写 `hub-state` schema 文档。
+5. 编写 `hub-state` schema 文档，并确保真实 `vault_path` 不进入可安装 Skill 包。
 
 这 5 件事做完之后，再推进 v1.2 会稳很多。
 

@@ -7,3 +7,13 @@
 .obsidian/workspace*.json
 .obsidian/workspace-mobile.json
 .obsidian/cache
+
+# Local second-brain runtime config
+.claude/hub-state.json
+.Codex/hub-state.json
+**/hub-state.local.json
+**/second-brain-hub/hub-state.json
+.claude/settings.local.json
+.claude/scheduled_tasks.json
+.claude/scheduled_tasks.lock
+.superpowers/
