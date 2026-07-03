@@ -1,0 +1,72 @@
+[
+  {
+    "id": "intent-001",
+    "input": "记一下，刚才想到可以用AI自动生成视频分镜脚本",
+    "expected_intent": "灵感速记"
+  },
+  {
+    "id": "intent-002",
+    "input": "保存这篇文章 https://example.com/second-brain",
+    "expected_intent": "保存外源"
+  },
+  {
+    "id": "intent-003",
+    "input": "这篇文章值得收藏 https://example.com/pkm",
+    "expected_intent": "保存外源"
+  },
+  {
+    "id": "intent-004",
+    "input": "帮我提炼一下这篇文章的重点",
+    "expected_intent": "提炼加工"
+  },
+  {
+    "id": "intent-005",
+    "input": "给这篇笔记画一下重点，加粗关键句",
+    "expected_intent": "提炼加工"
+  },
+  {
+    "id": "intent-006",
+    "input": "我想写一篇关于AI如何改变创作方式的文章",
+    "expected_intent": "创作启动"
+  },
+  {
+    "id": "intent-007",
+    "input": "帮我做一个关于第二大脑的分享PPT大纲",
+    "expected_intent": "创作启动"
+  },
+  {
+    "id": "intent-008",
+    "input": "清理一下收件箱",
+    "expected_intent": "收件箱处理"
+  },
+  {
+    "id": "intent-009",
+    "input": "回顾一下这周做了什么",
+    "expected_intent": "回顾整理"
+  },
+  {
+    "id": "intent-010",
+    "input": "找一下关于AI视频创作的笔记",
+    "expected_intent": "探索查询"
+  },
+  {
+    "id": "intent-011",
+    "input": "有没有关于知识管理的笔记？",
+    "expected_intent": "探索查询"
+  },
+  {
+    "id": "intent-012",
+    "input": "帮我看看",
+    "expected_intent": "不确定"
+  },
+  {
+    "id": "intent-013",
+    "input": "今天天气怎么样",
+    "expected_intent": null
+  },
+  {
+    "id": "intent-014",
+    "input": "整理一下收件箱和本周笔记",
+    "expected_intent": "收件箱处理"
+  }
+]

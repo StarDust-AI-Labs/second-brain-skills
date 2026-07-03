@@ -1,0 +1,38 @@
+[
+  {
+    "skill": "second-brain-hub",
+    "required_gates": [
+      "vault-config",
+      "intent-confirmed",
+      "para-classified-before-write"
+    ]
+  },
+  {
+    "skill": "capture-criteria",
+    "required_gates": [
+      "resonance-before-capture",
+      "extract-limit-before-save"
+    ]
+  },
+  {
+    "skill": "para-system",
+    "required_gates": [
+      "outcome-before-category",
+      "target-path-before-write"
+    ]
+  },
+  {
+    "skill": "progressive-summarization",
+    "required_gates": [
+      "source-selected-before-distill",
+      "density-limit-before-update"
+    ]
+  },
+  {
+    "skill": "creative-workflow",
+    "required_gates": [
+      "blocker-diagnosed-before-workflow",
+      "next-artifact-before-finish"
+    ]
+  }
+]
