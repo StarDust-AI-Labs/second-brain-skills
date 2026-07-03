@@ -13,6 +13,61 @@
 
 ---
 
+## 给其他用户的复制提示词
+
+把下面这段提示词直接发给你的 agent，它会自动下载本项目、安装 Skill，并引导你对接本地 Obsidian 知识库：
+
+```text
+请帮我安装并配置 second-brain-skill 项目，用它来管理我的本地 Obsidian 知识库。
+
+请按下面步骤执行：
+
+1. 下载项目：
+   - 优先克隆仓库 git@gitee.com:hyniubi/second-brain-skill.git
+   - 如果当前环境不能使用 SSH，请提示我提供 HTTPS 地址或 Git 凭据
+
+2. 阅读项目 README.md 和 .agents/skills/ 下各 Skill 的说明，确认当前 agent 支持的 Skill 安装目录。
+   - 如果我是 Codex 环境，优先安装到当前工作区的 .agents/skills/，或 agent 约定的用户级 skills 目录
+   - 如果我是 Claude Code 环境，同时兼容 .claude/skills/
+   - 不要覆盖我已有的同名 Skill，覆盖前先列出差异并询问我
+
+3. 安装本项目的核心 Skill：
+   - second-brain-hub
+   - second-brain-code
+   - capture-criteria
+   - twelve-favorite-problems
+   - para-system
+   - progressive-summarization
+   - creative-workflow
+   - diverge-converge
+   - intermediate-packets
+   - knowledge-lifecycle
+   - obsidian-skills-main 里的 Obsidian 工具 Skill
+
+4. 引导我对接本地 Obsidian Vault：
+   - 询问我的 Obsidian Vault 绝对路径
+   - 询问我的 Vault 名称
+   - 从 .claude/hub-state.example.json 复制生成本地 hub-state.json
+   - 写入 preferences.vault_path 和 preferences.vault_name
+   - 确认 hub-state.json 不提交到 Git
+
+5. 做一次最小可用验证：
+   - 检查 Vault 路径是否存在
+   - 检查是否能创建或更新 Markdown 笔记
+   - 用一句测试输入“记一下：这是 second-brain-skill 的安装验证”触发 second-brain-hub
+   - 把测试笔记写入 Obsidian Vault 的合适位置
+
+6. 配置完成后，请告诉我：
+   - 项目安装位置
+   - Skill 安装位置
+   - 当前绑定的 Vault 路径
+   - 我以后可以怎么对你说话来保存网页、记录灵感、整理笔记和启动创作
+
+执行时请先检查当前系统、shell、agent 类型和已有目录结构，再做文件操作。遇到不确定的安装目录或覆盖风险时先问我。
+```
+
+---
+
 ## 架构概览
 
 > 五层架构：输入层 → Agent层 → 方法论层 → 工具层 → 存储层
