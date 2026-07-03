@@ -1,9 +1,8 @@
 ---
 name: second-brain-hub
 description: |
-  第二大脑知识管理统一入口——记录灵感、保存网页、回顾整理、启动创作。
-  触发：用户说"记一下""保存这篇文章""回顾本周""写一篇""找一下"。
-  不适用于：与知识管理无关的纯对话、纯Obsidian技术问题。
+  第二大脑统一入口。触发:记一下、保存网页、回顾、写作、查找。
+  不适用:纯Obsidian技术问题。
 tags: [中枢调度, 知识管理, 工作流编排, 第二大脑, CODE]
 related_skills: [second-brain-code, capture-criteria, twelve-favorite-problems, para-system, progressive-summarization, creative-workflow, diverge-converge, intermediate-packets, knowledge-lifecycle, obsidian-cli, obsidian-markdown, obsidian-bases, json-canvas, defuddle]
 priority: highest
