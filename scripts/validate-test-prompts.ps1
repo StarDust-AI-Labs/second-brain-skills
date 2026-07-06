@@ -1,6 +1,6 @@
 param(
-    [string]$PrimaryPath = ".agents/skills/second-brain-hub/test-prompts.json",
-    [string]$MirrorPath = ".claude/skills/second-brain-hub/test-prompts.json",
+    [string]$PrimaryPath = "skills/second-brain-hub/test-prompts.json",
+    [string]$MirrorPath = "",
     [string]$StateExamplePath = ".claude/hub-state.example.json"
 )
 
@@ -37,7 +37,7 @@ function Assert-HasProperty {
 
 $primary = Read-TestPrompts -Path $PrimaryPath
 $mirror = $null
-if (Test-Path -LiteralPath $MirrorPath) {
+if ($MirrorPath -and (Test-Path -LiteralPath $MirrorPath)) {
     $mirror = Read-TestPrompts -Path $MirrorPath
 }
 

@@ -1,6 +1,6 @@
 # 🧠 第二大脑 · Skill 生态
 
-> 基于蒂亚戈·福特《打造第二大脑》构建的 Claude Code 知识管理技能体系——将"信息消费"转化为"知识创造"，基于obsidian技能全面掌管你的数字笔记。
+> 基于蒂亚戈·福特《打造第二大脑》构建的 AI Agent 知识管理技能体系——将"信息消费"转化为"知识创造"，基于 Obsidian 技能全面掌管你的数字笔记。
 
 ---
 
@@ -15,20 +15,28 @@
 
 ## 给其他用户的复制提示词
 
-把下面这段提示词直接发给你的 agent，它会自动下载本项目、安装 Skill，并引导你对接本地 Obsidian 知识库：
+把下面这段提示词直接发给你的 agent，它会自动检测运行平台、下载本项目、安装 Skill 到正确目录，并引导你对接到本地 Obsidian 知识库：
 
 ```text
 请帮我安装并配置 second-brain-skill 项目，用它来管理我的本地 Obsidian 知识库。
 
 请按下面步骤执行：
 
+0. ⚠️ 首先检测当前 agent 产品类型，确定 Skill 安装目标目录：
+   - Claude Code → 从 skills/ 复制到 .claude/skills/
+   - Codex → 从 skills/ 复制到 .agents/skills/
+   - Cursor → 从 skills/ 复制到 .cursor/skills/
+   - GitHub Copilot → 从 skills/ 复制到 .github/copilot/skills/
+   - Windsurf / Codeium / 其他 → 查找该 agent 的 skills 约定目录，找不到则询问用户
+   将检测结果和目标目录告知用户后再继续。
+   本项目以顶层 skills/ 为单一规范源，所有安装都是从此目录复制。
+
 1. 下载项目：
    - 优先克隆仓库 git@gitee.com:hyniubi/second-brain-skill.git
    - 如果当前环境不能使用 SSH，请提示我提供 HTTPS 地址或 Git 凭据
 
-2. 阅读项目 README.md 和 .agents/skills/ 下各 Skill 的说明，确认当前 agent 支持的 Skill 安装目录。
-   - 如果我是 Codex 环境，优先安装到当前工作区的 .agents/skills/，或 agent 约定的用户级 skills 目录
-   - 如果我是 Claude Code 环境，同时兼容 .claude/skills/
+2. 安装 Skill 到步骤 0 确定的目标目录：
+   - 从项目的 skills/（单一规范源）复制到目标目录
    - 不要覆盖我已有的同名 Skill，覆盖前先列出差异并询问我
 
 3. 安装本项目的核心 Skill：
@@ -54,12 +62,13 @@
 5. 做一次最小可用验证：
    - 检查 Vault 路径是否存在
    - 检查是否能创建或更新 Markdown 笔记
-   - 用一句测试输入“记一下：这是 second-brain-skill 的安装验证”触发 second-brain-hub
+   - 用一句测试输入”记一下：这是 second-brain-skill 的安装验证”触发 second-brain-hub
    - 把测试笔记写入 Obsidian Vault 的合适位置
 
 6. 配置完成后，请告诉我：
+   - 当前 agent 类型
    - 项目安装位置
-   - Skill 安装位置
+   - Skill 安装目录
    - 当前绑定的 Vault 路径
    - 我以后可以怎么对你说话来保存网页、记录灵感、整理笔记和启动创作
 
@@ -163,7 +172,7 @@
 
 ```
 second-brain/
-├── .agents/skills/          # 当前 Codex 运行时权威 Skill 源
+├── skills/                  # 单一规范源（single source of truth）
 │   ├── second-brain-hub/    # 中枢调度器（MVP核心）
 │   ├── second-brain-code/   # CODE 信管法则
 │   ├── capture-criteria/    # 抓取标准
@@ -175,16 +184,20 @@ second-brain/
 │   ├── intermediate-packets/
 │   ├── knowledge-lifecycle/
 │   └── obsidian-skills-main/ # 5个Obsidian工具skill
-├── .claude/                 # Claude Code legacy mirror + Hub 配置模板
+├── .claude/                 # Claude Code 配置目录
 │   ├── hub-state.example.json # 可提交的配置模板
 │   ├── hub-state.json       # 本地运行态配置（不提交，首次运行时创建）
-│   └── skills/              # legacy mirror；变更时需与 .agents/skills 同步
-├── docs/superpowers/        # 设计文档
-│   ├── specs/               # 设计方案
-│   └── plans/               # 实施计划
-├── docs/runbooks/           # 人工验收与运行手册
-├── docs/reference/          # 状态 schema、字段规范
+│   ├── settings.local.json  # 本地权限配置（不提交）
+│   └── scheduled_tasks.json # 定时任务配置（不提交）
+├── docs/                    # 设计文档
+│   ├── superpowers/
+│   │   ├── specs/           # 设计方案
+│   │   ├── plans/           # 实施计划
+│   │   └── reports/         # 验收报告
+│   ├── runbooks/            # 人工验收与运行手册
+│   └── reference/           # 状态 schema、字段规范
 ├── scripts/                 # 轻量验证脚本
+├── tests/                   # 评测用例
 ├── books/                   # 拆书审计记录
 │   └── building-second-brain/
 │       ├── INDEX.md         # Skill索引+依赖图
@@ -197,12 +210,12 @@ second-brain/
 
 ## 运行时约定
 
-- **权威 Skill 源**：当前 Codex 环境以 `.agents/skills/` 为准。
-- **Legacy mirror**：`.claude/skills/` 保留给 Claude Code 历史兼容；修改 Hub 或方法论 Skill 时，两边必须同步。
+- **单一规范源**：顶层 `skills/` 是本项目的唯一规范源（single source of truth），所有方法论 Skill 和 Obsidian 工具 Skill 在此维护。
+- **Agent 自适应安装**：用户克隆项目后，由 `skills/` 复制到对应 agent 的 skills 目录：Claude Code → `.claude/skills/`，Codex → `.agents/skills/`，Cursor → `.cursor/skills/`，GitHub Copilot → `.github/copilot/skills/`，其他按平台约定。
+- **多 agent 同步**：如果你同时使用多个 agent 产品，修改 Skill 内容后请确保从顶层 `skills/` 重新复制到各 agent 的目标目录。
 - **配置模板**：`.claude/hub-state.example.json` 可随 Skill 一起安装，真实配置从模板复制生成。
 - **本地运行态配置**：`.claude/hub-state.json` 保存 `vault_path`、`vault_name`、`active_projects`、偏好和 12 问题清单，属于本地文件，不提交到版本库。
 - **Vault 运行态状态**：`{vault_path}/.obsidian/hub-state.json` 保存 Vault 内运行记录；不存在时由 Hub 根据项目级配置创建。
-- **旧路径兼容**：历史文档中出现的 `.Codex/hub-state.json` 已降级为 legacy fallback，不再作为权威路径。
 
 ### 首次安装配置
 
@@ -261,8 +274,8 @@ $env:SECOND_BRAIN_VAULT_NAME = "<你的 Obsidian Vault 名称>"
 
 ## 依赖环境
 
-- **Claude Code** — Skill 运行平台
-- **Obsidian** — 笔记存储与浏览（Vault 路径：用户配置的本地obsidian笔记存放目录）
+- **AI Agent 平台**（Claude Code / Codex / Cursor / GitHub Copilot 等）— Skill 运行平台
+- **Obsidian** — 笔记存储与浏览（Vault 路径：用户配置的本地 Obsidian 笔记存放目录）
 - **Obsidian CLI** — 命令行笔记操作（可选，有降级方案）
 
 ---

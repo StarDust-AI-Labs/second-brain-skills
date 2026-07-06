@@ -92,9 +92,31 @@ tags: [Skill优化, 迭代记录, 变更日志]
 
 ---
 
-## v0.5 — P1-1 剩余 Skill 迁移（待执行）
+## v0.5 — P1-1 批量迁移：creative-workflow（2026-07-06）
 
-> 待迁移：creative-workflow、diverge-converge、intermediate-packets、knowledge-lifecycle、twelve-favorite-problems、second-brain-code
+> 将三层分离模式应用到创意工作流 Skill
+
+| 改进项 | 修改内容 | 涉及文件 | 预期效果 | 修改人 |
+|--------|---------|---------|---------|--------|
+| P1-1 批量-3 | creative-workflow 三层分离：拆出 4 个 references 文件，SKILL.md 从 226 行精简到 165 行 | `creative-workflow/SKILL.md` `references/source-quotes.md` `references/three-strategies-deep-dive.md` `references/examples.md` `references/boundary-and-failures.md` | Token 节省 ~27%，执行层完整保留 | Claude Opus 4.8 |
+
+### creative-workflow 拆分详情
+
+| 原始章节 | 归属层 | 拆分去向 |
+|---------|:------:|---------|
+| R — 原文引述 | 按需层 | → `references/source-quotes.md` |
+| I — 方法论骨架（三大策略详解） | 按需层 | → `references/three-strategies-deep-dive.md` |
+| A1 — 书中案例（3个） | 按需层 | → `references/examples.md` |
+| B — 边界与失败模式 | 按需层 | → `references/boundary-and-failures.md` |
+| A2 — 触发场景 + 语言信号 | 执行层 | ✅ 保留 |
+| E — 可执行步骤 + HARD-GATE | 执行层 | ✅ 保留 |
+| 合理化防御 (Prebuttal) | 执行层 | ✅ 保留 |
+
+---
+
+## v0.6 — P1-1 剩余 Skill 迁移（待执行）
+
+> 待迁移：diverge-converge、intermediate-packets、knowledge-lifecycle、twelve-favorite-problems、second-brain-code
 
 | 改进项 | 修改内容 | 涉及文件 | 预期效果 | 修改人 |
 |--------|---------|---------|---------|--------|
