@@ -8,15 +8,14 @@
 .obsidian/workspace-mobile.json
 .obsidian/cache
 
+# Agent runtime directories (recreated per agent product)
+.claude/
+.agents/
+.Codex/
+.cursor/
+.superpowers/
+.workbuddy/
+
 # Local second-brain runtime config
-.claude/hub-state.json
-.Codex/hub-state.json
 **/hub-state.local.json
 **/second-brain-hub/hub-state.json
-.claude/settings.local.json
-.claude/scheduled_tasks.json
-.claude/scheduled_tasks.lock
-.superpowers/
-
-# Agent workbuddy
-.workbuddy/

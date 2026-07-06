@@ -1,7 +1,7 @@
 param(
     [string]$PrimaryPath = "skills/second-brain-hub/test-prompts.json",
     [string]$MirrorPath = "",
-    [string]$StateExamplePath = ".claude/hub-state.example.json"
+    [string]$StateExamplePath = "skills/second-brain-hub/hub-state.example.json"
 )
 
 $ErrorActionPreference = "Stop"

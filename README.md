@@ -55,7 +55,7 @@
 4. 引导我对接本地 Obsidian Vault：
    - 询问我的 Obsidian Vault 绝对路径
    - 询问我的 Vault 名称
-   - 从 .claude/hub-state.example.json 复制生成本地 hub-state.json
+   - 从 skills/second-brain-hub/hub-state.example.json 复制生成本地 hub-state.json
    - 写入 preferences.vault_path 和 preferences.vault_name
    - 确认 hub-state.json 不提交到 Git
 
@@ -184,11 +184,6 @@ second-brain/
 │   ├── intermediate-packets/
 │   ├── knowledge-lifecycle/
 │   └── obsidian-skills-main/ # 5个Obsidian工具skill
-├── .claude/                 # Claude Code 配置目录
-│   ├── hub-state.example.json # 可提交的配置模板
-│   ├── hub-state.json       # 本地运行态配置（不提交，首次运行时创建）
-│   ├── settings.local.json  # 本地权限配置（不提交）
-│   └── scheduled_tasks.json # 定时任务配置（不提交）
 ├── docs/                    # 设计文档
 │   ├── superpowers/
 │   │   ├── specs/           # 设计方案
@@ -213,8 +208,8 @@ second-brain/
 - **单一规范源**：顶层 `skills/` 是本项目的唯一规范源（single source of truth），所有方法论 Skill 和 Obsidian 工具 Skill 在此维护。
 - **Agent 自适应安装**：用户克隆项目后，由 `skills/` 复制到对应 agent 的 skills 目录：Claude Code → `.claude/skills/`，Codex → `.agents/skills/`，Cursor → `.cursor/skills/`，GitHub Copilot → `.github/copilot/skills/`，其他按平台约定。
 - **多 agent 同步**：如果你同时使用多个 agent 产品，修改 Skill 内容后请确保从顶层 `skills/` 重新复制到各 agent 的目标目录。
-- **配置模板**：`.claude/hub-state.example.json` 可随 Skill 一起安装，真实配置从模板复制生成。
-- **本地运行态配置**：`.claude/hub-state.json` 保存 `vault_path`、`vault_name`、`active_projects`、偏好和 12 问题清单，属于本地文件，不提交到版本库。
+- **配置模板**：`skills/second-brain-hub/hub-state.example.json` 是配置模板，安装时复制生成 `hub-state.json`。
+- **本地运行态配置**：`hub-state.json` 保存 `vault_path`、`vault_name`、`active_projects`、偏好和 12 问题清单，属于本地文件，不提交到版本库。安装到 agent 时放在对应 skill 目录下。
 - **Vault 运行态状态**：`{vault_path}/.obsidian/hub-state.json` 保存 Vault 内运行记录；不存在时由 Hub 根据项目级配置创建。
 
 ### 首次安装配置
@@ -222,7 +217,7 @@ second-brain/
 复制配置模板并填写你自己的 Obsidian Vault 信息。若安装的是整个项目，使用项目级模板：
 
 ```powershell
-Copy-Item .claude\hub-state.example.json .claude\hub-state.json
+Copy-Item skills\second-brain-hub\hub-state.example.json skills\second-brain-hub\hub-state.json
 ```
 
 若只把 `second-brain-hub` Skill 单独安装给 agent，复制 Skill 目录旁的模板：
