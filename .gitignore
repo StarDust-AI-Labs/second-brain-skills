@@ -17,3 +17,6 @@
 .claude/scheduled_tasks.json
 .claude/scheduled_tasks.lock
 .superpowers/
+
+# Agent workbuddy
+.workbuddy/
