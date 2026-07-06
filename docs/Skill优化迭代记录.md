@@ -57,9 +57,44 @@ tags: [Skill优化, 迭代记录, 变更日志]
 
 ---
 
-## v0.4 — P1-1 批量迁移（待执行）
+## v0.4 — P1-1 批量迁移：progressive-summarization + para-system（2026-07-06）
 
-> 待 capture-criteria 试点验证通过后，将三层分离模式应用到其余 13 个 Skill
+> 在 capture-criteria 试点验证通过后，将三层分离模式应用到两个核心方法论 Skill
+
+| 改进项 | 修改内容 | 涉及文件 | 预期效果 | 修改人 |
+|--------|---------|---------|---------|--------|
+| P1-1 批量-1 | progressive-summarization 三层分离：拆出 4 个 references 文件，SKILL.md 从 206 行精简到 162 行 | `progressive-summarization/SKILL.md` `references/source-quotes.md` `references/four-layers-deep-dive.md` `references/examples.md` `references/boundary-and-failures.md` | Token 节省 ~22%，执行层完整保留 | Claude Opus 4.8 |
+| P1-1 批量-2 | para-system 三层分离：拆出 4 个 references 文件，SKILL.md 从 206 行精简到 159 行 | `para-system/SKILL.md` `references/source-quotes.md` `references/para-deep-dive.md` `references/examples.md` `references/boundary-and-failures.md` | Token 节省 ~23%，执行层完整保留 | Claude Opus 4.8 |
+
+### progressive-summarization 拆分详情
+
+| 原始章节 | 归属层 | 拆分去向 |
+|---------|:------:|---------|
+| R — 原文引述 | 按需层 | → `references/source-quotes.md` |
+| I — 方法论骨架（四层详解 + 关键原则） | 按需层 | → `references/four-layers-deep-dive.md` |
+| A1 — 书中案例（3个） | 按需层 | → `references/examples.md` |
+| B — 边界与失败模式 | 按需层 | → `references/boundary-and-failures.md` |
+| A2 — 触发场景 + 语言信号 | 执行层 | ✅ 保留 |
+| E — 可执行步骤 + HARD-GATE | 执行层 | ✅ 保留 |
+| 合理化防御 (Prebuttal) | 执行层 | ✅ 保留 |
+
+### para-system 拆分详情
+
+| 原始章节 | 归属层 | 拆分去向 |
+|---------|:------:|---------|
+| R — 原文引述 | 按需层 | → `references/source-quotes.md` |
+| I — 方法论骨架（四分类详解 + 速查规则 + 核心哲学） | 按需层 | → `references/para-deep-dive.md` |
+| A1 — 书中案例（3个） | 按需层 | → `references/examples.md` |
+| B — 边界与失败模式 | 按需层 | → `references/boundary-and-failures.md` |
+| A2 — 触发场景 + 语言信号 | 执行层 | ✅ 保留 |
+| E — 可执行步骤 + HARD-GATE | 执行层 | ✅ 保留 |
+| 合理化防御 (Prebuttal) | 执行层 | ✅ 保留 |
+
+---
+
+## v0.5 — P1-1 剩余 Skill 迁移（待执行）
+
+> 待迁移：creative-workflow、diverge-converge、intermediate-packets、knowledge-lifecycle、twelve-favorite-problems、second-brain-code
 
 | 改进项 | 修改内容 | 涉及文件 | 预期效果 | 修改人 |
 |--------|---------|---------|---------|--------|
