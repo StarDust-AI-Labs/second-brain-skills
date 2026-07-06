@@ -6,7 +6,7 @@
 
 ## 项目简介
 
-本项目是一套完整的**个人知识管理（PKM）Skill 体系**，运行在 Claude Code 平台上。
+本项目是一套完整的**个人知识管理（PKM）Skill 体系**，基于 Skill 技术适配多种 AI Agent 产品（Claude Code / Codex / Cursor / GitHub Copilot 等）。
 它将《打造第二大脑》中的 CODE 信管法则蒸馏为 9 个可执行的方法论 Skill + 5 个 Obsidian 工具 Skill，并通过一个中枢调度器（`second-brain-hub`）统一编排，最终将知识写入 Obsidian 笔记库。
 
 **核心理念**：信息管理的终点不是"知道"，而是"做出"。
