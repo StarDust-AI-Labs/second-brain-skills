@@ -34,7 +34,7 @@
    本项目以顶层 skills/ 为单一规范源，所有安装都是从此目录复制。
 
 1. 下载项目：
-   - 优先克隆仓库 git@gitee.com:hyniubi/second-brain-skill.git
+   - 优先克隆仓库 git@github.com:StarDust-AI-Labs/second-brain-skills.git
    - 如果当前环境不能使用 SSH，请提示我提供 HTTPS 地址或 Git 凭据
 
 2. 安装 Skill 到步骤 0 确定的目标目录：
@@ -274,6 +274,12 @@ $env:SECOND_BRAIN_VAULT_NAME = "<你的 Obsidian Vault 名称>"
 - **AI Agent 平台**（Claude Code / Codex / Cursor / GitHub Copilot 等）— Skill 运行平台
 - **Obsidian** — 笔记存储与浏览（Vault 路径：用户配置的本地 Obsidian 笔记存放目录）
 - **Obsidian CLI** — 命令行笔记操作（可选，有降级方案）
+
+---
+
+## 致谢
+
+- [obsidian-skills](https://github.com/kepano/obsidian-skills) by Steph Ango (@kepano) — MIT License
 
 ---
 
