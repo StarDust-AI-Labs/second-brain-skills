@@ -4,6 +4,7 @@
 - 当前权威 Skill 源: `skills/second-brain-hub/`
 - 安装镜像: `.agents/skills/second-brain-hub/`、`.claude/skills/second-brain-hub/`（仅用于运行时，不是规范源）
 - 路由契约: `skills/second-brain-hub/route-contracts.json`
+- 能力契约: `skills/second-brain-hub/capability-contracts.json`
 - 配置模板: `skills/second-brain-hub/hub-state.example.json`
 - 本地运行态状态: 安装后的对应 Skill 目录旁 `hub-state.json`
 
@@ -11,7 +12,7 @@
 
 ## 1. 每次修改 Hub 后必须做的检查
 
-### 1.1 测试提示结构校验
+### 1.1 自动契约校验
 
 在仓库根目录执行:
 
@@ -27,9 +28,21 @@
 - `id` 无重复。
 - 覆盖灵感速记、保存外源、提炼加工、创作启动、收件箱处理、回顾整理、探索查询、不确定、不应触发。
 - `route-contracts.json` 中的场景、必选步骤和条件步骤结构合法。
+- `capability-contracts.json` 中每个路由能力均声明输入、输出、门控、失败策略与副作用；声明的 HARD-GATE 必须存在于对应 Skill。
+- 路由测试夹具与路由契约完全一致；端到端验收夹具符合目标场景、最终动作和前置证据要求。
 - 有安装镜像时，显式传入 `-MirrorPath` 检查测试提示是否同步；镜像不同步不改变顶层 `skills/` 的规范源地位。
 
-### 1.2 状态文件检查
+### 1.2 测试分层
+
+| 层级 | 文件 | 验证目标 |
+|---|---|---|
+| 意图路由 | `tests/hub/intent-routing.json` | 输入是否映射到正确意图，或正确判定为不触发/不确定 |
+| 路由契约 | `tests/hub/route-contract-cases.json` | 每条执行流的必选和条件步骤是否与 `route-contracts.json` 一致 |
+| 端到端验收 | `tests/hub/e2e-cases.json` | 场景、最终副作用、前置证据和关键条件分支是否具备可人工验收的断言 |
+
+端到端夹具用于人工 dry-run 或真实 Vault 验收，不代表脚本已经执行了 Agent 或 Vault 操作。
+
+### 1.3 状态文件检查
 
 确认 `skills/second-brain-hub/hub-state.example.json` 存在，并包含:
 
@@ -78,7 +91,7 @@
 预期:
 
 - 识别为 `保存外源`。
-- 调度链包含 `defuddle -> capture-criteria -> para-system -> progressive-summarization -> obsidian-cli`。
+- 调度链包含 `defuddle -> capture-criteria -> para-system -> progressive-summarization -> obsidian-markdown -> obsidian-cli`。
 - 如果 defuddle 不可用，应要求用户粘贴正文，而不是中断。
 - 输出应说明保存位置、摘录比例、`distill_level`。
 
@@ -108,7 +121,8 @@
 预期:
 
 - 识别为 `创作启动`。
-- 调度链包含素材检索、渐进提炼、思想群岛、海明威之桥。
+- 调度链包含素材检索、条件 L2 提炼、创作阶段诊断、思想群岛/海明威之桥和模板渲染。
+- 只有用户明确表达持续收集、方向过多、无法收束等信号时，才额外调用 `diverge-converge`。
 - 输出至少包含素材清单、大纲、草稿/下一步行动的写入计划。
 
 ### 场景 E: 收件箱处理
@@ -175,7 +189,7 @@
 一次 Hub 版本可以标记为通过验收，当且仅当:
 
 1. `.\scripts\validate-test-prompts.ps1` 通过。
-2. `route-contracts.json`、Hub 场景正文和测试提示的必选步骤一致。
+2. `route-contracts.json`、`capability-contracts.json`、Hub 场景正文和三层测试夹具通过自动校验。
 3. 安装包只提交 `skills/second-brain-hub/hub-state.example.json`，真实 `hub-state.json` 被 `.gitignore` 忽略。
 4. 上述 8 个场景的意图识别和调度链人工复核通过。
 5. 所有批量写入/移动/删除都具备 preview/confirm/report 的安全边界。

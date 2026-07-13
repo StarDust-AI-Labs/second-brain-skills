@@ -2,7 +2,11 @@ param(
     [string]$PrimaryPath = "skills/second-brain-hub/test-prompts.json",
     [string]$MirrorPath = "",
     [string]$StateExamplePath = "skills/second-brain-hub/hub-state.example.json",
-    [string]$ContractPath = "skills/second-brain-hub/route-contracts.json"
+    [string]$ContractPath = "skills/second-brain-hub/route-contracts.json",
+    [string]$CapabilityContractPath = "skills/second-brain-hub/capability-contracts.json",
+    [string]$IntentCasePath = "tests/hub/intent-routing.json",
+    [string]$RouteCasePath = "tests/hub/route-contract-cases.json",
+    [string]$E2ECasePath = "tests/hub/e2e-cases.json"
 )
 
 $ErrorActionPreference = "Stop"
@@ -135,8 +139,207 @@ function Assert-ChainMatchesContract {
     }
 }
 
+function Assert-SequenceEqual {
+    param(
+        [array]$Actual,
+        [array]$Expected,
+        [string]$Description
+    )
+
+    if ($Actual.Count -ne $Expected.Count) {
+        throw "$Description count mismatch: expected $($Expected.Count), got $($Actual.Count)"
+    }
+
+    for ($index = 0; $index -lt $Expected.Count; $index++) {
+        if ($Actual[$index] -ne $Expected[$index]) {
+            throw "${Description} differs at index ${index}: expected '$($Expected[$index])', got '$($Actual[$index])'"
+        }
+    }
+}
+
+function Get-CapabilityIdForStep {
+    param([string]$Step)
+
+    if ($Step.StartsWith("hub.")) {
+        return $null
+    }
+
+    return (($Step -replace "\(.*$", "") -replace "/.*$", "")
+}
+
+function Get-SkillDefinitionPath {
+    param([string]$CapabilityId)
+
+    if ($CapabilityId -in @("defuddle", "obsidian-markdown", "obsidian-cli")) {
+        return "skills/obsidian-skills-main/skills/$CapabilityId/SKILL.md"
+    }
+
+    return "skills/$CapabilityId/SKILL.md"
+}
+
+function Read-CapabilityContracts {
+    param(
+        [string]$Path,
+        [hashtable]$RouteContracts
+    )
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        throw "Missing capability contract file: $Path"
+    }
+
+    $data = Get-Content -Raw -Encoding UTF8 -LiteralPath $Path | ConvertFrom-Json
+    foreach ($property in @("schema_version", "source_of_truth", "capabilities")) {
+        if (-not ($data.PSObject.Properties.Name -contains $property)) {
+            throw "Capability contracts are missing required property '$property'"
+        }
+    }
+    if ($data.source_of_truth -ne "skills/") {
+        throw "Capability contracts must declare skills/ as source_of_truth"
+    }
+
+    $capabilities = @{}
+    foreach ($capability in @($data.capabilities)) {
+        foreach ($property in @("id", "inputs", "outputs", "gates", "failure_mode", "side_effects")) {
+            if (-not ($capability.PSObject.Properties.Name -contains $property)) {
+                throw "Capability contract is missing required property '$property'"
+            }
+        }
+        if ($capabilities.ContainsKey($capability.id)) {
+            throw "Duplicate capability contract id: $($capability.id)"
+        }
+        if (@($capability.inputs).Count -eq 0 -or @($capability.outputs).Count -eq 0) {
+            throw "Capability '$($capability.id)' must define at least one input and output"
+        }
+        if ([string]::IsNullOrWhiteSpace($capability.failure_mode)) {
+            throw "Capability '$($capability.id)' must define failure_mode"
+        }
+
+        $skillDefinitionPath = Get-SkillDefinitionPath -CapabilityId $capability.id
+        if (-not (Test-Path -LiteralPath $skillDefinitionPath)) {
+            throw "Capability '$($capability.id)' points to missing Skill definition: $skillDefinitionPath"
+        }
+        $skillDefinition = Get-Content -Raw -Encoding UTF8 -LiteralPath $skillDefinitionPath
+        foreach ($gate in @($capability.gates)) {
+            if ($skillDefinition -notmatch [regex]::Escape("<HARD-GATE id=`"$gate`">")) {
+                throw "Capability '$($capability.id)' declares missing HARD-GATE '$gate'"
+            }
+        }
+        $capabilities[$capability.id] = $capability
+    }
+
+    foreach ($route in $RouteContracts.Values) {
+        foreach ($step in @($route.step_order)) {
+            $capabilityId = Get-CapabilityIdForStep -Step $step
+            if ($null -ne $capabilityId -and -not $capabilities.ContainsKey($capabilityId)) {
+                throw "Route '$($route.id)' references step '$step' without a capability contract"
+            }
+        }
+    }
+
+    return $capabilities
+}
+
+function Assert-RouteCases {
+    param(
+        [string]$Path,
+        [hashtable]$RouteContracts
+    )
+
+    $cases = Read-TestPrompts -Path $Path
+    $coveredContracts = @{}
+    foreach ($case in $cases) {
+        foreach ($property in @("id", "contract_id", "expected_required_chain", "expected_conditional_steps")) {
+            Assert-HasProperty -Item $case -Name $property -CaseId "<route-case>"
+        }
+        if (-not $RouteContracts.ContainsKey($case.contract_id)) {
+            throw "Route case $($case.id) references unknown contract_id '$($case.contract_id)'"
+        }
+        if ($coveredContracts.ContainsKey($case.contract_id)) {
+            throw "Duplicate route case for contract_id '$($case.contract_id)'"
+        }
+
+        $contract = $RouteContracts[$case.contract_id]
+        $conditionalIds = @($contract.conditional_steps | ForEach-Object { $_.id })
+        Assert-SequenceEqual -Actual @($case.expected_required_chain) -Expected @($contract.required_steps) -Description "Route case $($case.id) required chain"
+        Assert-SequenceEqual -Actual @($case.expected_conditional_steps) -Expected $conditionalIds -Description "Route case $($case.id) conditional steps"
+        $coveredContracts[$case.contract_id] = $true
+    }
+
+    foreach ($contractId in $RouteContracts.Keys) {
+        if (-not $coveredContracts.ContainsKey($contractId)) {
+            throw "Missing route case for contract_id '$contractId'"
+        }
+    }
+
+    return $cases
+}
+
+function Assert-E2ECases {
+    param(
+        [string]$Path,
+        [hashtable]$RouteContracts,
+        [object]$RouteContractDocument
+    )
+
+    $cases = Read-TestPrompts -Path $Path
+    $globalEvidence = @($RouteContractDocument.global_preflight | ForEach-Object { $_.id })
+    $writeEvidence = @($RouteContractDocument.write_preflight)
+
+    foreach ($case in $cases) {
+        foreach ($property in @("id", "contract_id", "input", "expected_intent", "expected_final_action", "expected_evidence")) {
+            Assert-HasProperty -Item $case -Name $property -CaseId "<e2e-case>"
+        }
+        if (-not $RouteContracts.ContainsKey($case.contract_id)) {
+            throw "E2E case $($case.id) references unknown contract_id '$($case.contract_id)'"
+        }
+
+        $contract = $RouteContracts[$case.contract_id]
+        if ($case.expected_intent -ne $contract.intent) {
+            throw "E2E case $($case.id) intent '$($case.expected_intent)' does not match contract '$($contract.intent)'"
+        }
+
+        $expectedAction = switch ($contract.mode) {
+            "write" { "create" }
+            "update" { "edit" }
+            default { $contract.mode }
+        }
+        if ($case.expected_final_action -ne $expectedAction) {
+            throw "E2E case $($case.id) action '$($case.expected_final_action)' does not match contract mode '$($contract.mode)'"
+        }
+
+        foreach ($evidence in $globalEvidence) {
+            if ($evidence -notin @($case.expected_evidence)) {
+                throw "E2E case $($case.id) is missing global evidence '$evidence'"
+            }
+        }
+        foreach ($preflight in $writeEvidence) {
+            if ($preflight.applies_to -like "*$($contract.mode)*" -and $preflight.id -notin @($case.expected_evidence)) {
+                throw "E2E case $($case.id) is missing write evidence '$($preflight.id)'"
+            }
+        }
+
+        $conditionalIds = @($contract.conditional_steps | ForEach-Object { $_.id })
+        foreach ($property in @("expected_executed_conditional_steps", "expected_skipped_conditional_steps")) {
+            if ($case.PSObject.Properties.Name -contains $property) {
+                foreach ($step in @($case.$property)) {
+                    if ($step -notin $conditionalIds) {
+                        throw "E2E case $($case.id) references non-conditional step '$step'"
+                    }
+                }
+            }
+        }
+    }
+
+    return $cases
+}
+
 $primary = Read-TestPrompts -Path $PrimaryPath
 $contracts = Read-RouteContracts -Path $ContractPath
+$routeContractDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath $ContractPath | ConvertFrom-Json
+$capabilities = Read-CapabilityContracts -Path $CapabilityContractPath -RouteContracts $contracts
+$intentCases = Read-TestPrompts -Path $IntentCasePath
+$routeCases = Assert-RouteCases -Path $RouteCasePath -RouteContracts $contracts
+$e2eCases = Assert-E2ECases -Path $E2ECasePath -RouteContracts $contracts -RouteContractDocument $routeContractDocument
 $mirror = $null
 if ($MirrorPath -and (Test-Path -LiteralPath $MirrorPath)) {
     $mirror = Read-TestPrompts -Path $MirrorPath
@@ -232,6 +435,8 @@ if ($null -ne $mirror) {
 }
 Write-Output "State example: $StateExamplePath"
 Write-Output "Route contracts: $ContractPath ($($contracts.Count) scenes)"
+Write-Output "Capability contracts: $CapabilityContractPath ($($capabilities.Count) capabilities)"
+Write-Output "Test layers: intent=$($intentCases.Count), route=$($routeCases.Count), e2e=$($e2eCases.Count)"
 Write-Output "Total cases: $($primary.Count)"
 Write-Output "Scene coverage:"
 foreach ($key in ($sceneCounts.Keys | Sort-Object)) {

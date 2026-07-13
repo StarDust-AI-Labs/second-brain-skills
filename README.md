@@ -217,6 +217,7 @@ second-brain/
 
 - **单一规范源**：顶层 `skills/` 是本项目的唯一规范源（single source of truth），所有方法论 Skill 和 Obsidian 工具 Skill 在此维护。
 - **路由契约**：`skills/second-brain-hub/route-contracts.json` 是 Hub 场景链路、条件步骤和写入前置的唯一规范源；Hub 正文、测试提示与审计文档均应据此校验。
+- **能力契约**：`skills/second-brain-hub/capability-contracts.json` 定义 Hub 直接调用能力的输入、输出、门控、失败策略与副作用；路由步骤必须能映射到已声明能力。
 - **Agent 自适应安装**：用户克隆项目后，由 `skills/` 复制到对应 agent 的 skills 目录：Claude Code → `.claude/skills/`，Codex → `.agents/skills/`，Cursor → `.cursor/skills/`，GitHub Copilot → `.github/copilot/skills/`，其他按平台约定。
 - **多 agent 同步**：如果你同时使用多个 agent 产品，修改 Skill 内容后请确保从顶层 `skills/` 重新复制到各 agent 的目标目录。
 - **配置模板**：`skills/second-brain-hub/hub-state.example.json` 是配置模板，安装时复制生成 `hub-state.json`。
