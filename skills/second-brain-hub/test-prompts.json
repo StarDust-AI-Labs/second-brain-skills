@@ -1,1 +1,308 @@
-[{"id":"t01","scene":"灵感速记","input":"记一下，刚才想到可以用AI自动生成视频分镜脚本","expected_intent":"灵感速记","expected_project_hint":"AI视频创作","expected_obsidian_action":"create","should_trigger_capture_criteria":false},{"id":"t02","scene":"灵感速记","input":"灵感来了：知识管理的本质不是管理信息，是管理注意力","expected_intent":"灵感速记","expected_obsidian_action":"create","should_trigger_capture_criteria":false},{"id":"t03","scene":"灵感速记","input":"有个idea，记下来。用para系统可以把所有数字文件都管起来","expected_intent":"灵感速记","expected_project_hint":"第二大脑体系搭建","expected_obsidian_action":"create"},{"id":"t04","scene":"灵感速记-不确定归属","input":"记一下，人类和AI协作的本质是意图对齐","expected_intent":"灵感速记","expected_behavior":"追问归属项目或领域"},{"id":"t05","scene":"保存外源","input":"保存这篇文章 https://mp.weixin.qq.com/s/example-ai-video","expected_intent":"保存外源","expected_chain":["defuddle","capture-criteria","para-system","progressive-summarization","obsidian-cli"]},{"id":"t06","scene":"保存外源","input":"这篇文章值得收藏 https://example.com/blog/second-brain-tips","expected_intent":"保存外源","expected_chain":["defuddle","capture-criteria","para-system","obsidian-cli"]},{"id":"t07","scene":"保存外源-不值得保留","input":"保存这个 https://example.com/random-news （内容质量低）","expected_intent":"保存外源","expected_behavior":"capture-criteria 判断后建议跳过"},{"id":"t08","scene":"提炼加工","input":"帮我提炼一下这篇文章的重点","expected_intent":"提炼加工","expected_chain":["obsidian-cli find","obsidian-cli read","progressive-summarization","obsidian-cli update"]},{"id":"t09","scene":"提炼加工","input":"给这篇笔记画一下重点，加粗关键句","expected_intent":"提炼加工","expected_distill_level":2},{"id":"t10","scene":"创作启动","input":"我想写一篇关于AI如何改变创作方式的文章","expected_intent":"创作启动","expected_chain":["intermediate-packets","obsidian-cli search","progressive-summarization","creative-workflow","obsidian-cli create"]},{"id":"t11","scene":"创作启动","input":"帮我做一个关于第二大脑的分享PPT大纲","expected_intent":"创作启动","expected_chain":["intermediate-packets","obsidian-cli search","progressive-summarization","creative-workflow"]},{"id":"t12","scene":"回顾整理","input":"回顾一下这周做了什么","expected_intent":"回顾整理","expected_chain":["knowledge-lifecycle","obsidian-cli"]},{"id":"t13","scene":"收件箱批量处理","input":"帮我清理一下收件箱","expected_intent":"收件箱处理","expected_behavior":"检查收件箱状态，逐条引导分类（场景5A）"},{"id":"t14","scene":"回顾整理","input":"本月回顾","expected_intent":"回顾整理","expected_review_type":"monthly"},{"id":"t15","scene":"探索查询","input":"找一下关于AI视频创作的笔记","expected_intent":"探索查询","expected_chain":["obsidian-cli search"]},{"id":"t16","scene":"探索查询","input":"有没有关于知识管理的笔记？","expected_intent":"探索查询","expected_chain":["obsidian-cli search"]},{"id":"t17","scene":"不确定","input":"帮我看看","expected_intent":"不确定","expected_behavior":"追问澄清意图"},{"id":"t18","scene":"不应触发","input":"今天天气怎么样","expected_intent":null,"expected_behavior":"不触发Hub，直接回答"},{"id":"t19","scene":"边界-降级","input":"保存这篇文章 https://example.com/article（假设defuddle不可用）","expected_behavior":"降级处理：让用户手动粘贴文本内容"},{"id":"t20","scene":"边界-Obsidian未运行","input":"记一下灵感：测试内容（假设Obsidian CLI不可用）","expected_behavior":"降级处理：直接写入.md文件到vault路径"},{"id":"t21","scene":"收件箱批量处理-空收件箱","input":"清理收件箱","expected_intent":"收件箱处理","expected_behavior":"检查后反馈收件箱已空，无需处理"},{"id":"t22","scene":"收件箱批量处理-少量条目","input":"处理收件箱里的几篇文章","expected_intent":"收件箱处理","expected_behavior":"逐条引导分类（<=5条不触发批量模式建议）"},{"id":"t23","scene":"收件箱批量处理-积压超阈值","input":"收件箱满了，帮我批量处理一下","expected_intent":"收件箱处理","expected_behavior":"展示概览、警告超阈值、建议批量模式"},{"id":"t24","scene":"收件箱vs回顾-意图区分","input":"帮我整理一下本周的笔记","expected_intent":"回顾整理","expected_behavior":"应识别为场景5回顾整理，非场景5A收件箱"},{"id":"t25","scene":"收件箱vs回顾-关键词优先","input":"整理一下收件箱和本周笔记","expected_intent":"收件箱处理","expected_behavior":"收件箱关键词优先，路由到场景5A"},{"id":"t26","scene":"创作启动-渐进归纳集成","input":"写一篇关于AI创作工具对比的文章，先帮我找找相关素材","expected_intent":"创作启动","expected_chain":["intermediate-packets","obsidian-cli search","progressive-summarization","creative-workflow"],"expected_behavior":"检索素材后先执行L2提炼再排列思想群岛"},{"id":"t27","scene":"创作启动-已有提炼跳过","input":"基于我整理好的AI视频笔记，帮我写一个分享大纲","expected_intent":"创作启动","expected_behavior":"素材distill_level>=2时跳过提炼步骤"},{"id":"t28","scene":"渐进归纳-auto-distill触发","input":"帮我重新打开上周保存的那篇AI文章看看","expected_intent":"提炼加工","expected_behavior":"检测distill_level=1且auto_distill_l2_on_revisit=true时自动执行L2"},{"id":"t29","scene":"渐进归纳-L3自动触发","input":"基于这些素材创作一篇深度文章","expected_intent":"创作启动","expected_behavior":"若auto_distill_l3_on_create=true且素材已有L2，自动执行L3高亮"},{"id":"t30","scene":"边界-渐进归纳判停","input":"帮我找找AI相关的笔记，准备写文章","expected_intent":"创作启动","expected_behavior":"素材>5条时仅提炼最相关5条，其余标记为可选参考"}]
+﻿[
+    {
+        "id":  "t01",
+        "scene":  "灵感速记",
+        "contract_id":  "inspiration",
+        "input":  "记一下，刚才想到可以用AI自动生成视频分镜脚本",
+        "expected_intent":  "灵感速记",
+        "expected_project_hint":  "AI视频创作",
+        "expected_obsidian_action":  "create",
+        "expected_chain":  [
+                               "hub.target-routing",
+                               "obsidian-markdown",
+                               "obsidian-cli/create"
+                           ],
+        "should_trigger_capture_criteria":  false
+    },
+    {
+        "id":  "t02",
+        "scene":  "灵感速记",
+        "contract_id":  "inspiration",
+        "input":  "灵感来了：知识管理的本质不是管理信息，是管理注意力",
+        "expected_intent":  "灵感速记",
+        "expected_obsidian_action":  "create",
+        "should_trigger_capture_criteria":  false
+    },
+    {
+        "id":  "t03",
+        "scene":  "灵感速记",
+        "contract_id":  "inspiration",
+        "input":  "有个idea，记下来。用para系统可以把所有数字文件都管起来",
+        "expected_intent":  "灵感速记",
+        "expected_project_hint":  "第二大脑体系搭建",
+        "expected_obsidian_action":  "create"
+    },
+    {
+        "id":  "t04",
+        "scene":  "灵感速记-不确定归属",
+        "contract_id":  "inspiration",
+        "input":  "记一下，人类和AI协作的本质是意图对齐",
+        "expected_intent":  "灵感速记",
+        "expected_behavior":  "追问归属项目或领域"
+    },
+    {
+        "id":  "t05",
+        "scene":  "保存外源",
+        "contract_id":  "external-save",
+        "input":  "保存这篇文章 https://mp.weixin.qq.com/s/example-ai-video",
+        "expected_intent":  "保存外源",
+        "expected_chain":  [
+                               "defuddle",
+                               "capture-criteria",
+                               "para-system",
+                               "progressive-summarization(L1)",
+                               "obsidian-markdown",
+                               "obsidian-cli/create"
+                           ]
+    },
+    {
+        "id":  "t06",
+        "scene":  "保存外源",
+        "contract_id":  "external-save",
+        "input":  "这篇文章值得收藏 https://example.com/blog/second-brain-tips",
+        "expected_intent":  "保存外源",
+        "expected_chain":  [
+                               "defuddle",
+                               "capture-criteria",
+                               "para-system",
+                               "progressive-summarization(L1)",
+                               "obsidian-markdown",
+                               "obsidian-cli/create"
+                           ]
+    },
+    {
+        "id":  "t07",
+        "scene":  "保存外源-不值得保留",
+        "contract_id":  "external-save",
+        "input":  "保存这个 https://example.com/random-news （内容质量低）",
+        "expected_intent":  "保存外源",
+        "expected_behavior":  "capture-criteria 判断后建议跳过"
+    },
+    {
+        "id":  "t08",
+        "scene":  "提炼加工",
+        "contract_id":  "distill",
+        "input":  "帮我提炼一下这篇文章的重点",
+        "expected_intent":  "提炼加工",
+        "expected_chain":  [
+                               "obsidian-cli/search",
+                               "obsidian-cli/read",
+                               "progressive-summarization",
+                               "obsidian-cli/edit"
+                           ]
+    },
+    {
+        "id":  "t09",
+        "scene":  "提炼加工",
+        "contract_id":  "distill",
+        "input":  "给这篇笔记画一下重点，加粗关键句",
+        "expected_intent":  "提炼加工",
+        "expected_distill_level":  2
+    },
+    {
+        "id":  "t10",
+        "scene":  "创作启动",
+        "contract_id":  "create",
+        "input":  "我想写一篇关于AI如何改变创作方式的文章",
+        "expected_intent":  "创作启动",
+        "expected_chain":  [
+                               "intermediate-packets",
+                               "obsidian-cli/search",
+                               "progressive-summarization(L2)",
+                               "creative-workflow",
+                               "obsidian-markdown",
+                               "obsidian-cli/create"
+                           ]
+    },
+    {
+        "id":  "t11",
+        "scene":  "创作启动",
+        "contract_id":  "create",
+        "input":  "帮我做一个关于第二大脑的分享PPT大纲",
+        "expected_intent":  "创作启动",
+        "expected_chain":  [
+                               "intermediate-packets",
+                               "obsidian-cli/search",
+                               "progressive-summarization(L2)",
+                               "creative-workflow",
+                               "obsidian-markdown",
+                               "obsidian-cli/create"
+                           ]
+    },
+    {
+        "id":  "t12",
+        "scene":  "回顾整理",
+        "contract_id":  "review",
+        "input":  "回顾一下这周做了什么",
+        "expected_intent":  "回顾整理",
+        "expected_chain":  [
+                               "knowledge-lifecycle",
+                               "obsidian-cli/list-search",
+                               "obsidian-markdown",
+                               "obsidian-cli/create"
+                           ]
+    },
+    {
+        "id":  "t13",
+        "scene":  "收件箱批量处理",
+        "contract_id":  "inbox",
+        "input":  "帮我清理一下收件箱",
+        "expected_intent":  "收件箱处理",
+        "expected_chain":  [
+                               "obsidian-cli/list",
+                               "para-system",
+                               "obsidian-cli/move-or-delete"
+                           ],
+        "expected_behavior":  "检查收件箱状态，逐条引导分类（场景5A）"
+    },
+    {
+        "id":  "t14",
+        "scene":  "回顾整理",
+        "contract_id":  "review",
+        "input":  "本月回顾",
+        "expected_intent":  "回顾整理",
+        "expected_chain":  [
+                               "knowledge-lifecycle",
+                               "obsidian-cli/list-search",
+                               "obsidian-markdown",
+                               "obsidian-cli/create"
+                           ],
+        "expected_review_type":  "monthly"
+    },
+    {
+        "id":  "t15",
+        "scene":  "探索查询",
+        "contract_id":  "query",
+        "input":  "找一下关于AI视频创作的笔记",
+        "expected_intent":  "探索查询",
+        "expected_chain":  [
+                               "obsidian-cli/search"
+                           ]
+    },
+    {
+        "id":  "t16",
+        "scene":  "探索查询",
+        "contract_id":  "query",
+        "input":  "有没有关于知识管理的笔记？",
+        "expected_intent":  "探索查询",
+        "expected_chain":  [
+                               "obsidian-cli/search"
+                           ]
+    },
+    {
+        "id":  "t17",
+        "scene":  "不确定",
+        "input":  "帮我看看",
+        "expected_intent":  "不确定",
+        "expected_behavior":  "追问澄清意图"
+    },
+    {
+        "id":  "t18",
+        "scene":  "不应触发",
+        "input":  "今天天气怎么样",
+        "expected_intent":  null,
+        "expected_behavior":  "不触发Hub，直接回答"
+    },
+    {
+        "id":  "t19",
+        "scene":  "边界-降级",
+        "contract_id":  "external-save",
+        "input":  "保存这篇文章 https://example.com/article（假设defuddle不可用）",
+        "expected_behavior":  "降级处理：让用户手动粘贴文本内容"
+    },
+    {
+        "id":  "t20",
+        "scene":  "边界-Obsidian未运行",
+        "contract_id":  "inspiration",
+        "input":  "记一下灵感：测试内容（假设Obsidian CLI不可用）",
+        "expected_behavior":  "降级处理：直接写入.md文件到vault路径"
+    },
+    {
+        "id":  "t21",
+        "scene":  "收件箱批量处理-空收件箱",
+        "contract_id":  "inbox",
+        "input":  "清理收件箱",
+        "expected_intent":  "收件箱处理",
+        "expected_behavior":  "检查后反馈收件箱已空，无需处理"
+    },
+    {
+        "id":  "t22",
+        "scene":  "收件箱批量处理-少量条目",
+        "contract_id":  "inbox",
+        "input":  "处理收件箱里的几篇文章",
+        "expected_intent":  "收件箱处理",
+        "expected_behavior":  "逐条引导分类（\u003c=5条不触发批量模式建议）"
+    },
+    {
+        "id":  "t23",
+        "scene":  "收件箱批量处理-积压超阈值",
+        "contract_id":  "inbox",
+        "input":  "收件箱满了，帮我批量处理一下",
+        "expected_intent":  "收件箱处理",
+        "expected_behavior":  "展示概览、警告超阈值、建议批量模式"
+    },
+    {
+        "id":  "t24",
+        "scene":  "收件箱vs回顾-意图区分",
+        "contract_id":  "review",
+        "input":  "帮我整理一下本周的笔记",
+        "expected_intent":  "回顾整理",
+        "expected_behavior":  "应识别为场景5回顾整理，非场景5A收件箱"
+    },
+    {
+        "id":  "t25",
+        "scene":  "收件箱vs回顾-关键词优先",
+        "contract_id":  "inbox",
+        "input":  "整理一下收件箱和本周笔记",
+        "expected_intent":  "收件箱处理",
+        "expected_behavior":  "收件箱关键词优先，路由到场景5A"
+    },
+    {
+        "id":  "t26",
+        "scene":  "创作启动-渐进归纳集成",
+        "contract_id":  "create",
+        "input":  "写一篇关于AI创作工具对比的文章，先帮我找找相关素材",
+        "expected_intent":  "创作启动",
+        "expected_chain":  [
+                               "intermediate-packets",
+                               "obsidian-cli/search",
+                               "progressive-summarization(L2)",
+                               "creative-workflow",
+                               "obsidian-markdown",
+                               "obsidian-cli/create"
+                           ],
+        "expected_behavior":  "检索素材后先执行L2提炼再排列思想群岛"
+    },
+    {
+        "id":  "t27",
+        "scene":  "创作启动-已有提炼跳过",
+        "contract_id":  "create",
+        "input":  "基于我整理好的AI视频笔记，帮我写一个分享大纲",
+        "expected_intent":  "创作启动",
+        "expected_behavior":  "素材distill_level\u003e=2时跳过提炼步骤"
+    },
+    {
+        "id":  "t28",
+        "scene":  "渐进归纳-auto-distill触发",
+        "contract_id":  "distill",
+        "input":  "帮我重新打开上周保存的那篇AI文章看看",
+        "expected_intent":  "提炼加工",
+        "expected_behavior":  "检测distill_level=1且auto_distill_l2_on_revisit=true时自动执行L2"
+    },
+    {
+        "id":  "t29",
+        "scene":  "渐进归纳-L3自动触发",
+        "contract_id":  "create",
+        "input":  "基于这些素材创作一篇深度文章",
+        "expected_intent":  "创作启动",
+        "expected_behavior":  "若auto_distill_l3_on_create=true且素材已有L2，自动执行L3高亮"
+    },
+    {
+        "id":  "t30",
+        "scene":  "边界-渐进归纳判停",
+        "contract_id":  "create",
+        "input":  "帮我找找AI相关的笔记，准备写文章",
+        "expected_intent":  "创作启动",
+        "expected_behavior":  "素材\u003e5条时仅提炼最相关5条，其余标记为可选参考"
+    }
+]
