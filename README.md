@@ -54,20 +54,25 @@
    - knowledge-lifecycle
    - obsidian-skills-main 里的 Obsidian 工具 Skill
 
-4. 引导我对接本地 Obsidian Vault：
+4. 检查本机是否已安装 Obsidian：
+   - 如果已安装，继续下一步
+   - 如果未安装，请把官方下载地址 https://obsidian.md/download 给我，并引导我下载安装 Obsidian
+   - 等我确认 Obsidian 已安装并能正常打开后，再继续配置 Vault
+
+5. 引导我对接本地 Obsidian Vault：
    - 询问我的 Obsidian Vault 绝对路径
    - 询问我的 Vault 名称
    - 从 skills/second-brain-hub/hub-state.example.json 复制生成本地 hub-state.json
    - 写入 preferences.vault_path 和 preferences.vault_name
    - 确认 hub-state.json 不提交到 Git
 
-5. 做一次最小可用验证：
+6. 做一次最小可用验证：
    - 检查 Vault 路径是否存在
    - 检查是否能创建或更新 Markdown 笔记
    - 用一句测试输入”记一下：这是 second-brain-skill 的安装验证”触发 second-brain-hub
    - 把测试笔记写入 Obsidian Vault 的合适位置
 
-6. 配置完成后，请告诉我：
+7. 配置完成后，请告诉我：
    - 当前 agent 类型
    - 项目安装位置
    - Skill 安装目录
