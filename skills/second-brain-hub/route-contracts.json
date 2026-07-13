@@ -119,6 +119,7 @@
       "intent": "创作启动",
       "mode": "write",
       "step_order": [
+        "diverge-converge",
         "intermediate-packets",
         "obsidian-cli/search",
         "progressive-summarization(L2)",
@@ -134,6 +135,11 @@
         "obsidian-cli/create"
       ],
       "conditional_steps": [
+        {
+          "id": "diverge-converge",
+          "run_when": "用户明确表达持续收集、方向过多、无法收束、完美主义无法交付或项目长期停滞",
+          "skip_evidence": "未检测到发散或聚合阻塞信号，由 creative-workflow 完成常规创作阶段诊断"
+        },
         {
           "id": "progressive-summarization(L2)",
           "run_when": "任一选中素材的 distill_level 小于 2",

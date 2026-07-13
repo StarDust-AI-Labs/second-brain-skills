@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "source_of_truth": "skills/",
+  "capabilities": [
+    {
+      "id": "defuddle",
+      "inputs": ["source_url"],
+      "outputs": ["source_title", "raw_markdown", "source_word_count"],
+      "gates": [],
+      "failure_mode": "停止外源写入，请用户粘贴正文或提供可访问的来源。",
+      "side_effects": ["network_read", "temporary_content"]
+    },
+    {
+      "id": "capture-criteria",
+      "inputs": ["source_excerpt", "capture_context"],
+      "outputs": ["keep_decision", "resonance_reason", "criteria_hits"],
+      "gates": ["resonance-before-capture", "extract-limit-before-save"],
+      "failure_mode": "未形成保留判断时停止后续写入，并请求用户确认是否保留。",
+      "side_effects": []
+    },
+    {
+      "id": "para-system",
+      "inputs": ["content_summary", "active_projects", "existing_folders"],
+      "outputs": ["target_folder", "classification_reason", "project_or_area"],
+      "gates": ["outcome-before-category", "target-path-before-write"],
+      "failure_mode": "无法确认归属时不写入，改为请求用户选择项目、领域、资源或存档。",
+      "side_effects": []
+    },
+    {
+      "id": "progressive-summarization",
+      "inputs": ["selected_note_or_source", "target_distill_level"],
+      "outputs": ["distill_level", "distilled_excerpt", "core_points"],
+      "gates": ["source-selected-before-distill", "density-limit-before-update"],
+      "failure_mode": "未选定来源或未满足密度限制时不更新原笔记。",
+      "side_effects": []
+    },
+    {
+      "id": "intermediate-packets",
+      "inputs": ["creation_topic", "search_results"],
+      "outputs": ["matched_notes", "usable_packets", "material_gaps"],
+      "gates": [],
+      "failure_mode": "未找到可用素材时返回 material_gaps，并允许创作流程以最小素材包继续。",
+      "side_effects": []
+    },
+    {
+      "id": "diverge-converge",
+      "inputs": ["creation_blocker_signals", "project_state"],
+      "outputs": ["mode_diagnosis", "recommended_mode_switch", "next_constraint"],
+      "gates": [],
+      "failure_mode": "未检测到发散或聚合阻塞时返回不适用，不得阻断常规创作流程。",
+      "side_effects": []
+    },
+    {
+      "id": "creative-workflow",
+      "inputs": ["creation_topic", "usable_packets", "blocker_diagnosis"],
+      "outputs": ["outline_or_next_artifact", "hemingway_bridge", "next_action"],
+      "gates": ["blocker-diagnosed-before-workflow", "next-artifact-before-finish"],
+      "failure_mode": "未诊断开始、持续或收尾障碍时不生成最终产物；先完成创作卡点诊断。",
+      "side_effects": []
+    },
+    {
+      "id": "knowledge-lifecycle",
+      "inputs": ["review_scope", "active_projects", "recent_notes"],
+      "outputs": ["review_scope", "review_findings", "next_priorities"],
+      "gates": [],
+      "failure_mode": "无法确认回顾范围时仅报告可用数据，不创建周/月回顾笔记。",
+      "side_effects": []
+    },
+    {
+      "id": "twelve-favorite-problems",
+      "inputs": ["search_results", "twelve_problems"],
+      "outputs": ["matched_problem_ids", "match_reason"],
+      "gates": [],
+      "failure_mode": "未配置问题清单时返回未匹配，不影响查询结果。",
+      "side_effects": []
+    },
+    {
+      "id": "obsidian-markdown",
+      "inputs": ["note_content", "frontmatter", "target_path"],
+      "outputs": ["final_markdown", "frontmatter_fields", "wikilinks_or_callouts_checked"],
+      "gates": [],
+      "failure_mode": "模板或 frontmatter 不完整时阻止写入。",
+      "side_effects": []
+    },
+    {
+      "id": "obsidian-cli",
+      "inputs": ["vault_name", "operation", "target_path_or_query"],
+      "outputs": ["search_results", "read_content", "write_receipt"],
+      "gates": [],
+      "failure_mode": "CLI 不可用时仅在所有前置条件完成后切换为直接文件写入；读取或搜索失败时报告阻塞。",
+      "side_effects": ["vault_read", "vault_write", "vault_move", "vault_delete"]
+    }
+  ]
+}
