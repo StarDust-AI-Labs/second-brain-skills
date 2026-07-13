@@ -32,6 +32,8 @@ def load_json(path: Path):
 
 
 def skill_path(root_name: str, skill_name: str) -> Path:
+    if root_name == "skills":
+        return ROOT / "skills" / skill_name / "SKILL.md"
     return ROOT / root_name / "skills" / skill_name / "SKILL.md"
 
 
@@ -145,9 +147,11 @@ def main() -> int:
     parser.add_argument("--check-mirror", action="store_true")
     args = parser.parse_args()
 
-    roots = [".agents"]
+    # Top-level skills/ is the repository source of truth. Agent directories
+    # are installation mirrors and are only checked when explicitly requested.
+    roots = ["skills"]
     if args.check_mirror:
-        roots.append(".claude")
+        roots.extend([".agents", ".claude"])
 
     errors: list[str] = []
     for root_name in roots:

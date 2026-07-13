@@ -136,7 +136,7 @@
 
 | Skill | 说明 |
 |-------|------|
-| `second-brain-hub` | 统一入口：7类意图识别 → 6大场景流程 → Obsidian写入管道 |
+| `second-brain-hub` | 统一入口：7类意图识别 → 7条执行流（含收件箱子流程）→ Obsidian写入管道 |
 
 ### 📚 9 大方法论 Skill（来自《打造第二大脑》）
 
@@ -164,15 +164,16 @@
 
 ---
 
-## 六大场景
+## 七条执行流
 
 | 场景 | 触发词 | 调度链 |
 |------|--------|--------|
-| 🔖 灵感速记 | "记一下""灵感""idea" | Hub → 追问归属 → obsidian-cli 写入 |
-| 📄 保存外源 | URL + "保存""收藏" | defuddle → capture-criteria → para-system → progressive-summarization → obsidian-cli |
+| 🔖 灵感速记 | "记一下""灵感""idea" | Hub 归属 → obsidian-markdown → obsidian-cli 写入 |
+| 📄 保存外源 | URL + "保存""收藏" | defuddle → capture-criteria → para-system → progressive-summarization → obsidian-markdown → obsidian-cli |
 | ✂️ 提炼加工 | "画重点""提炼""总结" | obsidian-cli 查找 → progressive-summarization → 更新笔记 |
-| ✍️ 创作启动 | "写一篇""创作""生成" | intermediate-packets → creative-workflow → obsidian-cli 创建项目 |
-| 📊 回顾整理 | "回顾""本周""整理" | knowledge-lifecycle → obsidian-cli 生成周回顾 |
+| ✍️ 创作启动 | "写一篇""创作""生成" | intermediate-packets → 条件 L2 提炼 → creative-workflow → obsidian-markdown → obsidian-cli 创建项目 |
+| 📥 收件箱处理 | "清理收件箱""处理收件" | obsidian-cli 列表 → para-system → 移动或删除；批量建议时条件调用 capture-criteria |
+| 📊 回顾整理 | "回顾""本周""整理" | knowledge-lifecycle → obsidian-cli 检索 → obsidian-markdown → 生成周回顾 |
 | 🔍 探索查询 | "找一下""搜索""有没有" | obsidian-cli 搜索 → twelve-favorite-problems 匹配 |
 
 ---
@@ -215,6 +216,7 @@ second-brain/
 ## 运行时约定
 
 - **单一规范源**：顶层 `skills/` 是本项目的唯一规范源（single source of truth），所有方法论 Skill 和 Obsidian 工具 Skill 在此维护。
+- **路由契约**：`skills/second-brain-hub/route-contracts.json` 是 Hub 场景链路、条件步骤和写入前置的唯一规范源；Hub 正文、测试提示与审计文档均应据此校验。
 - **Agent 自适应安装**：用户克隆项目后，由 `skills/` 复制到对应 agent 的 skills 目录：Claude Code → `.claude/skills/`，Codex → `.agents/skills/`，Cursor → `.cursor/skills/`，GitHub Copilot → `.github/copilot/skills/`，其他按平台约定。
 - **多 agent 同步**：如果你同时使用多个 agent 产品，修改 Skill 内容后请确保从顶层 `skills/` 重新复制到各 agent 的目标目录。
 - **配置模板**：`skills/second-brain-hub/hub-state.example.json` 是配置模板，安装时复制生成 `hub-state.json`。

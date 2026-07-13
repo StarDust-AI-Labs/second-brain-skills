@@ -1,0 +1,224 @@
+{
+  "schema_version": "1.0",
+  "source_of_truth": "skills/",
+  "global_preflight": [
+    {
+      "id": "vault-config",
+      "applies_to": "all",
+      "evidence": "vault_config=pass"
+    },
+    {
+      "id": "intent-confirmed",
+      "applies_to": "all",
+      "evidence": "intent is classified"
+    }
+  ],
+  "write_preflight": [
+    {
+      "id": "target-path",
+      "applies_to": "write, update",
+      "evidence": "target_path is not null and is not the vault root"
+    },
+    {
+      "id": "destination-or-delete-confirmation",
+      "applies_to": "move-or-delete",
+      "evidence": "target_path is not the vault root, or the user explicitly confirmed deletion"
+    },
+    {
+      "id": "template-ready",
+      "applies_to": "write",
+      "evidence": "final_markdown and required frontmatter fields are present"
+    },
+    {
+      "id": "write-allowed",
+      "applies_to": "write, update, move-or-delete",
+      "evidence": "write_allowed=true"
+    }
+  ],
+  "scenes": [
+    {
+      "id": "inspiration",
+      "intent": "灵感速记",
+      "mode": "write",
+      "step_order": [
+        "hub.target-routing",
+        "capture-criteria",
+        "obsidian-markdown",
+        "obsidian-cli/create"
+      ],
+      "required_steps": [
+        "hub.target-routing",
+        "obsidian-markdown",
+        "obsidian-cli/create"
+      ],
+      "conditional_steps": [
+        {
+          "id": "capture-criteria",
+          "run_when": "用户不确定灵感是否值得保留",
+          "skip_evidence": "灵感自带个人价值，用户未表达保留犹豫"
+        }
+      ],
+      "required_outputs": [
+        "target_path",
+        "final_markdown"
+      ]
+    },
+    {
+      "id": "external-save",
+      "intent": "保存外源",
+      "mode": "write",
+      "step_order": [
+        "defuddle",
+        "capture-criteria",
+        "para-system",
+        "progressive-summarization(L1)",
+        "obsidian-markdown",
+        "obsidian-cli/create"
+      ],
+      "required_steps": [
+        "defuddle",
+        "capture-criteria",
+        "para-system",
+        "progressive-summarization(L1)",
+        "obsidian-markdown",
+        "obsidian-cli/create"
+      ],
+      "conditional_steps": [],
+      "required_outputs": [
+        "keep_decision=true",
+        "target_folder",
+        "distilled_excerpt",
+        "final_markdown"
+      ]
+    },
+    {
+      "id": "distill",
+      "intent": "提炼加工",
+      "mode": "update",
+      "step_order": [
+        "obsidian-cli/search",
+        "obsidian-cli/read",
+        "progressive-summarization",
+        "obsidian-cli/edit"
+      ],
+      "required_steps": [
+        "obsidian-cli/search",
+        "obsidian-cli/read",
+        "progressive-summarization",
+        "obsidian-cli/edit"
+      ],
+      "conditional_steps": [],
+      "required_outputs": [
+        "selected_note",
+        "distill_level",
+        "updated_markdown"
+      ]
+    },
+    {
+      "id": "create",
+      "intent": "创作启动",
+      "mode": "write",
+      "step_order": [
+        "intermediate-packets",
+        "obsidian-cli/search",
+        "progressive-summarization(L2)",
+        "creative-workflow",
+        "obsidian-markdown",
+        "obsidian-cli/create"
+      ],
+      "required_steps": [
+        "intermediate-packets",
+        "obsidian-cli/search",
+        "creative-workflow",
+        "obsidian-markdown",
+        "obsidian-cli/create"
+      ],
+      "conditional_steps": [
+        {
+          "id": "progressive-summarization(L2)",
+          "run_when": "任一选中素材的 distill_level 小于 2",
+          "skip_evidence": "所有选中素材的 distill_level 大于或等于 2"
+        }
+      ],
+      "required_outputs": [
+        "usable_packets",
+        "outline_or_next_artifact",
+        "hemingway_bridge",
+        "target_path"
+      ]
+    },
+    {
+      "id": "inbox",
+      "intent": "收件箱处理",
+      "mode": "move-or-delete",
+      "step_order": [
+        "obsidian-cli/list",
+        "capture-criteria",
+        "para-system",
+        "obsidian-cli/move-or-delete"
+      ],
+      "required_steps": [
+        "obsidian-cli/list",
+        "para-system",
+        "obsidian-cli/move-or-delete"
+      ],
+      "conditional_steps": [
+        {
+          "id": "capture-criteria",
+          "run_when": "条目超过 5 条且用户确认批量建议模式",
+          "skip_evidence": "逐条处理或用户未确认批量建议模式"
+        }
+      ],
+      "required_outputs": [
+        "inbox_preview",
+        "target_path_or_delete_confirmation"
+      ]
+    },
+    {
+      "id": "review",
+      "intent": "回顾整理",
+      "mode": "write",
+      "step_order": [
+        "knowledge-lifecycle",
+        "obsidian-cli/list-search",
+        "obsidian-markdown",
+        "obsidian-cli/create"
+      ],
+      "required_steps": [
+        "knowledge-lifecycle",
+        "obsidian-cli/list-search",
+        "obsidian-markdown",
+        "obsidian-cli/create"
+      ],
+      "conditional_steps": [],
+      "required_outputs": [
+        "review_scope",
+        "review_findings",
+        "final_markdown",
+        "target_path"
+      ]
+    },
+    {
+      "id": "query",
+      "intent": "探索查询",
+      "mode": "read",
+      "step_order": [
+        "obsidian-cli/search",
+        "twelve-favorite-problems"
+      ],
+      "required_steps": [
+        "obsidian-cli/search"
+      ],
+      "conditional_steps": [
+        {
+          "id": "twelve-favorite-problems",
+          "run_when": "hub-state.json 中存在 twelve_problems",
+          "skip_evidence": "未配置 twelve_problems"
+        }
+      ],
+      "required_outputs": [
+        "search_results"
+      ]
+    }
+  ]
+}
