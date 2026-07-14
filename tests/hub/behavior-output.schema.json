@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "intent", "contract_id", "required_chain", "executed_conditional_steps",
+    "skipped_conditional_steps", "planned_tool_calls", "evidence",
+    "required_outputs", "final_action", "side_effects_attempted", "blocked_reason"
+  ],
+  "properties": {
+    "intent": {"type": "string"},
+    "contract_id": {"type": ["string", "null"]},
+    "required_chain": {"type": "array", "items": {"type": "string"}},
+    "executed_conditional_steps": {"type": "array", "items": {"type": "string"}},
+    "skipped_conditional_steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "reason"],
+        "properties": {"id": {"type": "string"}, "reason": {"type": "string", "minLength": 1}},
+        "additionalProperties": false
+      }
+    },
+    "planned_tool_calls": {"type": "array", "items": {"type": "string"}},
+    "evidence": {"type": "array", "items": {"type": "string"}},
+    "required_outputs": {"type": "array", "items": {"type": "string"}},
+    "final_action": {"enum": ["create", "edit", "move-or-delete", "read", "advisory", "clarify", "none"]},
+    "side_effects_attempted": {"type": "array", "maxItems": 0},
+    "blocked_reason": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}

@@ -439,6 +439,23 @@ function Assert-HubSkillStructure {
 }
 
 $null = Assert-HubSkillStructure -Path $HubSkillPath
+$behaviorCasesPath = "tests/hub/behavior-cases.json"
+$qualityGatesPath = "tests/hub/quality-gates.json"
+$behaviorSchemaPath = "tests/hub/behavior-output.schema.json"
+foreach ($requiredBehaviorFile in @($behaviorCasesPath, $qualityGatesPath, $behaviorSchemaPath, "skills/second-brain-hub/references/evaluation-protocol.md", "scripts/run-hub-behavior-eval.ps1")) {
+    if (-not (Test-Path -LiteralPath $requiredBehaviorFile)) { throw "Missing behavior evaluation file: $requiredBehaviorFile" }
+}
+$behaviorCases = @(Get-Content -Raw -Encoding UTF8 -LiteralPath $behaviorCasesPath | ConvertFrom-Json | ForEach-Object { $_ })
+$behaviorIds = @{}
+foreach ($case in $behaviorCases) {
+    foreach ($property in @("id", "category", "input", "expected_intent", "expected_action")) { Assert-HasProperty -Item $case -Name $property -CaseId "<behavior-case>" }
+    if ($behaviorIds.ContainsKey($case.id)) { throw "Duplicate behavior case id: $($case.id)" }
+    $behaviorIds[$case.id] = $true
+}
+$qualityGates = Get-Content -Raw -Encoding UTF8 -LiteralPath $qualityGatesPath | ConvertFrom-Json
+if ($qualityGates.minimum_overall_score -lt 4.6) { throw "Behavior quality gate must target at least 4.6" }
+$evaluationProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/evaluation-protocol.md"
+if ($evaluationProtocol -notmatch [regex]::Escape('<HARD-GATE id="eval-no-side-effects">')) { throw "Evaluation protocol is missing eval-no-side-effects gate" }
 $primary = Read-TestPrompts -Path $PrimaryPath
 $contracts = Read-RouteContracts -Path $ContractPath
 $routeContractDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath $ContractPath | ConvertFrom-Json
@@ -546,6 +563,7 @@ Write-Output "Route contracts: $ContractPath ($($contracts.Count) scenes)"
 Write-Output "Capability contracts: $CapabilityContractPath ($($capabilities.Count) capabilities)"
 Write-Output "Test layers: intent=$($intentCases.Count), route=$($routeCases.Count), e2e=$($e2eCases.Count), gates=$($gateCases.Count)"
 Write-Output "Total cases: $($primary.Count)"
+Write-Output "Behavior cases: $($behaviorCases.Count); target score: $($qualityGates.minimum_overall_score)"
 Write-Output "Scene coverage:"
 foreach ($key in ($sceneCounts.Keys | Sort-Object)) {
     Write-Output ("  {0}: {1}" -f $key, $sceneCounts[$key])

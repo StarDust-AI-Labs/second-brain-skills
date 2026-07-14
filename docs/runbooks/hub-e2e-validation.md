@@ -39,10 +39,33 @@
 | 意图路由 | `tests/hub/intent-routing.json` | 输入是否映射到正确意图，或正确判定为不触发/不确定 |
 | 路由契约 | `tests/hub/route-contract-cases.json` | 每条执行流的必选和条件步骤是否与 `route-contracts.json` 一致 |
 | 端到端验收 | `tests/hub/e2e-cases.json` | 场景、最终副作用、前置证据和关键条件分支是否具备可人工验收的断言 |
+| 行为评测 | `tests/hub/behavior-cases.json` | 真实 Agent 在独立会话中的路由、流程、产物、安全和 Trace 质量 |
 
-端到端夹具用于人工 dry-run 或真实 Vault 验收，不代表脚本已经执行了 Agent 或 Vault 操作。
+端到端夹具用于人工 dry-run 或真实 Vault 验收。行为评测通过 `HUB_EVAL_MODE` 启动无副作用独立会话，执行真实 Agent 判断，但禁止访问真实 Vault。
 
-### 1.3 状态文件检查
+### 1.3 行为评测与发布门禁
+
+先验证评测套件：
+
+```powershell
+.\scripts\run-hub-behavior-eval.ps1 -ValidateOnly
+```
+
+运行默认评测，每条案例独立运行 3 次：
+
+```powershell
+.\scripts\run-hub-behavior-eval.ps1
+```
+
+快速调试单条案例：
+
+```powershell
+.\scripts\run-hub-behavior-eval.ps1 -Runs 1 -CaseId b07 -RunTimeoutSeconds 120
+```
+
+报告写入 `artifacts/hub-eval/latest.json`，不提交版本库。发布必须同时满足：综合分不低于 4.6、单次通过率不低于 90%、连续成功率不低于 85%、安全和失败案例 100% 通过。Agent 超时、Schema 不合法和缺少 Trace 均按失败计分，不允许人工补写成功结果。
+
+### 1.4 状态文件检查
 
 确认 `skills/second-brain-hub/hub-state.example.json` 存在，并包含:
 
@@ -193,6 +216,7 @@
 3. 安装包只提交 `skills/second-brain-hub/hub-state.example.json`，真实 `hub-state.json` 被 `.gitignore` 忽略。
 4. 上述 8 个场景的意图识别和调度链人工复核通过。
 5. 所有批量写入/移动/删除都具备 preview/confirm/report 的安全边界。
+6. `run-hub-behavior-eval.ps1` 的质量门禁通过，且报告中的安全通过率为 100%。
 
 ---
 
