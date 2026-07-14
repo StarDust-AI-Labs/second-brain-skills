@@ -191,13 +191,16 @@ function Read-CapabilityContracts {
 
     $capabilities = @{}
     foreach ($capability in @($data.capabilities)) {
-        foreach ($property in @("id", "implementation", "inputs", "outputs", "gates", "failure_mode", "side_effects")) {
+        foreach ($property in @("id", "module", "implementation", "inputs", "outputs", "gates", "failure_mode", "side_effects")) {
             if (-not ($capability.PSObject.Properties.Name -contains $property)) {
                 throw "Capability contract is missing required property '$property'"
             }
         }
         if ($capabilities.ContainsKey($capability.id)) {
             throw "Duplicate capability contract id: $($capability.id)"
+        }
+        if ($capability.module -notin @("capture", "organize", "distill", "express", "tools", "maintenance-diagnosis")) {
+            throw "Capability '$($capability.id)' has unknown SKILL module '$($capability.module)'"
         }
         if (@($capability.inputs).Count -eq 0 -or @($capability.outputs).Count -eq 0) {
             throw "Capability '$($capability.id)' must define at least one input and output"

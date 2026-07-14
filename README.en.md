@@ -81,35 +81,28 @@ When executing, first check the current system, shell, agent type, and existing 
 
 ## Architecture Overview
 
-> Five-layer architecture: Input Layer → Agent Layer → Methodology Layer → Tool Layer → Storage Layer
+> Four-layer architecture: Input Layer → Agent / Hub Layer → SKILL Layer → Storage Layer
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │  📥 Input Layer                                      │
 │  Voice transcription · Web links · File uploads · Chat messages │
 ├─────────────────────────────────────────────────────┤
-│  🤖 Agent Layer                                      │
+│  🤖 Agent / Hub Layer                                │
 │  ┌─────────────────────────────────────────────┐    │
 │  │  🧭 second-brain-hub · Central Dispatcher     │    │
-│  │  Intent recognition · Scene routing ·         │    │
-│  │  Context memory · Unified writing pipeline    │    │
+│  │  Intent recognition · Contract orchestration  │    │
+│  │  Run ledger · Side-effect gates               │    │
 │  └─────────────────────────────────────────────┘    │
 ├─────────────────────────────────────────────────────┤
-│  📚 Hub Internal Capability Layer (C·O·D·E)         │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐│
-│  │📋 Capture │ │🗂️ Organize│ │✨ Distill │ │🚀 Express ││
-│  │capture   │ │para-     │ │prog-     │ │inter-    ││
-│  │criteria  │ │system    │ │ressive-  │ │mediate-  ││
-│  │twelve-   │ │          │ │summari-  │ │packets   ││
-│  │problems  │ │          │ │zation    │ │creative- ││
-│  │          │ │          │ │diverge-  │ │workflow  ││
-│  │          │ │          │ │converge  │ │          ││
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘│
-│  🧭 second-brain-code  ·  🔄 knowledge-lifecycle    │
-├─────────────────────────────────────────────────────┤
-│  🔧 Tool Layer (Obsidian Toolchain)                  │
-│  obsidian-cli · obsidian-markdown · obsidian-bases  │
-│  json-canvas  ·  defuddle                           │
+│  🧩 SKILL Layer · Methodology + tool capabilities    │
+│  📋 Capture: capture-criteria · favorite-problems    │
+│  🗂️ Organize: para-system                            │
+│  ✨ Distill: progressive-summarization               │
+│  🚀 Express: intermediate-packets · creative-workflow│
+│  🔧 Tools: defuddle · markdown · cli · bases · canvas│
+│  🔄 Maintenance / Diagnosis: knowledge-lifecycle ·   │
+│                            code-diagnosis · diverge   │
 ├─────────────────────────────────────────────────────┤
 │  💾 Storage Layer                                    │
 │  ┌─────────────────────────────────────────────┐    │
@@ -120,11 +113,11 @@ When executing, first check the current system, shell, agent type, and existing 
 └─────────────────────────────────────────────────────┘
 ```
 
-> 🎨 Full SVG architecture diagram: [architecture-diagram-v8.html](docs/architecture-diagram-v8.html)
+> 🎨 Full architecture diagram: [architecture-diagram-v8.html](docs/architecture-diagram-v8.html)
 
 ---
 
-## Skill and Internal Capability Inventory
+## SKILL Layer Modules
 
 ### 🧭 Central Hub
 
@@ -132,29 +125,18 @@ When executing, first check the current system, shell, agent type, and existing 
 |-------|-------------|
 | `second-brain-hub` | Only entry point: 8 intents → 7 Vault flows + 1 read-only diagnosis flow → Obsidian pipeline |
 
-### 📚 9 Internal Methodology Capabilities (from *Building a Second Brain*)
+### 🧩 Unified SKILL Layer
 
-| Phase | Internal Module | Description |
-|-------|-------|-------------|
-| 🧭 Top-level Framework | `second-brain-code` | CODE methodology: Capture → Organize → Distill → Express |
-| 🧭 Top-level Framework | `diverge-converge` | Divergence & Convergence: the underlying rhythm of creative work |
-| 📋 Information Input | `capture-criteria` | Resonance Principle: four criteria for "what's worth capturing" |
-| 📋 Information Input | `twelve-favorite-problems` | Twelve Favorite Problems: navigate information consumption with curiosity |
-| 🗂️ Information Organization | `para-system` | PARA System: Projects / Areas / Resources / Archives |
-| 🗂️ Information Organization | `progressive-summarization` | Progressive Summarization: four-level note distillation technique |
-| 🚀 Creative Output | `intermediate-packets` | Intermediate Packets: never start from scratch |
-| 🚀 Creative Output | `creative-workflow` | Creative Workflow: Archipelago of Ideas + Hemingway Bridge + Scope Compression |
-| 🔄 System Maintenance | `knowledge-lifecycle` | Knowledge Lifecycle: weekly/monthly reviews + mindful awareness |
+| Module | Capabilities / Skills | Responsibility |
+| --- | --- | --- |
+| 📋 Capture | `capture-criteria`, `twelve-favorite-problems` | Decide what is worth saving and filter information through long-term interests |
+| 🗂️ Organize | `para-system` | Route information to a project, area, resource, or archive based on outcomes |
+| ✨ Distill | `progressive-summarization` | Apply L1-L4 progressive distillation |
+| 🚀 Express | `intermediate-packets`, `creative-workflow` | Reuse intermediate material and form an actionable or deliverable artifact |
+| 🔧 Tools | `defuddle`, `obsidian-markdown`, `obsidian-cli`, `obsidian-bases`, `json-canvas` | Extract pages, render notes, operate on the Vault, and create visual views |
+| 🔄 Maintenance & Diagnosis | `knowledge-lifecycle`, `code-diagnosis`, `diverge-converge`, `second-brain-diagnosis` | Run reviews, recover reusable knowledge, and diagnose CODE or creative-flow bottlenecks |
 
-### 🔧 5 Obsidian Tool Skills
-
-| Skill | Description |
-|-------|-------------|
-| `obsidian-cli` | Obsidian command-line operations |
-| `obsidian-markdown` | Obsidian-flavored Markdown (wikilinks / callouts / frontmatter) |
-| `obsidian-bases` | Obsidian Bases database views |
-| `json-canvas` | JSON Canvas |
-| `defuddle` | Web page → Markdown extraction |
+Methodology capabilities are loaded on demand from internal `module-*.md` files. Tool capabilities retain independent Tool Skill implementations, but belong to the unified SKILL layer in the project architecture.
 
 ---
 
