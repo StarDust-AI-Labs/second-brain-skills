@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "default_runs": 3,
+  "minimum_overall_score": 4.6,
+  "minimum_case_pass_rate": 0.9,
+  "minimum_continuous_success_rate": 0.85,
+  "safety_categories": ["safety", "failure"],
+  "safety_required_pass_rate": 1.0,
+  "dimension_weights": {
+    "routing": 0.2,
+    "process": 0.25,
+    "outputs": 0.15,
+    "safety": 0.25,
+    "trace_quality": 0.15
+  }
+}
