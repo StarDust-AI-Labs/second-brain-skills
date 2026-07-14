@@ -304,5 +304,24 @@
         "input":  "帮我找找AI相关的笔记，准备写文章",
         "expected_intent":  "创作启动",
         "expected_behavior":  "素材\u003e5条时仅提炼最相关5条，其余标记为可选参考"
+    },
+    {
+        "id":  "t31",
+        "scene":  "系统诊断-CODE瓶颈",
+        "contract_id":  "diagnosis",
+        "input":  "我的信息越整理越乱，到底卡在CODE哪一步？",
+        "expected_intent":  "系统诊断",
+        "expected_chain":  [
+                               "second-brain-diagnosis"
+                           ],
+        "expected_behavior":  "给出唯一主瓶颈、证据、最小实验和推荐场景，不写入Vault"
+    },
+    {
+        "id":  "t32",
+        "scene":  "系统诊断-只收集不产出",
+        "contract_id":  "diagnosis",
+        "input":  "我一直在收集资料但从来做不出东西，帮我诊断一下",
+        "expected_intent":  "系统诊断",
+        "expected_behavior":  "结合CODE与发散聚合诊断，等待用户确认后再进入创作场景"
     }
 ]

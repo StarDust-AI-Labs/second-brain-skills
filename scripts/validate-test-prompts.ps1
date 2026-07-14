@@ -4,9 +4,11 @@ param(
     [string]$StateExamplePath = "skills/second-brain-hub/hub-state.example.json",
     [string]$ContractPath = "skills/second-brain-hub/route-contracts.json",
     [string]$CapabilityContractPath = "skills/second-brain-hub/capability-contracts.json",
+    [string]$HubSkillPath = "skills/second-brain-hub/SKILL.md",
     [string]$IntentCasePath = "tests/hub/intent-routing.json",
     [string]$RouteCasePath = "tests/hub/route-contract-cases.json",
-    [string]$E2ECasePath = "tests/hub/e2e-cases.json"
+    [string]$E2ECasePath = "tests/hub/e2e-cases.json",
+    [string]$GateCasePath = "tests/hub/gate-cases.json"
 )
 
 $ErrorActionPreference = "Stop"
@@ -60,7 +62,7 @@ function Read-RouteContracts {
 
     $contracts = @{}
     foreach ($scene in @($data.scenes)) {
-        foreach ($property in @("id", "intent", "mode", "step_order", "required_steps", "conditional_steps", "required_outputs")) {
+        foreach ($property in @("id", "intent", "mode", "requires_vault", "step_order", "required_steps", "conditional_steps", "required_outputs")) {
             if (-not ($scene.PSObject.Properties.Name -contains $property)) {
                 throw "Route contract is missing required property '$property'"
             }
@@ -167,16 +169,6 @@ function Get-CapabilityIdForStep {
     return (($Step -replace "\(.*$", "") -replace "/.*$", "")
 }
 
-function Get-SkillDefinitionPath {
-    param([string]$CapabilityId)
-
-    if ($CapabilityId -in @("defuddle", "obsidian-markdown", "obsidian-cli")) {
-        return "skills/obsidian-skills-main/skills/$CapabilityId/SKILL.md"
-    }
-
-    return "skills/$CapabilityId/SKILL.md"
-}
-
 function Read-CapabilityContracts {
     param(
         [string]$Path,
@@ -199,7 +191,7 @@ function Read-CapabilityContracts {
 
     $capabilities = @{}
     foreach ($capability in @($data.capabilities)) {
-        foreach ($property in @("id", "inputs", "outputs", "gates", "failure_mode", "side_effects")) {
+        foreach ($property in @("id", "implementation", "inputs", "outputs", "gates", "failure_mode", "side_effects")) {
             if (-not ($capability.PSObject.Properties.Name -contains $property)) {
                 throw "Capability contract is missing required property '$property'"
             }
@@ -214,9 +206,9 @@ function Read-CapabilityContracts {
             throw "Capability '$($capability.id)' must define failure_mode"
         }
 
-        $skillDefinitionPath = Get-SkillDefinitionPath -CapabilityId $capability.id
+        $skillDefinitionPath = [string]$capability.implementation
         if (-not (Test-Path -LiteralPath $skillDefinitionPath)) {
-            throw "Capability '$($capability.id)' points to missing Skill definition: $skillDefinitionPath"
+            throw "Capability '$($capability.id)' points to missing implementation: $skillDefinitionPath"
         }
         $skillDefinition = Get-Content -Raw -Encoding UTF8 -LiteralPath $skillDefinitionPath
         foreach ($gate in @($capability.gates)) {
@@ -282,7 +274,6 @@ function Assert-E2ECases {
     )
 
     $cases = Read-TestPrompts -Path $Path
-    $globalEvidence = @($RouteContractDocument.global_preflight | ForEach-Object { $_.id })
     $writeEvidence = @($RouteContractDocument.write_preflight)
 
     foreach ($case in $cases) {
@@ -307,6 +298,9 @@ function Assert-E2ECases {
             throw "E2E case $($case.id) action '$($case.expected_final_action)' does not match contract mode '$($contract.mode)'"
         }
 
+        $globalEvidence = @($RouteContractDocument.global_preflight | Where-Object {
+            $_.applies_to -eq "all" -or ($_.applies_to -eq "vault-scenes" -and $contract.requires_vault)
+        } | ForEach-Object { $_.id })
         foreach ($evidence in $globalEvidence) {
             if ($evidence -notin @($case.expected_evidence)) {
                 throw "E2E case $($case.id) is missing global evidence '$evidence'"
@@ -333,6 +327,67 @@ function Assert-E2ECases {
     return $cases
 }
 
+function Assert-GateCases {
+    param(
+        [string]$Path,
+        [hashtable]$Capabilities
+    )
+
+    $cases = Read-TestPrompts -Path $Path
+    foreach ($case in $cases) {
+        foreach ($property in @("capability", "required_gates")) {
+            Assert-HasProperty -Item $case -Name $property -CaseId "<gate-case>"
+        }
+        if (-not $Capabilities.ContainsKey($case.capability)) {
+            throw "Gate case references unknown capability '$($case.capability)'"
+        }
+        $capability = $Capabilities[$case.capability]
+        Assert-SequenceEqual -Actual @($case.required_gates) -Expected @($capability.gates) -Description "Gate case $($case.capability)"
+    }
+    return $cases
+}
+
+function Assert-HubSkillStructure {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        throw "Missing Hub SKILL.md: $Path"
+    }
+
+    $content = Get-Content -Raw -Encoding UTF8 -LiteralPath $Path
+    $frontmatter = [regex]::Match($content, "(?s)\A---\r?\n(.*?)\r?\n---")
+    if (-not $frontmatter.Success) {
+        throw "Hub SKILL.md has invalid YAML frontmatter"
+    }
+    $keys = @($frontmatter.Groups[1].Value -split "\r?\n" | Where-Object { $_ -match "^([a-zA-Z0-9_-]+):" } | ForEach-Object { $Matches[1] })
+    Assert-SequenceEqual -Actual $keys -Expected @("name", "description") -Description "Hub frontmatter keys"
+
+    $skillDirectory = Split-Path -Parent $Path
+    $referenceMatches = [regex]::Matches($content, "\]\((references/[^)#]+)\)")
+    foreach ($match in $referenceMatches) {
+        $referencePath = Join-Path $skillDirectory ($match.Groups[1].Value -replace "/", "\")
+        if (-not (Test-Path -LiteralPath $referencePath)) {
+            throw "Hub SKILL.md links to missing reference: $($match.Groups[1].Value)"
+        }
+    }
+
+    $nestedSkills = @(Get-ChildItem -LiteralPath (Join-Path $skillDirectory "references") -Recurse -File -Filter "SKILL.md")
+    if ($nestedSkills.Count -ne 0) {
+        throw "Hub references must not contain discoverable nested SKILL.md files"
+    }
+
+    $publicMethodSkills = @(Get-ChildItem -LiteralPath "skills" -Directory | Where-Object {
+        Test-Path -LiteralPath (Join-Path $_.FullName "SKILL.md")
+    } | ForEach-Object { $_.Name })
+    Assert-SequenceEqual -Actual $publicMethodSkills -Expected @("second-brain-hub") -Description "Top-level public Skill set"
+
+    $agentMetadata = Join-Path $skillDirectory "agents/openai.yaml"
+    if (-not (Test-Path -LiteralPath $agentMetadata)) {
+        throw "Missing Hub agents/openai.yaml"
+    }
+}
+
+$null = Assert-HubSkillStructure -Path $HubSkillPath
 $primary = Read-TestPrompts -Path $PrimaryPath
 $contracts = Read-RouteContracts -Path $ContractPath
 $routeContractDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath $ContractPath | ConvertFrom-Json
@@ -340,6 +395,7 @@ $capabilities = Read-CapabilityContracts -Path $CapabilityContractPath -RouteCon
 $intentCases = Read-TestPrompts -Path $IntentCasePath
 $routeCases = Assert-RouteCases -Path $RouteCasePath -RouteContracts $contracts
 $e2eCases = Assert-E2ECases -Path $E2ECasePath -RouteContracts $contracts -RouteContractDocument $routeContractDocument
+$gateCases = Assert-GateCases -Path $GateCasePath -Capabilities $capabilities
 $mirror = $null
 if ($MirrorPath -and (Test-Path -LiteralPath $MirrorPath)) {
     $mirror = Read-TestPrompts -Path $MirrorPath
@@ -429,6 +485,7 @@ if (Test-Path -LiteralPath $StateExamplePath) {
 }
 
 Write-Output "Hub test prompts valid."
+Write-Output "Hub skill structure valid: $HubSkillPath"
 Write-Output "Primary: $PrimaryPath"
 if ($null -ne $mirror) {
     Write-Output "Mirror: $MirrorPath"
@@ -436,7 +493,7 @@ if ($null -ne $mirror) {
 Write-Output "State example: $StateExamplePath"
 Write-Output "Route contracts: $ContractPath ($($contracts.Count) scenes)"
 Write-Output "Capability contracts: $CapabilityContractPath ($($capabilities.Count) capabilities)"
-Write-Output "Test layers: intent=$($intentCases.Count), route=$($routeCases.Count), e2e=$($e2eCases.Count)"
+Write-Output "Test layers: intent=$($intentCases.Count), route=$($routeCases.Count), e2e=$($e2eCases.Count), gates=$($gateCases.Count)"
 Write-Output "Total cases: $($primary.Count)"
 Write-Output "Scene coverage:"
 foreach ($key in ($sceneCounts.Keys | Sort-Object)) {

@@ -33,12 +33,18 @@
     "id": "route-review",
     "contract_id": "review",
     "expected_required_chain": ["knowledge-lifecycle", "obsidian-cli/list-search", "obsidian-markdown", "obsidian-cli/create"],
-    "expected_conditional_steps": []
+    "expected_conditional_steps": ["intermediate-packets"]
   },
   {
     "id": "route-query",
     "contract_id": "query",
     "expected_required_chain": ["obsidian-cli/search"],
     "expected_conditional_steps": ["twelve-favorite-problems"]
+  },
+  {
+    "id": "route-diagnosis",
+    "contract_id": "diagnosis",
+    "expected_required_chain": ["second-brain-diagnosis"],
+    "expected_conditional_steps": []
   }
 ]

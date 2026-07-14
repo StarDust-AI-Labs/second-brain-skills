@@ -7,7 +7,7 @@
 ## 项目简介
 
 本项目是一套完整的**个人知识管理（PKM）Skill 体系**，基于 Skill 技术适配多种 AI Agent 产品（Claude Code / Codex / Cursor / Coze / WorkBuddy 等）。
-它将《打造第二大脑》中的 CODE 信管法则蒸馏为 9 个可执行的方法论 Skill + 5 个 Obsidian 工具 Skill，并通过一个中枢调度器（`second-brain-hub`）统一编排，最终将知识写入 Obsidian 笔记库。
+它将《打造第二大脑》中的 CODE 信管法则蒸馏为 `second-brain-hub` 内部的 9 个方法论能力模块，并配合 5 个 Obsidian 工具 Skill，最终将知识写入 Obsidian 笔记库。运行时只有 Hub 作为第二大脑公开入口。
 
 **核心理念**：信息管理的终点不是"知道"，而是"做出"。
 
@@ -43,16 +43,7 @@
    - 不要覆盖我已有的同名 Skill，覆盖前先列出差异并询问我
 
 3. 安装本项目的核心 Skill：
-   - second-brain-hub
-   - second-brain-code
-   - capture-criteria
-   - twelve-favorite-problems
-   - para-system
-   - progressive-summarization
-   - creative-workflow
-   - diverge-converge
-   - intermediate-packets
-   - knowledge-lifecycle
+   - second-brain-hub（唯一第二大脑入口，已内置方法论模块）
    - obsidian-skills-main 里的 Obsidian 工具 Skill
 
 4. 检查本机是否已安装 Obsidian：
@@ -102,7 +93,7 @@
 │  │  意图识别 · 场景路由 · 上下文记忆 · 统一写入     │    │
 │  └─────────────────────────────────────────────┘    │
 ├─────────────────────────────────────────────────────┤
-│  📚 方法论层  (C·O·D·E 信管法则)                     │
+│  📚 Hub 内部能力层  (C·O·D·E 信管法则)                │
 │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐│
 │  │📋 抓取    │ │🗂️ 组织   │ │✨ 提炼    │ │🚀 表达   ││
 │  │capture   │ │Organize  │ │Distill   │ │Express   ││
@@ -131,17 +122,17 @@
 
 ***
 
-## Skill 清单
+## Skill 与内部能力清单
 
 ### 🧭 中枢调度
 
 | Skill              | 说明                                         |
 | ------------------ | ------------------------------------------ |
-| `second-brain-hub` | 统一入口：7类意图识别 → 7条执行流（含收件箱子流程）→ Obsidian写入管道 |
+| `second-brain-hub` | 唯一入口：8 类意图 → 7 条 Vault 执行流 + 1 条只读诊断流 → Obsidian 写入管道 |
 
-### 📚 9 大方法论 Skill（来自《打造第二大脑》）
+### 📚 9 大内部方法论能力（来自《打造第二大脑》）
 
-| 阶段       | Skill                       | 说明                     |
+| 阶段       | 内部模块                       | 说明                     |
 | -------- | --------------------------- | ---------------------- |
 | 🧭 顶层框架  | `second-brain-code`         | CODE信管法则：抓取→组织→提炼→表达   |
 | 🧭 顶层框架  | `diverge-converge`          | 发散与聚合：创作活动的底层节律        |
@@ -165,7 +156,7 @@
 
 ***
 
-## 七条执行流
+## 八条路由
 
 | 场景       | 触发词             | 调度链                                                                                                      |
 | -------- | --------------- | -------------------------------------------------------------------------------------------------------- |
@@ -176,6 +167,7 @@
 | 📥 收件箱处理 | "清理收件箱""处理收件"   | obsidian-cli 列表 → para-system → 移动或删除；批量建议时条件调用 capture-criteria                                         |
 | 📊 回顾整理  | "回顾""本周""整理"    | knowledge-lifecycle → obsidian-cli 检索 → obsidian-markdown → 生成周回顾                                        |
 | 🔍 探索查询  | "找一下""搜索""有没有"  | obsidian-cli 搜索 → twelve-favorite-problems 匹配                                                            |
+| 🧭 系统诊断  | "越管越乱""只收集不产出"  | CODE 瓶颈诊断 → 条件发散/聚合诊断 → 推荐进入一个执行场景（不写入 Vault）                                      |
 
 ***
 
@@ -184,16 +176,11 @@
 ```
 second-brain/
 ├── skills/                  # 单一规范源（single source of truth）
-│   ├── second-brain-hub/    # 中枢调度器（MVP核心）
-│   ├── second-brain-code/   # CODE 信管法则
-│   ├── capture-criteria/    # 抓取标准
-│   ├── twelve-favorite-problems/
-│   ├── para-system/         # PARA 组织系统
-│   ├── progressive-summarization/
-│   ├── creative-workflow/
-│   ├── diverge-converge/
-│   ├── intermediate-packets/
-│   ├── knowledge-lifecycle/
+│   ├── second-brain-hub/    # 唯一第二大脑入口
+│   │   ├── SKILL.md         # 路由、门控与渐进加载索引
+│   │   ├── route-contracts.json
+│   │   ├── capability-contracts.json
+│   │   └── references/      # 工作流、内部能力、方法论档案
 │   └── obsidian-skills-main/ # 5个Obsidian工具skill
 ├── docs/                    # 设计文档
 │   ├── superpowers/
@@ -216,10 +203,10 @@ second-brain/
 
 ## 运行时约定
 
-- **单一规范源**：顶层 `skills/` 是本项目的唯一规范源（single source of truth），所有方法论 Skill 和 Obsidian 工具 Skill 在此维护。
+- **单一规范源**：顶层 `skills/` 是项目规范源；第二大脑运行规范集中在 `skills/second-brain-hub/`，Obsidian 工具仍独立维护。
 - **路由契约**：`skills/second-brain-hub/route-contracts.json` 是 Hub 场景链路、条件步骤和写入前置的唯一规范源；Hub 正文、测试提示与审计文档均应据此校验。
 - **能力契约**：`skills/second-brain-hub/capability-contracts.json` 定义 Hub 直接调用能力的输入、输出、门控、失败策略与副作用；路由步骤必须能映射到已声明能力。
-- **Agent 自适应安装**：用户克隆项目后，由 `skills/` 复制到对应 agent 的 skills 目录：Claude Code → `.claude/skills/`，Codex → `.agents/skills/`，Cursor → `.cursor/skills/`，Coze → `.coze/skills/`，WorkBuddy → `.workbuddy/skills/`，其他按平台约定。
+- **Agent 自适应安装**：安装 `second-brain-hub` 和所需 Obsidian 工具 Skill；不要把 `references/legacy/` 中的方法论档案安装为平级 Skill。
 - **多 agent 同步**：如果你同时使用多个 agent 产品，修改 Skill 内容后请确保从顶层 `skills/` 重新复制到各 agent 的目标目录。
 - **配置模板**：`skills/second-brain-hub/hub-state.example.json` 是配置模板，安装时复制生成 `hub-state.json`。
 - **本地运行态配置**：`hub-state.json` 保存 `vault_path`、`vault_name`、`active_projects`、偏好和 12 问题清单，属于本地文件，不提交到版本库。安装到 agent 时放在对应 skill 目录下。
@@ -261,11 +248,11 @@ $env:SECOND_BRAIN_VAULT_NAME = "<你的 Obsidian Vault 名称>"
 
 ## 设计原则
 
-1. **Hub 不重复造轮子** — 方法论判断全权交给子 Skill，Hub 只管调度
-2. **方法论 Skill 零改动** — Hub 是调用者，不修改已有 Skill
+1. **唯一公开入口** — 第二大脑请求统一由 Hub 识别和路由，避免平级 Skill 竞争触发
+2. **内部能力模块化** — 方法论以 `module-*.md` 按需加载，完整历史内容保存在 `references/legacy/`
 3. **统一写入管道** — 所有笔记写入走同一套 frontmatter 模板
 4. **金字塔反馈** — 所有输出遵循「结论→详情→下一步」格式
-5. **渐进式实施** — MVP → v1.1 → v1.2 → v2.0 四阶段迭代
+5. **契约驱动** — 路由、输出、门控和跳过理由都由机器可读契约校验
 
 ***
 
@@ -304,4 +291,3 @@ $env:SECOND_BRAIN_VAULT_NAME = "<你的 Obsidian Vault 名称>"
 ***
 
 > *"你的大脑是用来产生想法的，不是用来储存它们的。"* — Tiago Forte
-

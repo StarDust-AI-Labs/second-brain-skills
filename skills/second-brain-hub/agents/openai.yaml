@@ -1,0 +1,7 @@
+interface:
+  display_name: "第二大脑中枢"
+  short_description: "统一路由记录、整理、创作、查询与知识系统诊断"
+  default_prompt: "Use $second-brain-hub to organize this request through the appropriate second-brain workflow."
+
+policy:
+  allow_implicit_invocation: true
