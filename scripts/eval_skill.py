@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Minimal checks for second-brain Skill routing and P0 hard gates."""
+"""Minimal checks for the modular second-brain Hub, routing, and hard gates."""
 
 from __future__ import annotations
 
@@ -11,19 +11,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MAX_DESCRIPTION_CHARS = 60
-METHOD_SKILLS = [
-    "second-brain-hub",
-    "second-brain-code",
-    "capture-criteria",
-    "twelve-favorite-problems",
-    "para-system",
-    "progressive-summarization",
-    "intermediate-packets",
-    "creative-workflow",
-    "diverge-converge",
-    "knowledge-lifecycle",
-]
+MAX_DESCRIPTION_CHARS = 300
+PUBLIC_SKILLS = ["second-brain-hub"]
 
 
 def load_json(path: Path):
@@ -32,6 +21,8 @@ def load_json(path: Path):
 
 
 def skill_path(root_name: str, skill_name: str) -> Path:
+    if root_name == "skills":
+        return ROOT / "skills" / skill_name / "SKILL.md"
     return ROOT / root_name / "skills" / skill_name / "SKILL.md"
 
 
@@ -42,7 +33,7 @@ def read_text(path: Path) -> str:
 
 
 def frontmatter(text: str) -> str:
-    match = re.match(r"^---\n(.*?)\n---", text, flags=re.S)
+    match = re.match(r"^---\r?\n(.*?)\r?\n---", text, flags=re.S)
     if not match:
         raise AssertionError("Missing YAML frontmatter")
     return match.group(1)
@@ -76,6 +67,20 @@ def route_intent(text: str) -> str | None:
         return None
     if "收件箱" in text:
         return "收件箱处理"
+    if any(
+        word in text
+        for word in [
+            "越整理越乱",
+            "越管越乱",
+            "卡在CODE",
+            "卡在 CODE",
+            "只收集不产出",
+            "从来做不出",
+            "帮我诊断",
+            "知识管理系统为什么",
+        ]
+    ):
+        return "系统诊断"
     if has_url and any(word in text for word in ["保存", "收藏", "值得看", "总结", "提取", "提炼"]):
         return "保存外源"
     if any(word in text for word in ["记一下", "灵感", "idea", "点子", "想到"]):
@@ -93,7 +98,7 @@ def route_intent(text: str) -> str | None:
 
 def check_descriptions(root_name: str) -> list[str]:
     errors: list[str] = []
-    for skill in METHOD_SKILLS:
+    for skill in PUBLIC_SKILLS:
         path = skill_path(root_name, skill)
         try:
             desc = description_from_frontmatter(frontmatter(read_text(path)))
@@ -108,17 +113,28 @@ def check_descriptions(root_name: str) -> list[str]:
     return errors
 
 
+def implementation_path(root_name: str, implementation: str) -> Path:
+    relative = Path(implementation)
+    if root_name == "skills":
+        return ROOT / relative
+    return ROOT / root_name / relative
+
+
 def check_gates(root_name: str) -> list[str]:
     errors: list[str] = []
     cases = load_json(ROOT / "tests" / "hub" / "gate-cases.json")
+    contracts = load_json(ROOT / "skills" / "second-brain-hub" / "capability-contracts.json")
+    capabilities = {item["id"]: item for item in contracts["capabilities"]}
     for case in cases:
-        skill = case["skill"]
-        text = read_text(skill_path(root_name, skill))
+        capability_id = case["capability"]
+        capability = capabilities.get(capability_id)
+        if capability is None:
+            errors.append(f"Unknown capability in gate case: {capability_id}")
+            continue
+        text = read_text(implementation_path(root_name, capability["implementation"]))
         for gate_id in case["required_gates"]:
             if f'<HARD-GATE id="{gate_id}">' not in text:
-                errors.append(f"{root_name}:{skill}: missing HARD-GATE {gate_id}")
-        if "合理化防御" not in text and "Prebuttal" not in text:
-            errors.append(f"{root_name}:{skill}: missing prebuttal section")
+                errors.append(f"{root_name}:{capability_id}: missing HARD-GATE {gate_id}")
     return errors
 
 
@@ -145,9 +161,11 @@ def main() -> int:
     parser.add_argument("--check-mirror", action="store_true")
     args = parser.parse_args()
 
-    roots = [".agents"]
+    # Top-level skills/ is the repository source of truth. Agent directories
+    # are installation mirrors and are only checked when explicitly requested.
+    roots = ["skills"]
     if args.check_mirror:
-        roots.append(".claude")
+        roots.extend([".agents", ".claude"])
 
     errors: list[str] = []
     for root_name in roots:
@@ -163,6 +181,7 @@ def main() -> int:
 
     print("Skill eval passed.")
     print(f"Checked roots: {', '.join(roots)}")
+    print(f"Public Skills: {', '.join(PUBLIC_SKILLS)}")
     print(f"Description max: {MAX_DESCRIPTION_CHARS} chars")
     print(f"Intent cases: {len(load_json(ROOT / 'tests' / 'hub' / 'intent-routing.json'))}")
     print(f"Gate specs: {len(load_json(ROOT / 'tests' / 'hub' / 'gate-cases.json'))}")

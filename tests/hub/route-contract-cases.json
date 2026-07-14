@@ -1,0 +1,50 @@
+[
+  {
+    "id": "route-inspiration",
+    "contract_id": "inspiration",
+    "expected_required_chain": ["hub.target-routing", "obsidian-markdown", "obsidian-cli/create"],
+    "expected_conditional_steps": ["capture-criteria"]
+  },
+  {
+    "id": "route-external-save",
+    "contract_id": "external-save",
+    "expected_required_chain": ["defuddle", "capture-criteria", "para-system", "progressive-summarization(L1)", "obsidian-markdown", "obsidian-cli/create"],
+    "expected_conditional_steps": []
+  },
+  {
+    "id": "route-distill",
+    "contract_id": "distill",
+    "expected_required_chain": ["obsidian-cli/search", "obsidian-cli/read", "progressive-summarization", "obsidian-cli/edit"],
+    "expected_conditional_steps": []
+  },
+  {
+    "id": "route-create",
+    "contract_id": "create",
+    "expected_required_chain": ["intermediate-packets", "obsidian-cli/search", "creative-workflow", "obsidian-markdown", "obsidian-cli/create"],
+    "expected_conditional_steps": ["diverge-converge", "progressive-summarization(L2)"]
+  },
+  {
+    "id": "route-inbox",
+    "contract_id": "inbox",
+    "expected_required_chain": ["obsidian-cli/list", "para-system", "obsidian-cli/move-or-delete"],
+    "expected_conditional_steps": ["capture-criteria"]
+  },
+  {
+    "id": "route-review",
+    "contract_id": "review",
+    "expected_required_chain": ["knowledge-lifecycle", "obsidian-cli/list-search", "obsidian-markdown", "obsidian-cli/create"],
+    "expected_conditional_steps": ["intermediate-packets"]
+  },
+  {
+    "id": "route-query",
+    "contract_id": "query",
+    "expected_required_chain": ["obsidian-cli/search"],
+    "expected_conditional_steps": ["twelve-favorite-problems"]
+  },
+  {
+    "id": "route-diagnosis",
+    "contract_id": "diagnosis",
+    "expected_required_chain": ["second-brain-diagnosis"],
+    "expected_conditional_steps": []
+  }
+]

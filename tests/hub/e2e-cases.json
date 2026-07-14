@@ -1,0 +1,77 @@
+[
+  {
+    "id": "e2e-inspiration-write",
+    "contract_id": "inspiration",
+    "input": "记一下，AI 视频分镜应先做镜头级素材包",
+    "expected_intent": "灵感速记",
+    "expected_final_action": "create",
+    "expected_evidence": ["vault-config", "intent-confirmed", "target-path", "template-ready", "write-allowed"]
+  },
+  {
+    "id": "e2e-external-save",
+    "contract_id": "external-save",
+    "input": "保存这篇文章 https://example.com/agent-workflow",
+    "expected_intent": "保存外源",
+    "expected_final_action": "create",
+    "expected_evidence": ["vault-config", "intent-confirmed", "target-path", "template-ready", "write-allowed"]
+  },
+  {
+    "id": "e2e-distill-update",
+    "contract_id": "distill",
+    "input": "给这篇笔记画重点并做到 L2",
+    "expected_intent": "提炼加工",
+    "expected_final_action": "edit",
+    "expected_evidence": ["vault-config", "intent-confirmed", "target-path", "write-allowed"]
+  },
+  {
+    "id": "e2e-create-normal",
+    "contract_id": "create",
+    "input": "帮我做一个关于第二大脑的分享 PPT 大纲",
+    "expected_intent": "创作启动",
+    "expected_final_action": "create",
+    "expected_skipped_conditional_steps": ["diverge-converge"],
+    "expected_evidence": ["vault-config", "intent-confirmed", "target-path", "template-ready", "write-allowed"]
+  },
+  {
+    "id": "e2e-create-diverge-diagnosis",
+    "contract_id": "create",
+    "input": "我一直在收集 AI 创作素材，方向越收越多，完全写不出大纲",
+    "expected_intent": "创作启动",
+    "expected_final_action": "create",
+    "expected_executed_conditional_steps": ["diverge-converge"],
+    "expected_evidence": ["vault-config", "intent-confirmed", "target-path", "template-ready", "write-allowed", "diverge-converge"]
+  },
+  {
+    "id": "e2e-inbox-move-or-delete",
+    "contract_id": "inbox",
+    "input": "清理收件箱",
+    "expected_intent": "收件箱处理",
+    "expected_final_action": "move-or-delete",
+    "expected_evidence": ["vault-config", "intent-confirmed", "destination-or-delete-confirmation", "write-allowed"]
+  },
+  {
+    "id": "e2e-review-create",
+    "contract_id": "review",
+    "input": "回顾一下这周做了什么",
+    "expected_intent": "回顾整理",
+    "expected_final_action": "create",
+    "expected_skipped_conditional_steps": ["intermediate-packets"],
+    "expected_evidence": ["vault-config", "intent-confirmed", "target-path", "template-ready", "write-allowed"]
+  },
+  {
+    "id": "e2e-query-read-only",
+    "contract_id": "query",
+    "input": "找一下关于 AI 视频创作的笔记",
+    "expected_intent": "探索查询",
+    "expected_final_action": "read",
+    "expected_evidence": ["vault-config", "intent-confirmed"]
+  },
+  {
+    "id": "e2e-diagnosis-advisory",
+    "contract_id": "diagnosis",
+    "input": "我的笔记越记越多，但完全产出不了东西，帮我看看卡在哪",
+    "expected_intent": "系统诊断",
+    "expected_final_action": "advisory",
+    "expected_evidence": ["intent-confirmed"]
+  }
+]
