@@ -68,5 +68,15 @@
     "id": "intent-014",
     "input": "整理一下收件箱和本周笔记",
     "expected_intent": "收件箱处理"
+  },
+  {
+    "id": "intent-015",
+    "input": "我的信息越整理越乱，到底卡在 CODE 哪一步？",
+    "expected_intent": "系统诊断"
+  },
+  {
+    "id": "intent-016",
+    "input": "我一直收集资料但从来做不出东西，帮我诊断一下",
+    "expected_intent": "系统诊断"
   }
 ]
