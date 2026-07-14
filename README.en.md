@@ -1,36 +1,308 @@
-# AI-西部世界
+# 🧠 Second Brain · Skill Ecosystem
 
-#### Description
-用AI创造我的数字西部世界
+> An AI Agent knowledge management skill system built on Tiago Forte's *Building a Second Brain* — turning "information consumption" into "knowledge creation", powered by Obsidian skills to fully manage your digital notes.
 
-#### Software Architecture
-Software architecture description
+---
 
-#### Installation
+## Overview
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+This project is a complete **Personal Knowledge Management (PKM) Skill system**, built on Skill technology and compatible with multiple AI Agent products (Claude Code / Codex / Cursor / Coze / WorkBuddy, etc.).
 
-#### Instructions
+It distills the CODE methodology from *Building a Second Brain* into 9 executable methodology Skills + 5 Obsidian tool Skills, orchestrated through a central hub (`second-brain-hub`), with all knowledge ultimately written into your Obsidian vault.
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+**Core philosophy**: The endpoint of information management is not "knowing" — it's "creating".
 
-#### Contribution
+![Second Brain Concept Poster](docs/第二大脑概念海报.png)
 
-1.  Fork the repository
-2.  Create Feat_xxx branch
-3.  Commit your code
-4.  Create Pull Request
+---
 
+## Copy-Paste Prompt for Other Users
 
-#### Gitee Feature
+Send the following prompt directly to your agent — it will auto-detect the platform, download this project, install Skills to the correct directory, and guide you through connecting to your local Obsidian vault:
 
-1.  You can use Readme\_XXX.md to support different languages, such as Readme\_en.md, Readme\_zh.md
-2.  Gitee blog [blog.gitee.com](https://blog.gitee.com)
-3.  Explore open source project [https://gitee.com/explore](https://gitee.com/explore)
-4.  The most valuable open source project [GVP](https://gitee.com/gvp)
-5.  The manual of Gitee [https://gitee.com/help](https://gitee.com/help)
-6.  The most popular members  [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+```text
+Please help me install and configure the second-brain-skill project to manage my local Obsidian vault.
+
+Follow these steps:
+
+0. ⚠️ First, detect the current agent product type and determine the Skill installation target directory:
+   - Claude Code → copy from skills/ to .claude/skills/
+   - Codex → copy from skills/ to .agents/skills/
+   - Cursor → copy from skills/ to .cursor/skills/
+   - Coze (扣子) → copy from skills/ to .coze/skills/
+   - WorkBuddy (问壁) → copy from skills/ to .workbuddy/skills/
+   - Codeium / other domestic agents → look up that agent's skills convention directory; if not found, ask the user
+   Report the detection result and target directory to the user before continuing.
+   The top-level skills/ directory is the single source of truth for this project. All installations copy from this directory.
+
+1. Download the project:
+   - Prefer cloning the repo: git@github.com:StarDust-AI-Labs/second-brain-skills.git
+   - If SSH is not available in the current environment, prompt me for the HTTPS URL or Git credentials
+
+2. Install Skills to the target directory determined in step 0:
+   - Copy from the project's skills/ (single source of truth) to the target directory
+   - Do not overwrite my existing Skills with the same name; before overwriting, list the differences and ask me first
+
+3. Install the core Skills from this project:
+   - second-brain-hub
+   - second-brain-code
+   - capture-criteria
+   - twelve-favorite-problems
+   - para-system
+   - progressive-summarization
+   - creative-workflow
+   - diverge-converge
+   - intermediate-packets
+   - knowledge-lifecycle
+   - The Obsidian tool Skills inside obsidian-skills-main
+
+4. Check whether Obsidian is installed on this machine:
+   - If already installed, continue to the next step
+   - If not installed, give me the official download link https://obsidian.md/download and guide me to download and install Obsidian
+   - Wait for me to confirm Obsidian is installed and can open normally before proceeding to vault configuration
+
+5. Guide me through connecting to my local Obsidian vault:
+   - Ask for the absolute path to my Obsidian vault
+   - Ask for my vault name
+   - Copy skills/second-brain-hub/hub-state.example.json to create a local hub-state.json
+   - Write preferences.vault_path and preferences.vault_name
+   - Confirm that hub-state.json is not committed to Git
+
+6. Perform a minimal smoke test:
+   - Verify the vault path exists
+   - Verify that Markdown notes can be created or updated
+   - Use the test input "Note to self: this is a second-brain-skill installation verification" to trigger second-brain-hub
+   - Write the test note to an appropriate location in the Obsidian vault
+
+7. After configuration, tell me:
+   - Current agent type
+   - Project installation location
+   - Skill installation directory
+   - Currently bound vault path
+   - How I can talk to you in the future to save web pages, record inspirations, organize notes, and start creating
+   - Ask me: "If this project has been helpful to you, would you like to star the GitHub repo?"
+   - If I say yes, use the currently available GitHub login/CLI/API to star the repo `StarDust-AI-Labs/second-brain-skills`; if authentication is missing or tools are unavailable, give me the repo link to do it manually
+
+When executing, first check the current system, shell, agent type, and existing directory structure before performing file operations. When unsure about the installation directory or facing overwrite risks, ask me first.
+```
+
+---
+
+## Architecture Overview
+
+> Five-layer architecture: Input Layer → Agent Layer → Methodology Layer → Tool Layer → Storage Layer
+
+```
+┌─────────────────────────────────────────────────────┐
+│  📥 Input Layer                                      │
+│  Voice transcription · Web links · File uploads · Chat messages │
+├─────────────────────────────────────────────────────┤
+│  🤖 Agent Layer                                      │
+│  ┌─────────────────────────────────────────────┐    │
+│  │  🧭 second-brain-hub · Central Dispatcher     │    │
+│  │  Intent recognition · Scene routing ·         │    │
+│  │  Context memory · Unified writing pipeline    │    │
+│  └─────────────────────────────────────────────┘    │
+├─────────────────────────────────────────────────────┤
+│  📚 Methodology Layer  (C·O·D·E Framework)          │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐│
+│  │📋 Capture │ │🗂️ Organize│ │✨ Distill │ │🚀 Express ││
+│  │capture   │ │para-     │ │prog-     │ │inter-    ││
+│  │criteria  │ │system    │ │ressive-  │ │mediate-  ││
+│  │twelve-   │ │          │ │summari-  │ │packets   ││
+│  │problems  │ │          │ │zation    │ │creative- ││
+│  │          │ │          │ │diverge-  │ │workflow  ││
+│  │          │ │          │ │converge  │ │          ││
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘│
+│  🧭 second-brain-code  ·  🔄 knowledge-lifecycle    │
+├─────────────────────────────────────────────────────┤
+│  🔧 Tool Layer (Obsidian Toolchain)                  │
+│  obsidian-cli · obsidian-markdown · obsidian-bases  │
+│  json-canvas  ·  defuddle                           │
+├─────────────────────────────────────────────────────┤
+│  💾 Storage Layer                                    │
+│  ┌─────────────────────────────────────────────┐    │
+│  │  🗄️ Obsidian Vault · Second Brain Notebook   │    │
+│  │  PARA directories · .md notes ·              │    │
+│  │  hub-state.json · .canvas                    │    │
+│  └─────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────┘
+```
+
+> 🎨 Full SVG architecture diagram: [architecture-diagram-v8.html](docs/architecture-diagram-v8.html)
+
+---
+
+## Skill Inventory
+
+### 🧭 Central Hub
+
+| Skill | Description |
+|-------|-------------|
+| `second-brain-hub` | Unified entry point: 7 intent types → 7 execution flows (including inbox sub-flow) → Obsidian write pipeline |
+
+### 📚 9 Methodology Skills (from *Building a Second Brain*)
+
+| Phase | Skill | Description |
+|-------|-------|-------------|
+| 🧭 Top-level Framework | `second-brain-code` | CODE methodology: Capture → Organize → Distill → Express |
+| 🧭 Top-level Framework | `diverge-converge` | Divergence & Convergence: the underlying rhythm of creative work |
+| 📋 Information Input | `capture-criteria` | Resonance Principle: four criteria for "what's worth capturing" |
+| 📋 Information Input | `twelve-favorite-problems` | Twelve Favorite Problems: navigate information consumption with curiosity |
+| 🗂️ Information Organization | `para-system` | PARA System: Projects / Areas / Resources / Archives |
+| 🗂️ Information Organization | `progressive-summarization` | Progressive Summarization: four-level note distillation technique |
+| 🚀 Creative Output | `intermediate-packets` | Intermediate Packets: never start from scratch |
+| 🚀 Creative Output | `creative-workflow` | Creative Workflow: Archipelago of Ideas + Hemingway Bridge + Scope Compression |
+| 🔄 System Maintenance | `knowledge-lifecycle` | Knowledge Lifecycle: weekly/monthly reviews + mindful awareness |
+
+### 🔧 5 Obsidian Tool Skills
+
+| Skill | Description |
+|-------|-------------|
+| `obsidian-cli` | Obsidian command-line operations |
+| `obsidian-markdown` | Obsidian-flavored Markdown (wikilinks / callouts / frontmatter) |
+| `obsidian-bases` | Obsidian Bases database views |
+| `json-canvas` | JSON Canvas |
+| `defuddle` | Web page → Markdown extraction |
+
+---
+
+## Seven Execution Flows
+
+| Scenario | Trigger Words | Dispatch Chain |
+|----------|--------------|----------------|
+| 🔖 Quick Capture | "note to self" "inspiration" "idea" | Hub classification → obsidian-markdown → obsidian-cli write |
+| 📄 Save External Source | URL + "save" "bookmark" | defuddle → capture-criteria → para-system → progressive-summarization → obsidian-markdown → obsidian-cli |
+| ✂️ Distill & Process | "highlight" "distill" "summarize" | obsidian-cli find → progressive-summarization → update note |
+| ✍️ Start Creating | "write" "create" "generate" | intermediate-packets → conditional L2 distillation → creative-workflow → obsidian-markdown → obsidian-cli create project |
+| 📥 Inbox Processing | "clear inbox" "process inbox" | obsidian-cli list → para-system → move or delete; conditionally invoke capture-criteria for batch suggestions |
+| 📊 Review & Organize | "review" "this week" "organize" | knowledge-lifecycle → obsidian-cli search → obsidian-markdown → generate weekly review |
+| 🔍 Explore & Query | "find" "search" "do we have" | obsidian-cli search → twelve-favorite-problems matching |
+
+---
+
+## Project Structure
+
+```
+second-brain/
+├── skills/                  # Single source of truth
+│   ├── second-brain-hub/    # Central dispatcher (MVP core)
+│   ├── second-brain-code/   # CODE methodology
+│   ├── capture-criteria/    # Capture criteria
+│   ├── twelve-favorite-problems/
+│   ├── para-system/         # PARA organization system
+│   ├── progressive-summarization/
+│   ├── creative-workflow/
+│   ├── diverge-converge/
+│   ├── intermediate-packets/
+│   ├── knowledge-lifecycle/
+│   └── obsidian-skills-main/ # 5 Obsidian tool skills
+├── docs/                    # Design documents
+│   ├── superpowers/
+│   │   ├── specs/           # Design specifications
+│   │   ├── plans/           # Implementation plans
+│   │   └── reports/         # Acceptance reports
+│   ├── runbooks/            # Manual verification & runbooks
+│   └── reference/           # State schemas, field specifications
+├── scripts/                 # Lightweight verification scripts
+├── tests/                   # Evaluation test cases
+├── books/                   # Book decomposition audit records
+│   └── building-second-brain/
+│       ├── INDEX.md         # Skill index + dependency graph
+│       ├── candidates/      # Candidate pool (frameworks/principles/cases/terminology)
+│       └── rejected/        # Rejected candidates
+└── CLAUDE.md                # Project instructions
+```
+
+---
+
+## Runtime Conventions
+
+- **Single Source of Truth**: The top-level `skills/` directory is the project's single source of truth; all methodology Skills and Obsidian tool Skills are maintained here.
+- **Route Contracts**: `skills/second-brain-hub/route-contracts.json` is the single source of truth for Hub scene chains, conditional steps, and write preconditions; Hub content, test prompts, and audit documents should validate against it.
+- **Capability Contracts**: `skills/second-brain-hub/capability-contracts.json` defines the inputs, outputs, gates, failure strategies, and side effects of Hub's directly invoked capabilities; route steps must map to declared capabilities.
+- **Agent-Adaptive Installation**: After cloning the project, copy from `skills/` to the corresponding agent's skills directory: Claude Code → `.claude/skills/`, Codex → `.agents/skills/`, Cursor → `.cursor/skills/`, Coze → `.coze/skills/`, WorkBuddy → `.workbuddy/skills/`, others per platform conventions.
+- **Multi-Agent Sync**: If you use multiple agent products simultaneously, after modifying Skill content, ensure you re-copy from the top-level `skills/` to each agent's target directory.
+- **Config Template**: `skills/second-brain-hub/hub-state.example.json` is the configuration template; copy it to create `hub-state.json` during installation.
+- **Local Runtime Config**: `hub-state.json` stores `vault_path`, `vault_name`, `active_projects`, preferences, and the 12 problems list. It is a local file and should NOT be committed to version control. When installed to an agent, place it in the corresponding skill directory.
+- **Vault Runtime State**: `{vault_path}/.obsidian/hub-state.json` stores in-vault runtime records; if absent, the Hub creates it from the project-level config.
+
+### First-Time Setup
+
+Copy the config template and fill in your own Obsidian vault info. If installing the entire project, use the project-level template:
+
+```powershell
+Copy-Item skills\second-brain-hub\hub-state.example.json skills\second-brain-hub\hub-state.json
+```
+
+If installing only the `second-brain-hub` Skill to an agent, copy the template alongside the Skill directory:
+
+```powershell
+Copy-Item <second-brain-hub-skill-dir>\hub-state.example.json <second-brain-hub-skill-dir>\hub-state.json
+```
+
+Then edit the local `hub-state.json`:
+
+```json
+{
+  "preferences": {
+    "vault_path": "<your Obsidian vault absolute path>",
+    "vault_name": "<your Obsidian vault name>"
+  }
+}
+```
+
+You can also use environment variables instead of creating the file:
+
+```powershell
+$env:SECOND_BRAIN_VAULT_PATH = "<your Obsidian vault absolute path>"
+$env:SECOND_BRAIN_VAULT_NAME = "<your Obsidian vault name>"
+```
+
+---
+
+## Design Principles
+
+1. **Hub doesn't reinvent the wheel** — methodology judgments are fully delegated to sub-Skills; the Hub only handles dispatch
+2. **Zero changes to methodology Skills** — the Hub is a caller, not a modifier of existing Skills
+3. **Unified write pipeline** — all note writing uses the same frontmatter template
+4. **Pyramid feedback** — all output follows the "Conclusion → Details → Next Steps" format
+5. **Progressive implementation** — iterate through four phases: MVP → v1.1 → v1.2 → v2.0
+
+---
+
+## Version Roadmap
+
+| Phase | Content | Status |
+|-------|---------|--------|
+| **MVP (P0)** | Vault PARA restructure + Hub core + Quick Capture + Save External Source | ✅ Complete |
+| **v1.1 (P1)** | Batch inbox processing + Creative launch + Progressive Summarization deep integration | ✅ Complete |
+| **v1.2 (P2)** | Weekly/monthly reviews + 12 Problems filtering + Bases dashboard | 📋 Planned |
+| **v2.0 (P3)** | Cron scheduled reviews + Inbox alerts + Project stagnation detection | 📋 Planned |
+
+---
+
+## Dependencies
+
+- **AI Agent Platform** (Claude Code / Codex / Cursor / GitHub Copilot, etc.) — Skill runtime
+- **Obsidian** — Note storage and browsing (Vault path: user-configured local Obsidian note directory)
+- **Obsidian CLI** — Command-line note operations (optional, with fallback)
+
+---
+
+## Acknowledgments
+
+- [obsidian-skills](https://github.com/kepano/obsidian-skills) by Steph Ango (@kepano) — MIT License
+
+---
+
+## References
+
+- 📖 *Building a Second Brain* — Tiago Forte
+- 🌐 [Building a Second Brain](https://www.buildingasecondbrain.com/)
+- 🔗 [PARA Method](https://fortelabs.com/blog/para/)
+- 🛠️ [Obsidian](https://obsidian.md/)
+
+---
+
+> *"Your brain is for having ideas, not for holding them."* — Tiago Forte
