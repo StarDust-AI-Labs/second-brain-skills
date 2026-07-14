@@ -39,12 +39,17 @@
    - 如果当前环境不能使用 SSH，请提示我提供 HTTPS 地址或 Git 凭据
 
 2. 安装 Skill 到步骤 0 确定的目标目录：
-   - 从项目的 skills/（单一规范源）复制到目标目录
+   - 将项目 `skills/` 下的 6 个 Skill 目录直接复制到目标 skills 目录，保持每个 `SKILL.md` 位于目标目录的第一层
+   - 不要复制 `scripts/`、`tests/`、`docs/`、`books/` 或 `third-party/`；它们不是运行时依赖
    - 不要覆盖我已有的同名 Skill，覆盖前先列出差异并询问我
 
 3. 安装本项目的核心 Skill：
    - second-brain-hub（唯一第二大脑入口，已内置方法论模块）
-   - obsidian-skills-main 里的 Obsidian 工具 Skill
+   - defuddle
+   - obsidian-markdown
+   - obsidian-cli
+   - obsidian-bases
+   - json-canvas
 
 4. 检查本机是否已安装 Obsidian：
    - 如果已安装，继续下一步
@@ -162,7 +167,12 @@ second-brain/
 │   │   ├── route-contracts.json
 │   │   ├── capability-contracts.json
 │   │   └── references/      # 工作流、内部能力、方法论档案
-│   └── obsidian-skills-main/ # 5个Obsidian工具skill
+│   ├── defuddle/             # 网页正文提取
+│   ├── obsidian-markdown/    # Obsidian Markdown 渲染
+│   ├── obsidian-cli/         # Vault 读写与检索
+│   ├── obsidian-bases/       # Bases 数据视图
+│   └── json-canvas/          # Canvas 文件
+├── third-party/              # 上游许可证与插件元数据，非运行时依赖
 ├── docs/                    # 设计文档
 │   ├── superpowers/
 │   │   ├── specs/           # 设计方案
@@ -186,8 +196,9 @@ second-brain/
 
 - **单一规范源**：顶层 `skills/` 是项目规范源；第二大脑运行规范集中在 `skills/second-brain-hub/`，Obsidian 工具仍独立维护。
 - **路由契约**：`skills/second-brain-hub/route-contracts.json` 是 Hub 场景链路、条件步骤和写入前置的唯一规范源；Hub 正文、测试提示与审计文档均应据此校验。
-- **能力契约**：`skills/second-brain-hub/capability-contracts.json` 定义 Hub 直接调用能力的输入、输出、门控、失败策略与副作用；路由步骤必须能映射到已声明能力。
-- **Agent 自适应安装**：安装 `second-brain-hub` 和所需 Obsidian 工具 Skill；不要把 `references/legacy/` 中的方法论档案安装为平级 Skill。
+- **能力契约**：`skills/second-brain-hub/capability-contracts.json` 定义输入、输出、门控、失败策略和可移植实现定位。内部能力使用 Hub 相对 `reference`，外部工具使用 Skill `name`，不依赖仓库绝对路径。
+- **Agent 自适应安装**：直接复制顶层 `skills/` 下的 6 个目录；不要把 `references/legacy/` 中的方法论档案安装为平级 Skill。
+- **运行时边界**：`scripts/`、`tests/`、`docs/`、`books/` 和 `third-party/` 仅用于开发、验证、文档与许可证归档，用户运行第二大脑时不需要安装，也不需要 Python。
 - **多 agent 同步**：如果你同时使用多个 agent 产品，修改 Skill 内容后请确保从顶层 `skills/` 重新复制到各 agent 的目标目录。
 - **配置模板**：`skills/second-brain-hub/hub-state.example.json` 是配置模板，安装时复制生成 `hub-state.json`。
 - **本地运行态配置**：`hub-state.json` 保存 `vault_path`、`vault_name`、`active_projects`、偏好和 12 问题清单，属于本地文件，不提交到版本库。安装到 agent 时放在对应 skill 目录下。

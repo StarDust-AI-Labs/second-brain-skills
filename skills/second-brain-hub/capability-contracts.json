@@ -1,11 +1,11 @@
 {
-  "schema_version": "2.1",
+  "schema_version": "3.0",
   "source_of_truth": "skills/",
   "capabilities": [
     {
       "id": "defuddle",
       "module": "tools",
-      "implementation": "skills/obsidian-skills-main/skills/defuddle/SKILL.md",
+      "implementation": {"type": "skill", "name": "defuddle"},
       "inputs": ["source_url"],
       "outputs": ["source_title", "raw_markdown", "source_word_count"],
       "gates": [],
@@ -15,7 +15,7 @@
     {
       "id": "capture-criteria",
       "module": "capture",
-      "implementation": "skills/second-brain-hub/references/module-capture-criteria.md",
+      "implementation": {"type": "reference", "path": "references/module-capture-criteria.md"},
       "inputs": ["source_excerpt", "capture_context"],
       "outputs": ["keep_decision", "resonance_reason", "criteria_hits"],
       "gates": ["resonance-before-capture", "extract-limit-before-save"],
@@ -25,7 +25,7 @@
     {
       "id": "para-system",
       "module": "organize",
-      "implementation": "skills/second-brain-hub/references/module-para-system.md",
+      "implementation": {"type": "reference", "path": "references/module-para-system.md"},
       "inputs": ["content_summary", "active_projects", "existing_folders"],
       "outputs": ["target_folder", "classification_reason", "project_or_area"],
       "gates": ["outcome-before-category", "target-path-before-write"],
@@ -35,7 +35,7 @@
     {
       "id": "progressive-summarization",
       "module": "distill",
-      "implementation": "skills/second-brain-hub/references/module-progressive-summarization.md",
+      "implementation": {"type": "reference", "path": "references/module-progressive-summarization.md"},
       "inputs": ["selected_note_or_source", "target_distill_level"],
       "outputs": ["distill_level", "distilled_excerpt", "core_points"],
       "gates": ["source-selected-before-distill", "density-limit-before-update"],
@@ -45,7 +45,7 @@
     {
       "id": "intermediate-packets",
       "module": "express",
-      "implementation": "skills/second-brain-hub/references/module-intermediate-packets.md",
+      "implementation": {"type": "reference", "path": "references/module-intermediate-packets.md"},
       "inputs": ["creation_topic", "search_results"],
       "outputs": ["matched_notes", "usable_packets", "material_gaps"],
       "gates": [],
@@ -55,7 +55,7 @@
     {
       "id": "diverge-converge",
       "module": "maintenance-diagnosis",
-      "implementation": "skills/second-brain-hub/references/module-diverge-converge.md",
+      "implementation": {"type": "reference", "path": "references/module-diverge-converge.md"},
       "inputs": ["creation_blocker_signals", "project_state"],
       "outputs": ["mode_diagnosis", "recommended_mode_switch", "next_constraint"],
       "gates": [],
@@ -65,7 +65,7 @@
     {
       "id": "creative-workflow",
       "module": "express",
-      "implementation": "skills/second-brain-hub/references/module-creative-workflow.md",
+      "implementation": {"type": "reference", "path": "references/module-creative-workflow.md"},
       "inputs": ["creation_topic", "usable_packets", "blocker_diagnosis"],
       "outputs": ["outline_or_next_artifact", "hemingway_bridge", "next_action"],
       "gates": ["blocker-diagnosed-before-workflow", "next-artifact-before-finish"],
@@ -75,7 +75,7 @@
     {
       "id": "knowledge-lifecycle",
       "module": "maintenance-diagnosis",
-      "implementation": "skills/second-brain-hub/references/module-knowledge-lifecycle.md",
+      "implementation": {"type": "reference", "path": "references/module-knowledge-lifecycle.md"},
       "inputs": ["review_scope", "active_projects", "recent_notes"],
       "outputs": ["review_scope", "review_findings", "next_priorities"],
       "gates": [],
@@ -85,7 +85,7 @@
     {
       "id": "twelve-favorite-problems",
       "module": "capture",
-      "implementation": "skills/second-brain-hub/references/module-twelve-favorite-problems.md",
+      "implementation": {"type": "reference", "path": "references/module-twelve-favorite-problems.md"},
       "inputs": ["search_results", "twelve_problems"],
       "outputs": ["matched_problem_ids", "match_reason"],
       "gates": [],
@@ -95,7 +95,7 @@
     {
       "id": "obsidian-markdown",
       "module": "tools",
-      "implementation": "skills/obsidian-skills-main/skills/obsidian-markdown/SKILL.md",
+      "implementation": {"type": "skill", "name": "obsidian-markdown"},
       "inputs": ["note_content", "frontmatter", "target_path"],
       "outputs": ["final_markdown", "frontmatter_fields", "wikilinks_or_callouts_checked"],
       "gates": [],
@@ -105,7 +105,7 @@
     {
       "id": "obsidian-cli",
       "module": "tools",
-      "implementation": "skills/obsidian-skills-main/skills/obsidian-cli/SKILL.md",
+      "implementation": {"type": "skill", "name": "obsidian-cli"},
       "inputs": ["vault_name", "operation", "target_path_or_query"],
       "outputs": ["search_results", "read_content", "write_receipt"],
       "gates": [],
@@ -115,7 +115,7 @@
     {
       "id": "second-brain-diagnosis",
       "module": "maintenance-diagnosis",
-      "implementation": "skills/second-brain-hub/references/module-second-brain-diagnosis.md",
+      "implementation": {"type": "reference", "path": "references/module-second-brain-diagnosis.md"},
       "inputs": ["system_symptoms", "recent_example"],
       "outputs": ["bottleneck_stage", "diagnosis_evidence", "recommended_scene", "next_experiment"],
       "gates": [],
