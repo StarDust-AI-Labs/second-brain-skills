@@ -55,6 +55,7 @@
     "input": "回顾一下这周做了什么",
     "expected_intent": "回顾整理",
     "expected_final_action": "create",
+    "expected_skipped_conditional_steps": ["intermediate-packets"],
     "expected_evidence": ["vault-config", "intent-confirmed", "target-path", "template-ready", "write-allowed"]
   },
   {
@@ -64,5 +65,13 @@
     "expected_intent": "探索查询",
     "expected_final_action": "read",
     "expected_evidence": ["vault-config", "intent-confirmed"]
+  },
+  {
+    "id": "e2e-diagnosis-advisory",
+    "contract_id": "diagnosis",
+    "input": "我的笔记越记越多，但完全产出不了东西，帮我看看卡在哪",
+    "expected_intent": "系统诊断",
+    "expected_final_action": "advisory",
+    "expected_evidence": ["intent-confirmed"]
   }
 ]

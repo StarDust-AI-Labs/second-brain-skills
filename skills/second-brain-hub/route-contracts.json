@@ -1,10 +1,10 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "2.0",
   "source_of_truth": "skills/",
   "global_preflight": [
     {
       "id": "vault-config",
-      "applies_to": "all",
+      "applies_to": "vault-scenes",
       "evidence": "vault_config=pass"
     },
     {
@@ -40,6 +40,7 @@
       "id": "inspiration",
       "intent": "灵感速记",
       "mode": "write",
+      "requires_vault": true,
       "step_order": [
         "hub.target-routing",
         "capture-criteria",
@@ -67,6 +68,7 @@
       "id": "external-save",
       "intent": "保存外源",
       "mode": "write",
+      "requires_vault": true,
       "step_order": [
         "defuddle",
         "capture-criteria",
@@ -95,6 +97,7 @@
       "id": "distill",
       "intent": "提炼加工",
       "mode": "update",
+      "requires_vault": true,
       "step_order": [
         "obsidian-cli/search",
         "obsidian-cli/read",
@@ -118,6 +121,7 @@
       "id": "create",
       "intent": "创作启动",
       "mode": "write",
+      "requires_vault": true,
       "step_order": [
         "diverge-converge",
         "intermediate-packets",
@@ -157,6 +161,7 @@
       "id": "inbox",
       "intent": "收件箱处理",
       "mode": "move-or-delete",
+      "requires_vault": true,
       "step_order": [
         "obsidian-cli/list",
         "capture-criteria",
@@ -184,9 +189,11 @@
       "id": "review",
       "intent": "回顾整理",
       "mode": "write",
+      "requires_vault": true,
       "step_order": [
         "knowledge-lifecycle",
         "obsidian-cli/list-search",
+        "intermediate-packets",
         "obsidian-markdown",
         "obsidian-cli/create"
       ],
@@ -196,7 +203,13 @@
         "obsidian-markdown",
         "obsidian-cli/create"
       ],
-      "conditional_steps": [],
+      "conditional_steps": [
+        {
+          "id": "intermediate-packets",
+          "run_when": "周月回顾或项目收尾中发现可跨项目复用的过程产物、落选素材或最终成果",
+          "skip_evidence": "本次回顾未发现需要回收的可复用素材"
+        }
+      ],
       "required_outputs": [
         "review_scope",
         "review_findings",
@@ -208,6 +221,7 @@
       "id": "query",
       "intent": "探索查询",
       "mode": "read",
+      "requires_vault": true,
       "step_order": [
         "obsidian-cli/search",
         "twelve-favorite-problems"
@@ -224,6 +238,25 @@
       ],
       "required_outputs": [
         "search_results"
+      ]
+    },
+    {
+      "id": "diagnosis",
+      "intent": "系统诊断",
+      "mode": "advisory",
+      "requires_vault": false,
+      "step_order": [
+        "second-brain-diagnosis"
+      ],
+      "required_steps": [
+        "second-brain-diagnosis"
+      ],
+      "conditional_steps": [],
+      "required_outputs": [
+        "bottleneck_stage",
+        "diagnosis_evidence",
+        "recommended_scene",
+        "next_experiment"
       ]
     }
   ]
