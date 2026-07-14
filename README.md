@@ -80,35 +80,27 @@
 
 ## 架构概览
 
-> 五层架构：输入层 → Agent层 → 方法论层 → 工具层 → 存储层
+> 四层架构：输入层 → Agent / Hub 层 → SKILL 层 → 存储层
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │  📥 输入层                                           │
 │  语音转写 · 网页链接 · 文件上传 · 聊天消息               │
 ├─────────────────────────────────────────────────────┤
-│  🤖 Agent层                                         │
+│  🤖 Agent / Hub 层                                  │
 │  ┌─────────────────────────────────────────────┐    │
 │  │  🧭 second-brain-hub · 中枢调度器              │    │
-│  │  意图识别 · 场景路由 · 上下文记忆 · 统一写入     │    │
+│  │  意图识别 · 契约编排 · 运行台账 · 副作用门控     │    │
 │  └─────────────────────────────────────────────┘    │
 ├─────────────────────────────────────────────────────┤
-│  📚 Hub 内部能力层  (C·O·D·E 信管法则)                │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐│
-│  │📋 抓取    │ │🗂️ 组织   │ │✨ 提炼    │ │🚀 表达   ││
-│  │capture   │ │Organize  │ │Distill   │ │Express   ││
-│  │criteria  │ │para-     │ │prog-     │ │inter-    ││
-│  │twelve-   │ │system    │ │ressive-  │ │mediate-  ││
-│  │problems  │ │          │ │summari-  │ │packets   ││
-│  │          │ │          │ │zation    │ │creative- ││
-│  │          │ │          │ │diverge-  │ │workflow  ││
-│  │          │ │          │ │converge  │ │          ││
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘│
-│  🧭 second-brain-code  ·  🔄 knowledge-lifecycle    │
-├─────────────────────────────────────────────────────┤
-│  🔧 工具层 (Obsidian 工具链)                          │
-│  obsidian-cli · obsidian-markdown · obsidian-bases  │
-│  json-canvas  ·  defuddle                           │
+│  🧩 SKILL 层 · 方法论能力与工具能力统一编排            │
+│  📋 抓取：capture-criteria · twelve-favorite-problems│
+│  🗂️ 组织：para-system                                │
+│  ✨ 提炼：progressive-summarization                  │
+│  🚀 表达：intermediate-packets · creative-workflow   │
+│  🔧 工具：defuddle · markdown · cli · bases · canvas │
+│  🔄 系统维护/诊断：knowledge-lifecycle                │
+│                     code-diagnosis · diverge-converge │
 ├─────────────────────────────────────────────────────┤
 │  💾 存储层                                           │
 │  ┌─────────────────────────────────────────────┐    │
@@ -118,11 +110,11 @@
 └─────────────────────────────────────────────────────┘
 ```
 
-> 🎨 完整 SVG 架构图：[architecture-diagram-v8.html](docs/architecture-diagram-v8.html)
+> 🎨 完整架构图：[architecture-diagram-v8.html](docs/architecture-diagram-v8.html)
 
 ***
 
-## Skill 与内部能力清单
+## SKILL 层模块清单
 
 ### 🧭 中枢调度
 
@@ -130,29 +122,18 @@
 | ------------------ | ------------------------------------------ |
 | `second-brain-hub` | 唯一入口：8 类意图 → 7 条 Vault 执行流 + 1 条只读诊断流 → Obsidian 写入管道 |
 
-### 📚 9 大内部方法论能力（来自《打造第二大脑》）
+### 🧩 统一 SKILL 层
 
-| 阶段       | 内部模块                       | 说明                     |
-| -------- | --------------------------- | ---------------------- |
-| 🧭 顶层框架  | `second-brain-code`         | CODE信管法则：抓取→组织→提炼→表达   |
-| 🧭 顶层框架  | `diverge-converge`          | 发散与聚合：创作活动的底层节律        |
-| 📋 信息输入  | `capture-criteria`          | 共鸣原则：四标准判断"什么值得记录"     |
-| 📋 信息输入  | `twelve-favorite-problems`  | 十二个兴趣问题：用好奇心导航信息消费     |
-| 🗂️ 信息组织 | `para-system`               | PARA系统：项目/领域/资源/存档四类分类 |
-| 🗂️ 信息组织 | `progressive-summarization` | 渐进式归纳法：四层级笔记提炼技术       |
-| 🚀 创造产出  | `intermediate-packets`      | 半熟素材思维：永不从零开始          |
-| 🚀 创造产出  | `creative-workflow`         | 创造性工作流：思想群岛+海明威之桥+压缩范围 |
-| 🔄 系统维护  | `knowledge-lifecycle`       | 知识生命周期：周月回顾+处处留意       |
+| 模块 | 能力 / Skill | 职责 |
+| --- | --- | --- |
+| 📋 抓取 | `capture-criteria`、`twelve-favorite-problems` | 判断保存价值，以长期兴趣方向过滤信息 |
+| 🗂️ 组织 | `para-system` | 根据行动结果确定项目、领域、资源或存档归属 |
+| ✨ 提炼 | `progressive-summarization` | 执行 L1-L4 渐进式提炼 |
+| 🚀 表达 | `intermediate-packets`、`creative-workflow` | 复用半熟素材，形成可继续推进或交付的产物 |
+| 🔧 工具 | `defuddle`、`obsidian-markdown`、`obsidian-cli`、`obsidian-bases`、`json-canvas` | 网页提取、模板渲染、Vault 操作和可视化 |
+| 🔄 系统维护与诊断 | `knowledge-lifecycle`、`code-diagnosis`、`diverge-converge`、`second-brain-diagnosis` | 周月回顾、知识回收、CODE 瓶颈和创作模式诊断 |
 
-### 🔧 5 大 Obsidian 工具 Skill
-
-| Skill               | 说明                                                   |
-| ------------------- | ---------------------------------------------------- |
-| `obsidian-cli`      | Obsidian 命令行操作                                       |
-| `obsidian-markdown` | Obsidian 风格 Markdown（wikilinks/callouts/frontmatter） |
-| `obsidian-bases`    | Obsidian Bases 数据库视图                                 |
-| `json-canvas`       | JSON Canvas 画布                                       |
-| `defuddle`          | 网页→Markdown 提取                                       |
+方法论能力以内置 `module-*.md` 形式按需加载；工具模块仍保留独立 Tool Skill 实现，但在项目架构上统一归入 SKILL 层。
 
 ***
 
