@@ -1,5 +1,5 @@
 param(
-    [string]$PrimaryPath = "skills/second-brain-hub/test-prompts.json",
+    [string]$PrimaryPath = "tests/hub/test-prompts.json",
     [string]$MirrorPath = "",
     [string]$StateExamplePath = "skills/second-brain-hub/hub-state.example.json",
     [string]$ContractPath = "skills/second-brain-hub/route-contracts.json",
@@ -169,6 +169,35 @@ function Get-CapabilityIdForStep {
     return (($Step -replace "\(.*$", "") -replace "/.*$", "")
 }
 
+function Resolve-CapabilityImplementation {
+    param(
+        [object]$Implementation,
+        [string]$ContractPath
+    )
+
+    if (-not ($Implementation.PSObject.Properties.Name -contains "type")) {
+        throw "Capability implementation is missing type"
+    }
+
+    switch ($Implementation.type) {
+        "reference" {
+            if (-not ($Implementation.PSObject.Properties.Name -contains "path") -or [string]::IsNullOrWhiteSpace($Implementation.path)) {
+                throw "Reference implementation is missing path"
+            }
+            return Join-Path (Split-Path -Parent $ContractPath) ([string]$Implementation.path -replace "/", "\")
+        }
+        "skill" {
+            if (-not ($Implementation.PSObject.Properties.Name -contains "name") -or $Implementation.name -notmatch "^[a-z0-9-]+$") {
+                throw "Skill implementation has invalid name"
+            }
+            return "skills/$($Implementation.name)/SKILL.md"
+        }
+        default {
+            throw "Unknown capability implementation type '$($Implementation.type)'"
+        }
+    }
+}
+
 function Read-CapabilityContracts {
     param(
         [string]$Path,
@@ -209,7 +238,7 @@ function Read-CapabilityContracts {
             throw "Capability '$($capability.id)' must define failure_mode"
         }
 
-        $skillDefinitionPath = [string]$capability.implementation
+        $skillDefinitionPath = Resolve-CapabilityImplementation -Implementation $capability.implementation -ContractPath $Path
         if (-not (Test-Path -LiteralPath $skillDefinitionPath)) {
             throw "Capability '$($capability.id)' points to missing implementation: $skillDefinitionPath"
         }
@@ -379,10 +408,29 @@ function Assert-HubSkillStructure {
         throw "Hub references must not contain discoverable nested SKILL.md files"
     }
 
-    $publicMethodSkills = @(Get-ChildItem -LiteralPath "skills" -Directory | Where-Object {
+    $publicSkills = @(Get-ChildItem -LiteralPath "skills" -Directory | Where-Object {
         Test-Path -LiteralPath (Join-Path $_.FullName "SKILL.md")
-    } | ForEach-Object { $_.Name })
-    Assert-SequenceEqual -Actual $publicMethodSkills -Expected @("second-brain-hub") -Description "Top-level public Skill set"
+    } | ForEach-Object { $_.Name } | Sort-Object)
+    $expectedPublicSkills = @("defuddle", "json-canvas", "obsidian-bases", "obsidian-cli", "obsidian-markdown", "second-brain-hub")
+    Assert-SequenceEqual -Actual $publicSkills -Expected $expectedPublicSkills -Description "Top-level installable Skill set"
+
+    foreach ($skillName in $expectedPublicSkills) {
+        $definitionPath = "skills/$skillName/SKILL.md"
+        $definition = Get-Content -Raw -Encoding UTF8 -LiteralPath $definitionPath
+        $definitionFrontmatter = [regex]::Match($definition, "(?s)\A---\r?\n(.*?)\r?\n---")
+        if (-not $definitionFrontmatter.Success) {
+            throw "Skill '$skillName' has invalid YAML frontmatter"
+        }
+        $definitionKeys = @($definitionFrontmatter.Groups[1].Value -split "\r?\n" | Where-Object { $_ -match "^([a-zA-Z0-9_-]+):" } | ForEach-Object { $Matches[1] })
+        Assert-SequenceEqual -Actual $definitionKeys -Expected @("name", "description") -Description "Skill '$skillName' frontmatter keys"
+        if ($definitionFrontmatter.Groups[1].Value -notmatch "(?m)^name:\s*$([regex]::Escape($skillName))\s*$") {
+            throw "Skill folder '$skillName' does not match its frontmatter name"
+        }
+    }
+
+    if (Test-Path -LiteralPath "skills/obsidian-skills-main") {
+        throw "Obsidian tool Skills must be flattened; nested bundle still exists under skills/"
+    }
 
     $agentMetadata = Join-Path $skillDirectory "agents/openai.yaml"
     if (-not (Test-Path -LiteralPath $agentMetadata)) {

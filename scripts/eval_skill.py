@@ -11,8 +11,15 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MAX_DESCRIPTION_CHARS = 300
-PUBLIC_SKILLS = ["second-brain-hub"]
+MAX_DESCRIPTION_CHARS = 500
+PUBLIC_SKILLS = [
+    "defuddle",
+    "json-canvas",
+    "obsidian-bases",
+    "obsidian-cli",
+    "obsidian-markdown",
+    "second-brain-hub",
+]
 
 
 def load_json(path: Path):
@@ -113,11 +120,15 @@ def check_descriptions(root_name: str) -> list[str]:
     return errors
 
 
-def implementation_path(root_name: str, implementation: str) -> Path:
-    relative = Path(implementation)
-    if root_name == "skills":
-        return ROOT / relative
-    return ROOT / root_name / relative
+def implementation_path(root_name: str, implementation: dict[str, str]) -> Path:
+    implementation_type = implementation.get("type")
+    if implementation_type == "skill":
+        return skill_path(root_name, implementation["name"])
+    if implementation_type == "reference":
+        if root_name == "skills":
+            return ROOT / "skills" / "second-brain-hub" / implementation["path"]
+        return ROOT / root_name / "skills" / "second-brain-hub" / implementation["path"]
+    raise AssertionError(f"Unknown implementation type: {implementation_type}")
 
 
 def check_gates(root_name: str) -> list[str]:
