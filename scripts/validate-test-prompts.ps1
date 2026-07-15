@@ -1,5 +1,5 @@
 param(
-    [string]$PrimaryPath = "skills/second-brain-hub/test-prompts.json",
+    [string]$PrimaryPath = "tests/hub/test-prompts.json",
     [string]$MirrorPath = "",
     [string]$StateExamplePath = "skills/second-brain-hub/hub-state.example.json",
     [string]$ContractPath = "skills/second-brain-hub/route-contracts.json",
@@ -8,7 +8,9 @@ param(
     [string]$IntentCasePath = "tests/hub/intent-routing.json",
     [string]$RouteCasePath = "tests/hub/route-contract-cases.json",
     [string]$E2ECasePath = "tests/hub/e2e-cases.json",
-    [string]$GateCasePath = "tests/hub/gate-cases.json"
+    [string]$GateCasePath = "tests/hub/gate-cases.json",
+    [string]$DependencyPath = "skills/second-brain-hub/dependencies.json",
+    [string]$DependencyCasePath = "tests/hub/dependency-cases.json"
 )
 
 $ErrorActionPreference = "Stop"
@@ -169,6 +171,35 @@ function Get-CapabilityIdForStep {
     return (($Step -replace "\(.*$", "") -replace "/.*$", "")
 }
 
+function Resolve-CapabilityImplementation {
+    param(
+        [object]$Implementation,
+        [string]$ContractPath
+    )
+
+    if (-not ($Implementation.PSObject.Properties.Name -contains "type")) {
+        throw "Capability implementation is missing type"
+    }
+
+    switch ($Implementation.type) {
+        "reference" {
+            if (-not ($Implementation.PSObject.Properties.Name -contains "path") -or [string]::IsNullOrWhiteSpace($Implementation.path)) {
+                throw "Reference implementation is missing path"
+            }
+            return Join-Path (Split-Path -Parent $ContractPath) ([string]$Implementation.path -replace "/", "\")
+        }
+        "skill" {
+            if (-not ($Implementation.PSObject.Properties.Name -contains "name") -or $Implementation.name -notmatch "^[a-z0-9-]+$") {
+                throw "Skill implementation has invalid name"
+            }
+            return "skills/$($Implementation.name)/SKILL.md"
+        }
+        default {
+            throw "Unknown capability implementation type '$($Implementation.type)'"
+        }
+    }
+}
+
 function Read-CapabilityContracts {
     param(
         [string]$Path,
@@ -191,13 +222,16 @@ function Read-CapabilityContracts {
 
     $capabilities = @{}
     foreach ($capability in @($data.capabilities)) {
-        foreach ($property in @("id", "implementation", "inputs", "outputs", "gates", "failure_mode", "side_effects")) {
+        foreach ($property in @("id", "module", "implementation", "inputs", "outputs", "gates", "failure_mode", "side_effects")) {
             if (-not ($capability.PSObject.Properties.Name -contains $property)) {
                 throw "Capability contract is missing required property '$property'"
             }
         }
         if ($capabilities.ContainsKey($capability.id)) {
             throw "Duplicate capability contract id: $($capability.id)"
+        }
+        if ($capability.module -notin @("capture", "organize", "distill", "express", "tools", "maintenance-diagnosis")) {
+            throw "Capability '$($capability.id)' has unknown SKILL module '$($capability.module)'"
         }
         if (@($capability.inputs).Count -eq 0 -or @($capability.outputs).Count -eq 0) {
             throw "Capability '$($capability.id)' must define at least one input and output"
@@ -206,7 +240,7 @@ function Read-CapabilityContracts {
             throw "Capability '$($capability.id)' must define failure_mode"
         }
 
-        $skillDefinitionPath = [string]$capability.implementation
+        $skillDefinitionPath = Resolve-CapabilityImplementation -Implementation $capability.implementation -ContractPath $Path
         if (-not (Test-Path -LiteralPath $skillDefinitionPath)) {
             throw "Capability '$($capability.id)' points to missing implementation: $skillDefinitionPath"
         }
@@ -376,10 +410,29 @@ function Assert-HubSkillStructure {
         throw "Hub references must not contain discoverable nested SKILL.md files"
     }
 
-    $publicMethodSkills = @(Get-ChildItem -LiteralPath "skills" -Directory | Where-Object {
+    $publicSkills = @(Get-ChildItem -LiteralPath "skills" -Directory | Where-Object {
         Test-Path -LiteralPath (Join-Path $_.FullName "SKILL.md")
-    } | ForEach-Object { $_.Name })
-    Assert-SequenceEqual -Actual $publicMethodSkills -Expected @("second-brain-hub") -Description "Top-level public Skill set"
+    } | ForEach-Object { $_.Name } | Sort-Object)
+    $expectedPublicSkills = @("defuddle", "json-canvas", "obsidian-bases", "obsidian-cli", "obsidian-markdown", "second-brain-hub")
+    Assert-SequenceEqual -Actual $publicSkills -Expected $expectedPublicSkills -Description "Top-level installable Skill set"
+
+    foreach ($skillName in $expectedPublicSkills) {
+        $definitionPath = "skills/$skillName/SKILL.md"
+        $definition = Get-Content -Raw -Encoding UTF8 -LiteralPath $definitionPath
+        $definitionFrontmatter = [regex]::Match($definition, "(?s)\A---\r?\n(.*?)\r?\n---")
+        if (-not $definitionFrontmatter.Success) {
+            throw "Skill '$skillName' has invalid YAML frontmatter"
+        }
+        $definitionKeys = @($definitionFrontmatter.Groups[1].Value -split "\r?\n" | Where-Object { $_ -match "^([a-zA-Z0-9_-]+):" } | ForEach-Object { $Matches[1] })
+        Assert-SequenceEqual -Actual $definitionKeys -Expected @("name", "description") -Description "Skill '$skillName' frontmatter keys"
+        if ($definitionFrontmatter.Groups[1].Value -notmatch "(?m)^name:\s*$([regex]::Escape($skillName))\s*$") {
+            throw "Skill folder '$skillName' does not match its frontmatter name"
+        }
+    }
+
+    if (Test-Path -LiteralPath "skills/obsidian-skills-main") {
+        throw "Obsidian tool Skills must be flattened; nested bundle still exists under skills/"
+    }
 
     $agentMetadata = Join-Path $skillDirectory "agents/openai.yaml"
     if (-not (Test-Path -LiteralPath $agentMetadata)) {
@@ -388,6 +441,40 @@ function Assert-HubSkillStructure {
 }
 
 $null = Assert-HubSkillStructure -Path $HubSkillPath
+$dependencyDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath $DependencyPath | ConvertFrom-Json
+foreach ($property in @("schema_version", "package", "distribution", "dependencies")) {
+    if (-not ($dependencyDocument.PSObject.Properties.Name -contains $property)) { throw "Dependency manifest is missing '$property'" }
+}
+if ($dependencyDocument.package -ne "second-brain-hub" -or -not $dependencyDocument.distribution.store_entry) { throw "Only second-brain-hub may be the public store entry" }
+$expectedDependencies = @("defuddle", "json-canvas", "obsidian-bases", "obsidian-cli", "obsidian-markdown")
+$actualDependencies = @($dependencyDocument.dependencies | ForEach-Object { $_.name } | Sort-Object)
+Assert-SequenceEqual -Actual $actualDependencies -Expected @($expectedDependencies | Sort-Object) -Description "Hidden dependency set"
+foreach ($dependency in @($dependencyDocument.dependencies)) {
+    if ($dependency.visibility -ne "hidden" -or -not $dependency.install_with_parent) { throw "Dependency '$($dependency.name)' must be hidden and installed with parent" }
+    if (-not (Test-Path -LiteralPath $dependency.source.path)) { throw "Dependency '$($dependency.name)' points to missing path '$($dependency.source.path)'" }
+}
+$dependencyCases = Read-TestPrompts -Path $DependencyCasePath
+$dependencyProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/dependency-resolution.md"
+foreach ($gate in @("fallback-vault-boundary", "fallback-write-preflight")) {
+    if ($dependencyProtocol -notmatch [regex]::Escape("<HARD-GATE id=`"$gate`">")) { throw "Dependency protocol is missing HARD-GATE '$gate'" }
+}
+$behaviorCasesPath = "tests/hub/behavior-cases.json"
+$qualityGatesPath = "tests/hub/quality-gates.json"
+$behaviorSchemaPath = "tests/hub/behavior-output.schema.json"
+foreach ($requiredBehaviorFile in @($behaviorCasesPath, $qualityGatesPath, $behaviorSchemaPath, "skills/second-brain-hub/references/evaluation-protocol.md", "scripts/run-hub-behavior-eval.ps1", "scripts/build-skillhub-package.ps1")) {
+    if (-not (Test-Path -LiteralPath $requiredBehaviorFile)) { throw "Missing behavior evaluation file: $requiredBehaviorFile" }
+}
+$behaviorCases = @(Get-Content -Raw -Encoding UTF8 -LiteralPath $behaviorCasesPath | ConvertFrom-Json | ForEach-Object { $_ })
+$behaviorIds = @{}
+foreach ($case in $behaviorCases) {
+    foreach ($property in @("id", "category", "input", "expected_intent", "expected_action")) { Assert-HasProperty -Item $case -Name $property -CaseId "<behavior-case>" }
+    if ($behaviorIds.ContainsKey($case.id)) { throw "Duplicate behavior case id: $($case.id)" }
+    $behaviorIds[$case.id] = $true
+}
+$qualityGates = Get-Content -Raw -Encoding UTF8 -LiteralPath $qualityGatesPath | ConvertFrom-Json
+if ($qualityGates.minimum_overall_score -lt 4.6) { throw "Behavior quality gate must target at least 4.6" }
+$evaluationProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/evaluation-protocol.md"
+if ($evaluationProtocol -notmatch [regex]::Escape('<HARD-GATE id="eval-no-side-effects">')) { throw "Evaluation protocol is missing eval-no-side-effects gate" }
 $primary = Read-TestPrompts -Path $PrimaryPath
 $contracts = Read-RouteContracts -Path $ContractPath
 $routeContractDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath $ContractPath | ConvertFrom-Json
@@ -495,6 +582,8 @@ Write-Output "Route contracts: $ContractPath ($($contracts.Count) scenes)"
 Write-Output "Capability contracts: $CapabilityContractPath ($($capabilities.Count) capabilities)"
 Write-Output "Test layers: intent=$($intentCases.Count), route=$($routeCases.Count), e2e=$($e2eCases.Count), gates=$($gateCases.Count)"
 Write-Output "Total cases: $($primary.Count)"
+Write-Output "Behavior cases: $($behaviorCases.Count); target score: $($qualityGates.minimum_overall_score)"
+Write-Output "Hidden dependencies: $($actualDependencies.Count); dependency cases: $($dependencyCases.Count)"
 Write-Output "Scene coverage:"
 foreach ($key in ($sceneCounts.Keys | Sort-Object)) {
     Write-Output ("  {0}: {1}" -f $key, $sceneCounts[$key])

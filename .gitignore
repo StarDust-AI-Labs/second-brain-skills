@@ -19,3 +19,6 @@
 # Local second-brain runtime config
 **/hub-state.local.json
 **/second-brain-hub/hub-state.json
+
+# Local evaluation reports
+artifacts/

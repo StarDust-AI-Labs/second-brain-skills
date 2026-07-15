@@ -30,6 +30,8 @@ hub_run_ledger:
   scenario_contract: null
   contract_version: null
   capability_contract_version: null
+  dependency_manifest_version: null
+  dependency_resolution: {}
   global_preflight: []
   write_preflight: []
   required_chain: []
@@ -48,10 +50,11 @@ hub_run_ledger:
 
 1. `vault_config = pass`；系统诊断不读取 Vault 时可记录 `not_required` 证据。
 2. `intent` 已归类。
-3. 已读取两份契约，并选择唯一 `scenario_contract`。
+3. 已读取两份契约和依赖清单，并选择唯一 `scenario_contract`。
 4. 当前步骤之前的所有必选步骤已有输出凭证。
 5. 条件步骤已执行，或已有契约指定的跳过证据。
 6. 副作用操作已完成对应 `write_preflight`。
+7. 当前工具能力已解析为 `primary` 或满足门控的 `fallback`；解析为 `blocked` 时只停止当前能力或场景。
 
 禁止用 Hub 自己的自由判断替代契约要求的能力输出。
 
