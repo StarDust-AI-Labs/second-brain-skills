@@ -1,16 +1,14 @@
 # 🧠 Second Brain · Skill Ecosystem
 
-> An AI Agent knowledge management skill system built on Tiago Forte's *Building a Second Brain* — turning "information consumption" into "knowledge creation", powered by Obsidian skills to fully manage your digital notes.
+> An AI Agent knowledge management skill system built on Tiago Forte's *Building a Second Brain* — upgrading "knowledge recording" into "knowledge creation", powered by Obsidian skills to fully manage your digital notes.
 
 ---
 
 ## Overview
 
-This project is a complete **Personal Knowledge Management (PKM) Skill system**, built on Skill technology and compatible with multiple AI Agent products (Claude Code / Codex / Cursor / Coze / WorkBuddy, etc.).
+This project engineers the methodologies from *Building a Second Brain* — the CODE framework, PARA organizing system, Progressive Summarization, Twelve Favorite Problems, and the **Hemingway Bridge** — into a Skill system that AI Agents can invoke directly. `second-brain-hub` serves as the single entry point, housing 9 methodology capability modules and 5 Obsidian tool Skills. Users simply say "capture this idea", "save this webpage", "distill to L2", or "diagnose why I'm collecting but never creating" — the Agent handles intent routing, contract orchestration, gate checks, and knowledge writing automatically. Compatible with Claude Code, Codex, Cursor, Coze, WorkBuddy, and other major Agent platforms.
 
-It distills the CODE methodology from *Building a Second Brain* into 9 internal capability modules inside `second-brain-hub`, combined with 5 independent Obsidian tool Skills. The Hub is the only public entry point for second-brain workflows.
-
-**Core philosophy**: The endpoint of information management is not "knowing" — it's "creating".
+**Core philosophy**: The endpoint of knowledge management is not collecting — it's creating.
 
 ![Second Brain Concept Poster](docs/第二大脑概念海报.png)
 
