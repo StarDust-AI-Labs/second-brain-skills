@@ -1,0 +1,8 @@
+[
+  {"id":"dep-all-installed","available":["defuddle","json-canvas","obsidian-bases","obsidian-cli","obsidian-markdown"],"capability":"obsidian-cli","expected_resolution":"primary","expected_blocked":false},
+  {"id":"dep-cli-fallback","available":[],"capability":"obsidian-cli","vault_config":"pass","expected_resolution":"direct-vault-filesystem","expected_blocked":false},
+  {"id":"dep-cli-no-vault","available":[],"capability":"obsidian-cli","vault_config":"blocked","expected_resolution":"blocked","expected_blocked":true},
+  {"id":"dep-markdown-fallback","available":[],"capability":"obsidian-markdown","expected_resolution":"internal-obsidian-markdown-rendering","expected_blocked":false},
+  {"id":"dep-defuddle-paste","available":[],"capability":"defuddle","web_reader_available":false,"source_content_available":false,"expected_resolution":"request-user-content","expected_blocked":true},
+  {"id":"dep-unrelated-diagnosis","available":[],"capability":"second-brain-diagnosis","expected_resolution":"primary","expected_blocked":false}
+]
