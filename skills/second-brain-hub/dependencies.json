@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "package": "second-brain-hub",
+  "distribution": {
+    "visibility": "public",
+    "store_entry": true
+  },
+  "dependencies": [
+    {
+      "name": "defuddle",
+      "source": {"repository": "StarDust-AI-Labs/second-brain-skills", "path": "skills/defuddle"},
+      "visibility": "hidden",
+      "install_with_parent": true,
+      "runtime_required": false,
+      "fallback": "available-web-reader-or-user-pasted-content"
+    },
+    {
+      "name": "json-canvas",
+      "source": {"repository": "StarDust-AI-Labs/second-brain-skills", "path": "skills/json-canvas"},
+      "visibility": "hidden",
+      "install_with_parent": true,
+      "runtime_required": false,
+      "fallback": "direct-json-canvas-file-operation"
+    },
+    {
+      "name": "obsidian-bases",
+      "source": {"repository": "StarDust-AI-Labs/second-brain-skills", "path": "skills/obsidian-bases"},
+      "visibility": "hidden",
+      "install_with_parent": true,
+      "runtime_required": false,
+      "fallback": "direct-base-file-operation-when-schema-known"
+    },
+    {
+      "name": "obsidian-cli",
+      "source": {"repository": "StarDust-AI-Labs/second-brain-skills", "path": "skills/obsidian-cli"},
+      "visibility": "hidden",
+      "install_with_parent": true,
+      "runtime_required": false,
+      "fallback": "direct-vault-filesystem"
+    },
+    {
+      "name": "obsidian-markdown",
+      "source": {"repository": "StarDust-AI-Labs/second-brain-skills", "path": "skills/obsidian-markdown"},
+      "visibility": "hidden",
+      "install_with_parent": true,
+      "runtime_required": false,
+      "fallback": "internal-obsidian-markdown-rendering"
+    }
+  ]
+}
