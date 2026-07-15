@@ -1,15 +1,14 @@
 # 🧠 第二大脑 · Skill 生态
 
-> 基于蒂亚戈·福特《打造第二大脑》构建的 AI Agent 知识管理技能体系——将"信息消费"转化为"知识创造"，基于 Obsidian 技能全面掌管你的数字笔记。
+> 基于蒂亚戈·福特《打造第二大脑》构建的 AI Agent 知识管理技能体系——将"知识记录"升级为"知识创造"，基于 Obsidian 技能全面掌管你的数字笔记。
 
 ***
 
 ## 项目简介
 
-本项目是一套完整的**个人知识管理（PKM）Skill 体系**，基于 Skill 技术适配多种 AI Agent 产品（Claude Code / Codex / Cursor / Coze / WorkBuddy 等）。
-它将《打造第二大脑》中的 CODE 信管法则蒸馏为 `second-brain-hub` 内部的 9 个方法论能力模块，并配合 5 个 Obsidian 工具 Skill，最终将知识写入 Obsidian 笔记库。运行时只有 Hub 作为第二大脑公开入口。
+本项目将《打造第二大脑》中的 CODE 信管法则、PARA 组织系统、渐进式归纳、十二问过滤和**海明威之桥**等方法论，工程化为 AI Agent 可直接调用的 Skill 体系。`second-brain-hub` 作为唯一入口，内置 9 个方法论能力模块和 5 个 Obsidian 工具 Skill——用户只需说"记一下灵感""保存这篇网页""提炼到 L2""帮我诊断为什么只收集不产出"，Agent 自动完成意图路由、契约编排、门控检查和知识写入。适配 Claude Code / Codex / Cursor / Coze / WorkBuddy 等主流 Agent 平台。
 
-**核心理念**：信息管理的终点不是"知道"，而是"做出"。
+**核心理念**：知识管理的终点不是收藏，而是创造。
 
 ![第二大脑概念海报](docs/第二大脑概念海报.png)
 
