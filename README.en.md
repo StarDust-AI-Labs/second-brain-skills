@@ -1,16 +1,14 @@
 # 🧠 Second Brain · Skill Ecosystem
 
-> An AI Agent knowledge management skill system built on Tiago Forte's *Building a Second Brain* — turning "information consumption" into "knowledge creation", powered by Obsidian skills to fully manage your digital notes.
+> An AI Agent knowledge management skill system built on Tiago Forte's *Building a Second Brain* — upgrading "knowledge recording" into "knowledge creation", powered by Obsidian skills to fully manage your digital notes.
 
 ---
 
 ## Overview
 
-This project is a complete **Personal Knowledge Management (PKM) Skill system**, built on Skill technology and compatible with multiple AI Agent products (Claude Code / Codex / Cursor / Coze / WorkBuddy, etc.).
+This project engineers the methodologies from *Building a Second Brain* — the CODE framework, PARA organizing system, Progressive Summarization, Twelve Favorite Problems, and the **Hemingway Bridge** — into a Skill system that AI Agents can invoke directly. `second-brain-hub` serves as the single entry point, housing 9 methodology capability modules and 5 Obsidian tool Skills. Users simply say "capture this idea", "save this webpage", "distill to L2", or "diagnose why I'm collecting but never creating" — the Agent handles intent routing, contract orchestration, gate checks, and knowledge writing automatically. Compatible with Claude Code, Codex, Cursor, Coze, WorkBuddy, and other major Agent platforms.
 
-It distills the CODE methodology from *Building a Second Brain* into 9 internal capability modules inside `second-brain-hub`, combined with 5 independent Obsidian tool Skills. The Hub is the only public entry point for second-brain workflows.
-
-**Core philosophy**: The endpoint of information management is not "knowing" — it's "creating".
+**Core philosophy**: The endpoint of knowledge management is not collecting — it's creating.
 
 ![Second Brain Concept Poster](docs/第二大脑概念海报.png)
 
@@ -40,12 +38,17 @@ Follow these steps:
    - If SSH is not available in the current environment, prompt me for the HTTPS URL or Git credentials
 
 2. Install Skills to the target directory determined in step 0:
-   - Copy from the project's skills/ (single source of truth) to the target directory
+   - Copy the 6 directories directly under the project's `skills/` into the target skills directory, keeping each `SKILL.md` one level below the target root
+   - Do not copy `scripts/`, `tests/`, `docs/`, `books/`, or `third-party/`; they are not runtime dependencies
    - Do not overwrite my existing Skills with the same name; before overwriting, list the differences and ask me first
 
 3. Install the core Skills from this project:
    - second-brain-hub (the only second-brain entry point; methodology modules are bundled)
-   - The Obsidian tool Skills inside obsidian-skills-main
+   - defuddle
+   - obsidian-markdown
+   - obsidian-cli
+   - obsidian-bases
+   - json-canvas
 
 4. Check whether Obsidian is installed on this machine:
    - If already installed, continue to the next step
@@ -81,35 +84,28 @@ When executing, first check the current system, shell, agent type, and existing 
 
 ## Architecture Overview
 
-> Five-layer architecture: Input Layer → Agent Layer → Methodology Layer → Tool Layer → Storage Layer
+> Four-layer architecture: Input Layer → Agent / Hub Layer → SKILL Layer → Storage Layer
 
 ```
 ┌─────────────────────────────────────────────────────┐
 │  📥 Input Layer                                      │
 │  Voice transcription · Web links · File uploads · Chat messages │
 ├─────────────────────────────────────────────────────┤
-│  🤖 Agent Layer                                      │
+│  🤖 Agent / Hub Layer                                │
 │  ┌─────────────────────────────────────────────┐    │
 │  │  🧭 second-brain-hub · Central Dispatcher     │    │
-│  │  Intent recognition · Scene routing ·         │    │
-│  │  Context memory · Unified writing pipeline    │    │
+│  │  Intent recognition · Contract orchestration  │    │
+│  │  Run ledger · Side-effect gates               │    │
 │  └─────────────────────────────────────────────┘    │
 ├─────────────────────────────────────────────────────┤
-│  📚 Hub Internal Capability Layer (C·O·D·E)         │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐│
-│  │📋 Capture │ │🗂️ Organize│ │✨ Distill │ │🚀 Express ││
-│  │capture   │ │para-     │ │prog-     │ │inter-    ││
-│  │criteria  │ │system    │ │ressive-  │ │mediate-  ││
-│  │twelve-   │ │          │ │summari-  │ │packets   ││
-│  │problems  │ │          │ │zation    │ │creative- ││
-│  │          │ │          │ │diverge-  │ │workflow  ││
-│  │          │ │          │ │converge  │ │          ││
-│  └──────────┘ └──────────┘ └──────────┘ └──────────┘│
-│  🧭 second-brain-code  ·  🔄 knowledge-lifecycle    │
-├─────────────────────────────────────────────────────┤
-│  🔧 Tool Layer (Obsidian Toolchain)                  │
-│  obsidian-cli · obsidian-markdown · obsidian-bases  │
-│  json-canvas  ·  defuddle                           │
+│  🧩 SKILL Layer · Methodology + tool capabilities    │
+│  📋 Capture: capture-criteria · favorite-problems    │
+│  🗂️ Organize: para-system                            │
+│  ✨ Distill: progressive-summarization               │
+│  🚀 Express: intermediate-packets · creative-workflow│
+│  🔧 Tools: defuddle · markdown · cli · bases · canvas│
+│  🔄 Maintenance / Diagnosis: knowledge-lifecycle ·   │
+│                            code-diagnosis · diverge   │
 ├─────────────────────────────────────────────────────┤
 │  💾 Storage Layer                                    │
 │  ┌─────────────────────────────────────────────┐    │
@@ -120,11 +116,11 @@ When executing, first check the current system, shell, agent type, and existing 
 └─────────────────────────────────────────────────────┘
 ```
 
-> 🎨 Full SVG architecture diagram: [architecture-diagram-v8.html](docs/architecture-diagram-v8.html)
+> 🎨 Full architecture diagram: [architecture-diagram-v8.html](docs/architecture-diagram-v8.html)
 
 ---
 
-## Skill and Internal Capability Inventory
+## SKILL Layer Modules
 
 ### 🧭 Central Hub
 
@@ -132,29 +128,18 @@ When executing, first check the current system, shell, agent type, and existing 
 |-------|-------------|
 | `second-brain-hub` | Only entry point: 8 intents → 7 Vault flows + 1 read-only diagnosis flow → Obsidian pipeline |
 
-### 📚 9 Internal Methodology Capabilities (from *Building a Second Brain*)
+### 🧩 Unified SKILL Layer
 
-| Phase | Internal Module | Description |
-|-------|-------|-------------|
-| 🧭 Top-level Framework | `second-brain-code` | CODE methodology: Capture → Organize → Distill → Express |
-| 🧭 Top-level Framework | `diverge-converge` | Divergence & Convergence: the underlying rhythm of creative work |
-| 📋 Information Input | `capture-criteria` | Resonance Principle: four criteria for "what's worth capturing" |
-| 📋 Information Input | `twelve-favorite-problems` | Twelve Favorite Problems: navigate information consumption with curiosity |
-| 🗂️ Information Organization | `para-system` | PARA System: Projects / Areas / Resources / Archives |
-| 🗂️ Information Organization | `progressive-summarization` | Progressive Summarization: four-level note distillation technique |
-| 🚀 Creative Output | `intermediate-packets` | Intermediate Packets: never start from scratch |
-| 🚀 Creative Output | `creative-workflow` | Creative Workflow: Archipelago of Ideas + Hemingway Bridge + Scope Compression |
-| 🔄 System Maintenance | `knowledge-lifecycle` | Knowledge Lifecycle: weekly/monthly reviews + mindful awareness |
+| Module | Capabilities / Skills | Responsibility |
+| --- | --- | --- |
+| 📋 Capture | `capture-criteria`, `twelve-favorite-problems` | Decide what is worth saving and filter information through long-term interests |
+| 🗂️ Organize | `para-system` | Route information to a project, area, resource, or archive based on outcomes |
+| ✨ Distill | `progressive-summarization` | Apply L1-L4 progressive distillation |
+| 🚀 Express | `intermediate-packets`, `creative-workflow` | Reuse intermediate material and form an actionable or deliverable artifact |
+| 🔧 Tools | `defuddle`, `obsidian-markdown`, `obsidian-cli`, `obsidian-bases`, `json-canvas` | Extract pages, render notes, operate on the Vault, and create visual views |
+| 🔄 Maintenance & Diagnosis | `knowledge-lifecycle`, `code-diagnosis`, `diverge-converge`, `second-brain-diagnosis` | Run reviews, recover reusable knowledge, and diagnose CODE or creative-flow bottlenecks |
 
-### 🔧 5 Obsidian Tool Skills
-
-| Skill | Description |
-|-------|-------------|
-| `obsidian-cli` | Obsidian command-line operations |
-| `obsidian-markdown` | Obsidian-flavored Markdown (wikilinks / callouts / frontmatter) |
-| `obsidian-bases` | Obsidian Bases database views |
-| `json-canvas` | JSON Canvas |
-| `defuddle` | Web page → Markdown extraction |
+Methodology capabilities are loaded on demand from internal `module-*.md` files. Tool capabilities retain independent Tool Skill implementations, but belong to the unified SKILL layer in the project architecture.
 
 ---
 
@@ -183,7 +168,12 @@ second-brain/
 │   │   ├── route-contracts.json
 │   │   ├── capability-contracts.json
 │   │   └── references/      # Workflows, capability modules, methodology archive
-│   └── obsidian-skills-main/ # 5 Obsidian tool skills
+│   ├── defuddle/             # Web content extraction
+│   ├── obsidian-markdown/    # Obsidian Markdown rendering
+│   ├── obsidian-cli/         # Vault read, write, and search
+│   ├── obsidian-bases/       # Bases data views
+│   └── json-canvas/          # Canvas files
+├── third-party/              # Upstream license and plugin metadata; not a runtime dependency
 ├── docs/                    # Design documents
 │   ├── superpowers/
 │   │   ├── specs/           # Design specifications
@@ -207,8 +197,9 @@ second-brain/
 
 - **Single Source of Truth**: The top-level `skills/` directory is the project source; second-brain runtime specifications live under `skills/second-brain-hub/`, while Obsidian tool Skills remain independent.
 - **Route Contracts**: `skills/second-brain-hub/route-contracts.json` is the single source of truth for Hub scene chains, conditional steps, and write preconditions; Hub content, test prompts, and audit documents should validate against it.
-- **Capability Contracts**: `skills/second-brain-hub/capability-contracts.json` defines the inputs, outputs, gates, failure strategies, and side effects of Hub's directly invoked capabilities; route steps must map to declared capabilities.
-- **Agent-Adaptive Installation**: Install `second-brain-hub` and the required Obsidian tool Skills. Do not install the methodology archive under `references/legacy/` as peer Skills.
+- **Capability Contracts**: `skills/second-brain-hub/capability-contracts.json` defines inputs, outputs, gates, failure strategies, and portable implementation locators. Internal capabilities use Hub-relative references; external tools use Skill names rather than repository paths.
+- **Agent-Adaptive Installation**: Copy the 6 top-level directories under `skills/` directly into the target skills directory. Do not install the methodology archive under `references/legacy/` as peer Skills.
+- **Runtime Boundary**: `scripts/`, `tests/`, `docs/`, `books/`, and `third-party/` are only for development, validation, documentation, and license archival. End users do not need them or Python at runtime.
 - **Multi-Agent Sync**: If you use multiple agent products simultaneously, after modifying Skill content, ensure you re-copy from the top-level `skills/` to each agent's target directory.
 - **Config Template**: `skills/second-brain-hub/hub-state.example.json` is the configuration template; copy it to create `hub-state.json` during installation.
 - **Local Runtime Config**: `hub-state.json` stores `vault_path`, `vault_name`, `active_projects`, preferences, and the 12 problems list. It is a local file and should NOT be committed to version control. When installed to an agent, place it in the corresponding skill directory.
