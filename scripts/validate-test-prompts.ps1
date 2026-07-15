@@ -8,7 +8,9 @@ param(
     [string]$IntentCasePath = "tests/hub/intent-routing.json",
     [string]$RouteCasePath = "tests/hub/route-contract-cases.json",
     [string]$E2ECasePath = "tests/hub/e2e-cases.json",
-    [string]$GateCasePath = "tests/hub/gate-cases.json"
+    [string]$GateCasePath = "tests/hub/gate-cases.json",
+    [string]$DependencyPath = "skills/second-brain-hub/dependencies.json",
+    [string]$DependencyCasePath = "tests/hub/dependency-cases.json"
 )
 
 $ErrorActionPreference = "Stop"
@@ -439,10 +441,27 @@ function Assert-HubSkillStructure {
 }
 
 $null = Assert-HubSkillStructure -Path $HubSkillPath
+$dependencyDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath $DependencyPath | ConvertFrom-Json
+foreach ($property in @("schema_version", "package", "distribution", "dependencies")) {
+    if (-not ($dependencyDocument.PSObject.Properties.Name -contains $property)) { throw "Dependency manifest is missing '$property'" }
+}
+if ($dependencyDocument.package -ne "second-brain-hub" -or -not $dependencyDocument.distribution.store_entry) { throw "Only second-brain-hub may be the public store entry" }
+$expectedDependencies = @("defuddle", "json-canvas", "obsidian-bases", "obsidian-cli", "obsidian-markdown")
+$actualDependencies = @($dependencyDocument.dependencies | ForEach-Object { $_.name } | Sort-Object)
+Assert-SequenceEqual -Actual $actualDependencies -Expected @($expectedDependencies | Sort-Object) -Description "Hidden dependency set"
+foreach ($dependency in @($dependencyDocument.dependencies)) {
+    if ($dependency.visibility -ne "hidden" -or -not $dependency.install_with_parent) { throw "Dependency '$($dependency.name)' must be hidden and installed with parent" }
+    if (-not (Test-Path -LiteralPath $dependency.source.path)) { throw "Dependency '$($dependency.name)' points to missing path '$($dependency.source.path)'" }
+}
+$dependencyCases = Read-TestPrompts -Path $DependencyCasePath
+$dependencyProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/dependency-resolution.md"
+foreach ($gate in @("fallback-vault-boundary", "fallback-write-preflight")) {
+    if ($dependencyProtocol -notmatch [regex]::Escape("<HARD-GATE id=`"$gate`">")) { throw "Dependency protocol is missing HARD-GATE '$gate'" }
+}
 $behaviorCasesPath = "tests/hub/behavior-cases.json"
 $qualityGatesPath = "tests/hub/quality-gates.json"
 $behaviorSchemaPath = "tests/hub/behavior-output.schema.json"
-foreach ($requiredBehaviorFile in @($behaviorCasesPath, $qualityGatesPath, $behaviorSchemaPath, "skills/second-brain-hub/references/evaluation-protocol.md", "scripts/run-hub-behavior-eval.ps1")) {
+foreach ($requiredBehaviorFile in @($behaviorCasesPath, $qualityGatesPath, $behaviorSchemaPath, "skills/second-brain-hub/references/evaluation-protocol.md", "scripts/run-hub-behavior-eval.ps1", "scripts/build-skillhub-package.ps1")) {
     if (-not (Test-Path -LiteralPath $requiredBehaviorFile)) { throw "Missing behavior evaluation file: $requiredBehaviorFile" }
 }
 $behaviorCases = @(Get-Content -Raw -Encoding UTF8 -LiteralPath $behaviorCasesPath | ConvertFrom-Json | ForEach-Object { $_ })
@@ -564,6 +583,7 @@ Write-Output "Capability contracts: $CapabilityContractPath ($($capabilities.Cou
 Write-Output "Test layers: intent=$($intentCases.Count), route=$($routeCases.Count), e2e=$($e2eCases.Count), gates=$($gateCases.Count)"
 Write-Output "Total cases: $($primary.Count)"
 Write-Output "Behavior cases: $($behaviorCases.Count); target score: $($qualityGates.minimum_overall_score)"
+Write-Output "Hidden dependencies: $($actualDependencies.Count); dependency cases: $($dependencyCases.Count)"
 Write-Output "Scene coverage:"
 foreach ($key in ($sceneCounts.Keys | Sort-Object)) {
     Write-Output ("  {0}: {1}" -f $key, $sceneCounts[$key])

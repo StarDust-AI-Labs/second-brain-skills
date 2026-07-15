@@ -6,6 +6,7 @@
       "id": "defuddle",
       "module": "tools",
       "implementation": {"type": "skill", "name": "defuddle"},
+      "fallback_implementation": {"type": "protocol", "path": "references/dependency-resolution.md", "id": "available-web-reader-or-user-pasted-content"},
       "inputs": ["source_url"],
       "outputs": ["source_title", "raw_markdown", "source_word_count"],
       "gates": [],
@@ -96,6 +97,7 @@
       "id": "obsidian-markdown",
       "module": "tools",
       "implementation": {"type": "skill", "name": "obsidian-markdown"},
+      "fallback_implementation": {"type": "protocol", "path": "references/dependency-resolution.md", "id": "internal-obsidian-markdown-rendering"},
       "inputs": ["note_content", "frontmatter", "target_path"],
       "outputs": ["final_markdown", "frontmatter_fields", "wikilinks_or_callouts_checked"],
       "gates": [],
@@ -106,10 +108,11 @@
       "id": "obsidian-cli",
       "module": "tools",
       "implementation": {"type": "skill", "name": "obsidian-cli"},
+      "fallback_implementation": {"type": "protocol", "path": "references/dependency-resolution.md", "id": "direct-vault-filesystem"},
       "inputs": ["vault_name", "operation", "target_path_or_query"],
       "outputs": ["search_results", "read_content", "write_receipt"],
       "gates": [],
-      "failure_mode": "CLI 不可用时仅在所有前置条件完成后切换为直接文件写入；读取或搜索失败时报告阻塞。",
+      "failure_mode": "Skill 或 CLI 不可用时按依赖协议切换为 Vault 内直接文件操作；Vault 配置、路径边界或写入前置未通过时局部阻塞。",
       "side_effects": ["vault_read", "vault_write", "vault_move", "vault_delete"]
     },
     {
