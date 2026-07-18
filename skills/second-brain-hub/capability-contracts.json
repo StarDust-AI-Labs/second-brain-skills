@@ -109,7 +109,7 @@
       "module": "tools",
       "implementation": {"type": "skill", "name": "obsidian-cli"},
       "fallback_implementation": {"type": "protocol", "path": "references/dependency-resolution.md", "id": "direct-vault-filesystem"},
-      "inputs": ["vault_name", "operation", "target_path_or_query"],
+      "inputs": ["storage_mode", "vault_name_or_workspace_name", "operation", "target_path_or_query"],
       "outputs": ["search_results", "read_content", "write_receipt"],
       "gates": [],
       "failure_mode": "Skill 或 CLI 不可用时按依赖协议切换为 Vault 内直接文件操作；Vault 配置、路径边界或写入前置未通过时局部阻塞。",
