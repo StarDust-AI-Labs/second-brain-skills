@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "fixed_load_files": [
+    "skills/second-brain-hub/SKILL.md",
+    "skills/second-brain-hub/references/runtime-protocol.md"
+  ],
+  "max_fixed_bytes": 13000,
+  "conditional_groups": {
+    "selected_route": ["skills/second-brain-hub/route-contracts.json"],
+    "selected_capabilities": ["skills/second-brain-hub/capability-contracts.json"],
+    "dependency_resolution": [
+      "skills/second-brain-hub/dependencies.json",
+      "skills/second-brain-hub/references/dependency-resolution.md"
+    ],
+    "complex_output": ["skills/second-brain-hub/references/output-cards.md"]
+  }
+}

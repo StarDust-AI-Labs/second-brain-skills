@@ -5,7 +5,7 @@
     {
       "id": "vault-config",
       "applies_to": "vault-scenes",
-      "evidence": "vault_config=pass"
+      "evidence": "vault_config=pass after an Obsidian Vault or Markdown workspace path is confirmed"
     },
     {
       "id": "intent-confirmed",
