@@ -61,9 +61,9 @@
    - 在目标 Skill 根目录写入或更新 `.second-brain-install.json`，记录 `source_repository`、`source_commit`、`installed_at`、`agent_type` 和已安装的6个 Skill 名称；不得在其中记录 Vault 路径等隐私信息
 
 5. 首次安装模式配置 Vault：
-   - 询问我的 Obsidian Vault 绝对路径和 Vault 名称
-   - 从 `second-brain-hub/hub-state.example.json` 复制生成目标安装目录中的 `second-brain-hub/hub-state.json`
-   - 写入 `preferences.vault_path` 和 `preferences.vault_name`
+   - 不要求我手工编辑 JSON；安装完成后通过 second-brain-hub 的首次运行引导选择存储位置
+   - 我可以选择已有 Obsidian Vault、已有 Markdown 文件夹，或创建最小 Markdown 第二大脑
+   - 引导完成后由 Agent 从 `hub-state.example.json` 生成本地 `hub-state.json`
    - 确认 `hub-state.json` 不提交到 Git
 
 6. 更新模式复用现有 Vault 配置：
@@ -71,13 +71,12 @@
    - 如果配置缺失或路径已失效，再询问用户并修复配置
 
 7. 检查本机是否已安装 Obsidian：
-   - 如果已安装，继续下一步
-   - 如果未安装，请把官方下载地址 https://obsidian.md/download 给我，并引导我下载安装 Obsidian
-   - 等我确认 Obsidian 已安装并能正常打开后，再继续配置 Vault
+   - 如果选择 Obsidian 模式但尚未安装，请提供 https://obsidian.md/download
+   - 如果选择 Markdown 模式，Obsidian 不是必需依赖，直接继续
 
 8. 做一次最小可用验证：
    - 检查6个 Skill 的 `SKILL.md` 均存在，并核对 `dependencies.json` 中的5个依赖已安装；缺失依赖时报告降级能力
-   - 检查 Vault 路径是否存在
+   - 检查已选择的 Vault 或 Markdown 工作区路径是否存在
    - 检查是否能创建或更新 Markdown 笔记
    - 用一句测试输入”记一下：这是 second-brain-skill 的安装验证”触发 second-brain-hub
    - 把测试笔记写入 Obsidian Vault 的合适位置
@@ -218,18 +217,20 @@ second-brain/
 - **运行时边界**：`scripts/`、`tests/`、`docs/`、`books/` 和 `third-party/` 仅用于开发、验证、文档与许可证归档，用户运行第二大脑时不需要安装，也不需要 Python。
 - **多 agent 同步**：如果你同时使用多个 agent 产品，修改 Skill 内容后请确保从顶层 `skills/` 重新复制到各 agent 的目标目录。
 - **配置模板**：`skills/second-brain-hub/hub-state.example.json` 是配置模板，安装时复制生成 `hub-state.json`。
-- **本地运行态配置**：`hub-state.json` 保存 `vault_path`、`vault_name`、`active_projects`、偏好和 12 问题清单，属于本地文件，不提交到版本库。安装到 agent 时放在对应 skill 目录下。
-- **Vault 运行态状态**：`{vault_path}/.obsidian/hub-state.json` 保存 Vault 内运行记录；不存在时由 Hub 根据项目级配置创建。
+- **本地运行态配置**：`hub-state.json` 保存存储模式、Vault 或 Markdown 工作区路径、引导状态、偏好和 12 问题清单，属于本地文件，不提交到版本库。
+- **Vault 运行态状态**：Obsidian 模式可在 `{vault_path}/.obsidian/hub-state.json` 保存 Vault 内运行记录；Markdown 模式只使用 Hub 旁的本地状态。
 
-### 首次安装配置
+### 5 分钟快速开始
 
-复制配置模板并填写你自己的 Obsidian Vault 信息。若安装的是整个项目，使用项目级模板：
+安装完成后直接对 Agent 说：
 
-```powershell
-Copy-Item skills\second-brain-hub\hub-state.example.json skills\second-brain-hub\hub-state.json
+```text
+记一下：这是我的第一条第二大脑笔记
 ```
 
-若只把 `second-brain-hub` Skill 单独安装给 agent，复制 Skill 目录旁的模板：
+如果尚未配置，Hub 会用一个问题让你选择：已有 Obsidian Vault、已有 Markdown 文件夹，或创建最小 Markdown 第二大脑。配置完成后会自动继续保存上面的原始笔记，不需要重新输入。
+
+如需预先手工配置 Obsidian 模式，可复制模板并填写：
 
 ```powershell
 Copy-Item <second-brain-hub-skill-dir>\hub-state.example.json <second-brain-hub-skill-dir>\hub-state.json
@@ -240,18 +241,35 @@ Copy-Item <second-brain-hub-skill-dir>\hub-state.example.json <second-brain-hub-
 ```json
 {
   "preferences": {
+    "storage_mode": "obsidian",
+    "workspace_path": "<你的 Obsidian Vault 绝对路径>",
+    "workspace_name": "<你的 Obsidian Vault 名称>",
     "vault_path": "<你的 Obsidian Vault 绝对路径>",
     "vault_name": "<你的 Obsidian Vault 名称>"
   }
 }
 ```
 
-也可以不创建文件，改用环境变量：
+纯 Markdown 模式只需设置：
+
+```json
+{
+  "preferences": {
+    "storage_mode": "markdown",
+    "workspace_path": "<Markdown 工作区绝对路径>",
+    "workspace_name": "<工作区名称>"
+  }
+}
+```
+
+也可以使用环境变量：
 
 ```powershell
 $env:SECOND_BRAIN_VAULT_PATH = "<你的 Obsidian Vault 绝对路径>"
 $env:SECOND_BRAIN_VAULT_NAME = "<你的 Obsidian Vault 名称>"
 ```
+
+Markdown 模式对应 `SECOND_BRAIN_STORAGE_MODE=markdown`、`SECOND_BRAIN_WORKSPACE_PATH` 和 `SECOND_BRAIN_WORKSPACE_NAME`。
 
 ***
 
@@ -279,7 +297,7 @@ $env:SECOND_BRAIN_VAULT_NAME = "<你的 Obsidian Vault 名称>"
 ## 依赖环境
 
 - **AI Agent 平台**（Claude Code / Codex / Cursor / GitHub Copilot 等）— Skill 运行平台
-- **Obsidian** — 笔记存储与浏览（Vault 路径：用户配置的本地 Obsidian 笔记存放目录）
+- **Obsidian** — 可选的笔记浏览与插件生态；也可以只使用普通 Markdown 文件夹
 - **Obsidian CLI** — 命令行笔记操作（可选，有降级方案）
 
 ***

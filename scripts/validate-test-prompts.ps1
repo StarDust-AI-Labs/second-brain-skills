@@ -10,7 +10,9 @@ param(
     [string]$E2ECasePath = "tests/hub/e2e-cases.json",
     [string]$GateCasePath = "tests/hub/gate-cases.json",
     [string]$DependencyPath = "skills/second-brain-hub/dependencies.json",
-    [string]$DependencyCasePath = "tests/hub/dependency-cases.json"
+    [string]$DependencyCasePath = "tests/hub/dependency-cases.json",
+    [string]$OnboardingCasePath = "tests/hub/onboarding-cases.json",
+    [string]$ContextBudgetPath = "tests/hub/context-budget.json"
 )
 
 $ErrorActionPreference = "Stop"
@@ -458,10 +460,30 @@ $dependencyProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/secon
 foreach ($gate in @("fallback-vault-boundary", "fallback-write-preflight")) {
     if ($dependencyProtocol -notmatch [regex]::Escape("<HARD-GATE id=`"$gate`">")) { throw "Dependency protocol is missing HARD-GATE '$gate'" }
 }
+$onboardingCases = Read-TestPrompts -Path $OnboardingCasePath
+if ($onboardingCases.Count -lt 10) { throw "Onboarding regression suite must contain at least 10 cases" }
+$onboardingProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/workflow-onboarding.md"
+foreach ($gate in @("onboarding-path-confirmed", "onboarding-limited-write-scope", "onboarding-resume-original-request")) {
+    if ($onboardingProtocol -notmatch [regex]::Escape("<HARD-GATE id=`"$gate`">")) { throw "Onboarding protocol is missing HARD-GATE '$gate'" }
+}
+$minimalWorkspace = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/minimal-workspace.md"
+if ($minimalWorkspace -notmatch [regex]::Escape('<HARD-GATE id="minimal-workspace-safe-target">')) { throw "Minimal workspace protocol is missing its safe-target gate" }
+$contextBudget = Get-Content -Raw -Encoding UTF8 -LiteralPath $ContextBudgetPath | ConvertFrom-Json
+$fixedBytes = 0
+foreach ($fixedFile in @($contextBudget.fixed_load_files)) {
+    if (-not (Test-Path -LiteralPath $fixedFile)) { throw "Context budget references missing file: $fixedFile" }
+    $fixedBytes += (Get-Item -LiteralPath $fixedFile).Length
+}
+if ($fixedBytes -gt $contextBudget.max_fixed_bytes) { throw "Fixed Hub context is $fixedBytes bytes, above budget $($contextBudget.max_fixed_bytes)" }
+$hubStateExample = Get-Content -Raw -Encoding UTF8 -LiteralPath $StateExamplePath | ConvertFrom-Json
+foreach ($property in @("storage_mode", "workspace_path", "workspace_name", "vault_path", "vault_name")) {
+    if (-not ($hubStateExample.preferences.PSObject.Properties.Name -contains $property)) { throw "State example preferences are missing '$property'" }
+}
+if (-not ($hubStateExample.PSObject.Properties.Name -contains "onboarding")) { throw "State example is missing onboarding state" }
 $behaviorCasesPath = "tests/hub/behavior-cases.json"
 $qualityGatesPath = "tests/hub/quality-gates.json"
 $behaviorSchemaPath = "tests/hub/behavior-output.schema.json"
-foreach ($requiredBehaviorFile in @($behaviorCasesPath, $qualityGatesPath, $behaviorSchemaPath, "skills/second-brain-hub/references/evaluation-protocol.md", "scripts/run-hub-behavior-eval.ps1", "scripts/build-skillhub-package.ps1")) {
+foreach ($requiredBehaviorFile in @($behaviorCasesPath, $qualityGatesPath, $behaviorSchemaPath, "skills/second-brain-hub/references/evaluation-protocol.md", "skills/second-brain-hub/scripts/init-workspace.mjs", "scripts/run-hub-behavior-eval.ps1", "scripts/build-skillhub-package.ps1")) {
     if (-not (Test-Path -LiteralPath $requiredBehaviorFile)) { throw "Missing behavior evaluation file: $requiredBehaviorFile" }
 }
 $behaviorCases = @(Get-Content -Raw -Encoding UTF8 -LiteralPath $behaviorCasesPath | ConvertFrom-Json | ForEach-Object { $_ })
@@ -584,6 +606,7 @@ Write-Output "Test layers: intent=$($intentCases.Count), route=$($routeCases.Cou
 Write-Output "Total cases: $($primary.Count)"
 Write-Output "Behavior cases: $($behaviorCases.Count); target score: $($qualityGates.minimum_overall_score)"
 Write-Output "Hidden dependencies: $($actualDependencies.Count); dependency cases: $($dependencyCases.Count)"
+Write-Output "Onboarding cases: $($onboardingCases.Count); fixed context: $fixedBytes/$($contextBudget.max_fixed_bytes) bytes"
 Write-Output "Scene coverage:"
 foreach ($key in ($sceneCounts.Keys | Sort-Object)) {
     Write-Output ("  {0}: {1}" -f $key, $sceneCounts[$key])

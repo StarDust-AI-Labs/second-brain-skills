@@ -1,0 +1,13 @@
+[
+  {"id":"onboard-existing-single-vault","input":"记一下：测试灵感","config":"missing","detected_paths":["D:/Notes/Vault"],"expected":"confirm-detected-path","resume_intent":"灵感速记"},
+  {"id":"onboard-multiple-vaults","input":"找一下项目笔记","config":"missing","detected_paths":["D:/VaultA","D:/VaultB"],"expected":"choose-path","max_options":3},
+  {"id":"onboard-existing-markdown","input":"记一下想法","config":"missing","user_choice":"existing-markdown","expected_storage_mode":"markdown","resume_intent":"灵感速记"},
+  {"id":"onboard-create-markdown","input":"记一下想法","config":"missing","user_choice":"create-minimal","expected_storage_mode":"markdown","expected_folders":5,"resume_intent":"灵感速记"},
+  {"id":"onboard-existing-config","input":"记一下想法","config":"valid","expected":"skip-onboarding","resume_intent":"灵感速记"},
+  {"id":"onboard-invalid-path","input":"保存这篇文章 https://example.com","config":"missing","user_path":"relative/path","expected":"reject-relative-path"},
+  {"id":"onboard-root-path","input":"记一下想法","config":"missing","user_path":"D:/","expected":"reject-unsafe-target"},
+  {"id":"onboard-init-failure","input":"记一下想法","config":"missing","write_result":"failed","expected_completed":false,"must_not_claim_success":true},
+  {"id":"onboard-resume-original","input":"回顾一下本周","config":"missing","setup_result":"success","expected_resume_intent":"回顾整理"},
+  {"id":"onboard-delete-safety","input":"把收件箱全部删掉","config":"missing","setup_result":"success","expected":"require-delete-confirmation-after-setup"},
+  {"id":"onboard-legacy-config-migration","input":"记一下想法","config":"legacy-valid-vault","storage_mode":null,"expected_storage_mode":"obsidian","expected":"skip-onboarding-and-migrate-lazily"}
+]
