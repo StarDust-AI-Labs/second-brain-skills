@@ -198,7 +198,7 @@ second-brain/
 - **Single Source of Truth**: The top-level `skills/` directory is the project source; second-brain runtime specifications live under `skills/second-brain-hub/`, while Obsidian tool Skills remain independent.
 - **Route Contracts**: `skills/second-brain-hub/route-contracts.json` is the single source of truth for Hub scene chains, conditional steps, and write preconditions; Hub content, test prompts, and audit documents should validate against it.
 - **Capability Contracts**: `skills/second-brain-hub/capability-contracts.json` defines inputs, outputs, gates, failure strategies, and portable implementation locators. Internal capabilities use Hub-relative references; external tools use Skill names rather than repository paths.
-- **Agent-Adaptive Installation**: Copy the 6 top-level directories under `skills/` directly into the target skills directory. Do not install the methodology archive under `references/legacy/` as peer Skills.
+- **Agent-Adaptive Installation**: Copy the 6 top-level directories under `skills/` directly into the target skills directory. The pre-refactor methodology archive now lives in `docs/archive/methodology-legacy/`, is not distributed with Skill installation, and must not be installed as peer Skills.
 - **Runtime Boundary**: `scripts/`, `tests/`, `docs/`, `books/`, and `third-party/` are only for development, validation, documentation, and license archival. End users do not need them or Python at runtime.
 - **Multi-Agent Sync**: If you use multiple agent products simultaneously, after modifying Skill content, ensure you re-copy from the top-level `skills/` to each agent's target directory.
 - **Config Template**: `skills/second-brain-hub/hub-state.example.json` is the configuration template; copy it to create `hub-state.json` during installation.
@@ -242,7 +242,7 @@ $env:SECOND_BRAIN_VAULT_NAME = "<your Obsidian vault name>"
 ## Design Principles
 
 1. **One public entry point** — all second-brain requests go through the Hub, preventing peer Skills from competing for invocation
-2. **Internal capability modules** — methodology is loaded from `module-*.md` on demand, with full historical material retained under `references/legacy/`
+2. **Internal capability modules** — methodology is loaded from `module-*.md` on demand, with full historical material archived in `docs/archive/methodology-legacy/` (source repository only, not distributed with installation)
 3. **Unified write pipeline** — all note writing uses the same frontmatter template
 4. **Pyramid feedback** — all output follows the "Conclusion → Details → Next Steps" format
 5. **Contract-driven execution** — routes, outputs, gates, and skip evidence are validated from machine-readable contracts

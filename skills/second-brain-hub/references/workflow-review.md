@@ -8,5 +8,6 @@
 4. 若发现可复用产物，读取 `module-intermediate-packets.md` 形成素材包；这是回顾内的能力组合，不改变路由必选链。
 5. 调用 `obsidian-markdown` 渲染标准回顾笔记。
 6. 完成写入前置后调用 `obsidian-cli/create`。
+7. 可选：用户表达定期回顾意愿时，按 `hub-state.json` 的 `weekly_review_day` 偏好提议下一次回顾时间，经用户确认后使用当前 Agent 平台的定时提醒能力创建提醒；平台不支持或用户未确认时跳过，不阻塞场景。
 
 必需输出：`review_scope`、`review_findings`、`final_markdown`、`target_path`。
