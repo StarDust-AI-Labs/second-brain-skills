@@ -121,3 +121,16 @@ tags: [Skill优化, 迭代记录, 变更日志]
 | 改进项 | 修改内容 | 涉及文件 | 预期效果 | 修改人 |
 |--------|---------|---------|---------|--------|
 | （待执行） | | | | |
+
+---
+
+## v1.2 — 众测反馈改进：档案外迁 + 回顾引导式提醒（2026-07-19）
+
+> 对应反馈：`第二大脑Skill_原始测评汇总.md`（20 条众测）改进点归纳。核对结论：QUICKSTART/首次引导、Markdown 跨生态模式、隐藏依赖随包安装、懒加载与自动化测试等高频建议在此前迭代中已落地；本次处理剩余两项。
+
+| 改进项 | 修改内容 | 涉及文件 | 预期效果 | 修改人 |
+|--------|---------|---------|---------|--------|
+| legacy 档案外迁 | `references/legacy/`（34 个历史方法论文件）移出 Skill 目录，归档至 `docs/archive/methodology-legacy/`，不随安装分发；同步更新 `methodology-sources.md` 与 README 中英文引用 | `docs/archive/methodology-legacy/` `skills/second-brain-hub/references/methodology-sources.md` `README.md` `README.en.md` | 消除文档积压与误装风险，Skill 包体积下降 | Kimi |
+| 回顾引导式提醒 | review 工作流新增可选步骤：用户表达定期回顾意愿时，按 `weekly_review_day` 偏好提议下次回顾时间，确认后用当前 Agent 平台的定时提醒能力创建；不支持或未确认则跳过 | `skills/second-brain-hub/references/workflow-review.md` | 回应测评 8「周/月回顾自动化提醒」，不引入新依赖 | Kimi |
+
+> 经用户确认暂不执行：多 Vault 支持、自定义场景注册、垂直场景模板、团队协作文档集成。
