@@ -213,7 +213,7 @@ second-brain/
 - **单一规范源**：顶层 `skills/` 是项目规范源；第二大脑运行规范集中在 `skills/second-brain-hub/`，Obsidian 工具仍独立维护。
 - **路由契约**：`skills/second-brain-hub/route-contracts.json` 是 Hub 场景链路、条件步骤和写入前置的唯一规范源；Hub 正文、测试提示与审计文档均应据此校验。
 - **能力契约**：`skills/second-brain-hub/capability-contracts.json` 定义输入、输出、门控、失败策略和可移植实现定位。内部能力使用 Hub 相对 `reference`，外部工具使用 Skill `name`，不依赖仓库绝对路径。
-- **Agent 自适应安装**：直接复制顶层 `skills/` 下的 6 个目录；不要把 `references/legacy/` 中的方法论档案安装为平级 Skill。
+- **Agent 自适应安装**：直接复制顶层 `skills/` 下的 6 个目录；重构前的方法论档案已归档到 `docs/archive/methodology-legacy/`，不随 Skill 安装分发，不要安装为平级 Skill。
 - **运行时边界**：`scripts/`、`tests/`、`docs/`、`books/` 和 `third-party/` 仅用于开发、验证、文档与许可证归档，用户运行第二大脑时不需要安装，也不需要 Python。
 - **多 agent 同步**：如果你同时使用多个 agent 产品，修改 Skill 内容后请确保从顶层 `skills/` 重新复制到各 agent 的目标目录。
 - **配置模板**：`skills/second-brain-hub/hub-state.example.json` 是配置模板，安装时复制生成 `hub-state.json`。
@@ -276,7 +276,7 @@ Markdown 模式对应 `SECOND_BRAIN_STORAGE_MODE=markdown`、`SECOND_BRAIN_WORKS
 ## 设计原则
 
 1. **唯一公开入口** — 第二大脑请求统一由 Hub 识别和路由，避免平级 Skill 竞争触发
-2. **内部能力模块化** — 方法论以 `module-*.md` 按需加载，完整历史内容保存在 `references/legacy/`
+2. **内部能力模块化** — 方法论以 `module-*.md` 按需加载，完整历史内容归档在 `docs/archive/methodology-legacy/`（仅源仓库，不随安装分发）
 3. **统一写入管道** — 所有笔记写入走同一套 frontmatter 模板
 4. **金字塔反馈** — 所有输出遵循「结论→详情→下一步」格式
 5. **契约驱动** — 路由、输出、门控和跳过理由都由机器可读契约校验
