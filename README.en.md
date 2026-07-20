@@ -23,14 +23,12 @@ Please help me install and set up the "Second Brain" knowledge management system
 
 Follow these steps:
 
-0. Detect the environment and determine the Skill installation target directory:
-   - Claude Code → copy from skills/ to .claude/skills/
-   - Codex → copy from skills/ to .agents/skills/
-   - Cursor → copy from skills/ to .cursor/skills/
-   - Coze (扣子) → copy from skills/ to .coze/skills/
-   - WorkBuddy → copy from skills/ to .workbuddy/skills/
-   - Codeium / other agents → look up that agent's skills convention directory; if not found, ask me
-   Tell me the detection result and target directory in one sentence before continuing. The top-level skills/ directory is the single source of truth; all installations copy from it.
+0. Determine the Skill installation target directory based on actual evidence — do not make me pick from the product list below:
+   - You yourself are the primary evidence: which agent product you are running as, where your own configuration directory lives, and where your already-installed skills (if any) reside; if a skills directory already exists on this machine, prefer reusing it as the install target
+   - Then run read-only checks for agent config/skill directories that actually exist in the current workspace and the home directory (e.g. `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `.coze/skills/`, `.workbuddy/skills/`, `.opencode/`), and use whichever exists
+   - Only if both of the above fail, fall back to known conventions: Claude Code → .claude/skills/; Codex → .agents/skills/; Cursor → .cursor/skills/; Coze (扣子) → .coze/skills/; WorkBuddy → .workbuddy/skills/; for any product outside this list (e.g. OpenClaw), follow the skills convention in that agent's own documentation, or if none is documented, use `skills/` under its configuration directory
+   - Tell me in one sentence the target directory you chose and the evidence behind it; if you genuinely cannot determine it, ask me with your recommended directory attached
+   The top-level skills/ directory is the single source of truth; all installations copy from it.
 
 1. Detect any existing installation:
    - Check whether `second-brain-hub/SKILL.md` exists in the target skills directory, and whether `defuddle`, `obsidian-markdown`, `obsidian-cli`, `obsidian-bases`, `json-canvas` exist alongside it

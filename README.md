@@ -23,14 +23,12 @@
 
 请按下面步骤执行：
 
-0. 检测环境，确定 Skill 安装目标目录：
-   - Claude Code → 从 skills/ 复制到 .claude/skills/
-   - Codex → 从 skills/ 复制到 .agents/skills/
-   - Cursor → 从 skills/ 复制到 .cursor/skills/
-   - Coze（扣子）→ 从 skills/ 复制到 .coze/skills/
-   - WorkBuddy → 从 skills/ 复制到 .workbuddy/skills/
-   - Codeium / 其他国产 Agent → 查找该 agent 的 skills 约定目录，找不到则询问我
-   将检测结果和目标目录用一句话告诉我后再继续。本项目以顶层 skills/ 为单一规范源，所有安装都从此目录复制。
+0. 确定 Skill 安装目标目录——基于实际证据判断，不要让我从下面的产品列表中做选择：
+   - 你自身就是首要证据：你正在运行的 agent 产品是什么、你的配置目录在哪里、你已安装的技能（如有）放在哪个目录；本机已存在技能目录时，优先沿用它作为安装目标
+   - 再只读检查：当前工作区和用户主目录下实际存在的 agent 配置/技能目录（如 `.claude/skills/`、`.agents/skills/`、`.cursor/skills/`、`.coze/skills/`、`.workbuddy/skills/`、`.opencode/` 等），存在哪个就用哪个
+   - 以上都无果时才参考已知约定：Claude Code → .claude/skills/；Codex → .agents/skills/；Cursor → .cursor/skills/；Coze（扣子）→ .coze/skills/；WorkBuddy → .workbuddy/skills/；列表之外的产品（如 OpenClaw 等）按该 agent 自身文档中的 skills 约定，查不到约定就用其配置目录下的 `skills/`
+   - 用一句话告诉我你确定的目标目录和判断依据；确实无法确定时，附上你的建议目录再问我
+   本项目以顶层 skills/ 为单一规范源，所有安装都从此目录复制。
 
 1. 检测现有安装：
    - 检查目标 skills 目录中是否存在 `second-brain-hub/SKILL.md`，同级是否存在 `defuddle`、`obsidian-markdown`、`obsidian-cli`、`obsidian-bases`、`json-canvas`
