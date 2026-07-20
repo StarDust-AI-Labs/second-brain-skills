@@ -16,68 +16,62 @@ This project engineers the methodologies from *Building a Second Brain* — the 
 
 ## Copy-Paste Prompt for Other Users
 
-Send the following prompt directly to your agent — it will auto-detect the platform, download this project, install Skills to the correct directory, and guide you through connecting to your local Obsidian vault:
+Send the following prompt directly to your agent. No technical background needed — the agent guides you step by step in plain language: it detects whether this is a first install or an update, syncs the Skills to the right directory, and helps you choose how to store your knowledge base (connect an existing Obsidian vault, install Obsidian and create a new vault, or use a plain folder):
 
 ```text
-Please help me install and configure the second-brain-skill project to manage my local Obsidian vault.
+Please help me install and set up the "Second Brain" knowledge management system. Talk to me in plain language throughout, and ask me only one question at a time. Before running any command or modifying any file, explain what you are about to do and get my consent first. Never ask me to type commands or edit files by hand.
 
 Follow these steps:
 
-0. ⚠️ First, detect the current agent product type and determine the Skill installation target directory:
+0. Detect the environment and determine the Skill installation target directory:
    - Claude Code → copy from skills/ to .claude/skills/
    - Codex → copy from skills/ to .agents/skills/
    - Cursor → copy from skills/ to .cursor/skills/
    - Coze (扣子) → copy from skills/ to .coze/skills/
-   - WorkBuddy (问壁) → copy from skills/ to .workbuddy/skills/
-   - Codeium / other domestic agents → look up that agent's skills convention directory; if not found, ask the user
-   Report the detection result and target directory to the user before continuing.
-   The top-level skills/ directory is the single source of truth for this project. All installations copy from this directory.
+   - WorkBuddy → copy from skills/ to .workbuddy/skills/
+   - Codeium / other agents → look up that agent's skills convention directory; if not found, ask me
+   Tell me the detection result and target directory in one sentence before continuing. The top-level skills/ directory is the single source of truth; all installations copy from it.
 
-1. Download the project:
-   - Prefer cloning the repo: git@github.com:StarDust-AI-Labs/second-brain-skills.git
-   - If SSH is not available in the current environment, prompt me for the HTTPS URL or Git credentials
+1. Detect any existing installation:
+   - Check whether `second-brain-hub/SKILL.md` exists in the target skills directory, and whether `defuddle`, `obsidian-markdown`, `obsidian-cli`, `obsidian-bases`, `json-canvas` exist alongside it
+   - If `second-brain-hub` exists, enter "update mode"; otherwise enter "first install mode"
+   - If a same-named Skill cannot be confirmed to come from this repository, do not overwrite it; show me its origin or the differences and ask me first
 
-2. Install Skills to the target directory determined in step 0:
-   - Copy the 6 directories directly under the project's `skills/` into the target skills directory, keeping each `SKILL.md` one level below the target root
-   - Do not copy `scripts/`, `tests/`, `docs/`, `books/`, or `third-party/`; they are not runtime dependencies
-   - Do not overwrite my existing Skills with the same name; before overwriting, list the differences and ask me first
+2. Fetch the latest version of the repository:
+   - Repository: git@github.com:StarDust-AI-Labs/second-brain-skills.git
+   - If the repo already exists locally and its working tree is clean, run `git fetch` and update `main` with a safe fast-forward
+   - If the existing repo has uncommitted changes, do not reset, clean, or overwrite; clone into a fresh temporary directory instead, or ask me how to proceed
+   - If there is no local repo, clone it; if SSH is unavailable, use the HTTPS URL
+   - Record the Git commit used for this installation
 
-3. Install the core Skills from this project:
-   - second-brain-hub (the only second-brain entry point; methodology modules are bundled)
-   - defuddle
-   - obsidian-markdown
-   - obsidian-cli
-   - obsidian-bases
-   - json-canvas
+3. Install or update the Skills:
+   - The directories to sync are strictly limited to: `second-brain-hub`, `defuddle`, `obsidian-markdown`, `obsidian-cli`, `obsidian-bases`, `json-canvas`
+   - Copy these 6 directories into the target skills directory from step 0, keeping each `SKILL.md` one level below the target root
+   - Do not copy `scripts/`, `tests/`, `docs/`, `books/`, `artifacts/`, or `third-party/`
+   - Update mode: back up the existing 6 Skill directories first; you must preserve `second-brain-hub/hub-state.json` (it holds my knowledge base configuration) — never overwrite it with `hub-state.example.json`; if I have modified other Skill files, show me the differences and replace them only after my confirmation
+   - Write or update `.second-brain-install.json` in the target Skill root, recording `source_repository`, `source_commit`, `installed_at`, `agent_type`, and the names of the 6 installed Skills; do not record private information such as knowledge base paths
 
-4. Check whether Obsidian is installed on this machine:
-   - If already installed, continue to the next step
-   - If not installed, give me the official download link https://obsidian.md/download and guide me to download and install Obsidian
-   - Wait for me to confirm Obsidian is installed and can open normally before proceeding to vault configuration
+4. Guide me to choose my knowledge base storage (skip this step in update mode and reuse the preserved hub-state.json; re-guide only if the configuration is missing or its path is no longer valid):
+   First, use read-only checks to detect whether Obsidian is installed on this machine (common install directories, Start Menu, /Applications, `which obsidian`, etc.), then ask me one question: "Would you like to manage your notes with Obsidian, or with a plain folder?" Handle each case as follows:
+   - Obsidian is installed: prefer connecting my existing vault. Use read-only probing of common locations (Documents, Desktop, home directory, etc.) for directories containing `.obsidian/`, and show me at most 3 candidates to choose from; I may also give you a path directly. After my confirmation, write the local `hub-state.json` (Obsidian mode). If I want to create a new vault instead, follow the creation flow in the next bullet
+   - Obsidian is not installed, but I want to use it: tell me you will download the installer from the official site https://obsidian.md/download, and only after my consent download the installer matching my OS (.exe on Windows, or use winget; .dmg on macOS; AppImage on Linux) and guide me through the installation. Then ask where I want my vault to live (suggest a location such as "Documents/SecondBrain"; the path must be an absolute path I confirm), and run the repository's `skills/second-brain-hub/scripts/init-workspace.mjs --path <confirmed path> --obsidian` to create the new vault (the five PARA folders plus the `.obsidian/` marker); if Node.js is unavailable, create the same structure with your file tools. Remind me to choose "Open folder as vault" for this directory the first time I open Obsidian. Finally, write the local `hub-state.json` (Obsidian mode)
+   - I choose a plain folder (no Obsidian): ask where the knowledge base should live, and after I confirm an absolute path, run `init-workspace.mjs --path <confirmed path>` to create the minimal PARA directories (📥 收件箱 / 📂 项目 / 📂 领域 / 📂 资源 / 📦 存档), then write the local `hub-state.json` (Markdown mode)
+   - Never guess paths; never place the knowledge base at a filesystem root or the home directory itself; `hub-state.json` must not be committed to Git
 
-5. Guide me through connecting to my local Obsidian vault:
-   - Ask for the absolute path to my Obsidian vault
-   - Ask for my vault name
-   - Copy skills/second-brain-hub/hub-state.example.json to create a local hub-state.json
-   - Write preferences.vault_path and preferences.vault_name
-   - Confirm that hub-state.json is not committed to Git
+5. Run a minimal smoke test:
+   - Verify all 6 Skills' `SKILL.md` files exist and the 5 hidden dependencies are installed; if any are missing, report the degraded capabilities
+   - Verify my chosen knowledge base path exists and a Markdown note can be created in it
+   - Trigger second-brain-hub with the test input "Note to self: this is a second-brain-skill installation verification" and write the test note into the knowledge base inbox
+   - If verification fails in update mode, restore the pre-update backup and report the cause
 
-6. Perform a minimal smoke test:
-   - Verify the vault path exists
-   - Verify that Markdown notes can be created or updated
-   - Use the test input "Note to self: this is a second-brain-skill installation verification" to trigger second-brain-hub
-   - Write the test note to an appropriate location in the Obsidian vault
+6. When done, tell me in plain language:
+   - Whether this was a first install or an update
+   - Where my knowledge base lives, and whether it uses Obsidian or a plain folder
+   - The project location, Skill installation directory, and the Git commit used
+   - How I can talk to you in the future to save web pages, capture ideas, organize notes, start creating, and do weekly reviews
+   - Ask me: "If this project has been helpful, would you like to star the GitHub repo?"; if I say yes, use the currently available GitHub login/CLI/API to star `StarDust-AI-Labs/second-brain-skills`; if authentication is missing or tooling is unavailable, give me the repo link to do it manually
 
-7. After configuration, tell me:
-   - Current agent type
-   - Project installation location
-   - Skill installation directory
-   - Currently bound vault path
-   - How I can talk to you in the future to save web pages, record inspirations, organize notes, and start creating
-   - Ask me: "If this project has been helpful to you, would you like to star the GitHub repo?"
-   - If I say yes, use the currently available GitHub login/CLI/API to star the repo `StarDust-AI-Labs/second-brain-skills`; if authentication is missing or tools are unavailable, give me the repo link to do it manually
-
-When executing, first check the current system, shell, agent type, and existing directory structure before performing file operations. When unsure about the installation directory or facing overwrite risks, ask me first.
+Ground rules: check before acting; never use `git reset --hard`; do not delete my files, and do not download or run any installer, without my explicit confirmation; when facing a same-named Skill of unknown origin, uncommitted changes, or any overwrite risk, ask me first.
 ```
 
 ---

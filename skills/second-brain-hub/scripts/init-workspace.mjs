@@ -9,6 +9,7 @@ const value = (name) => {
 };
 const targetArg = value("--path");
 const dryRun = args.includes("--dry-run");
+const obsidianMode = args.includes("--obsidian");
 
 if (!targetArg || !path.isAbsolute(targetArg)) {
   throw new Error("--path must be an absolute path");
@@ -26,6 +27,11 @@ const operations = folders.map((folder) => {
   return {folder, path: folderPath, status: fs.existsSync(folderPath) ? "existing" : "create"};
 });
 
+if (obsidianMode) {
+  const markerPath = path.join(target, ".obsidian");
+  operations.push({folder: ".obsidian", path: markerPath, status: fs.existsSync(markerPath) ? "existing" : "create"});
+}
+
 if (!dryRun) {
   fs.mkdirSync(target, {recursive: true});
   for (const operation of operations) {
@@ -33,4 +39,4 @@ if (!dryRun) {
   }
 }
 
-process.stdout.write(JSON.stringify({target, dry_run: dryRun, operations}, null, 2));
+process.stdout.write(JSON.stringify({target, dry_run: dryRun, obsidian_mode: obsidianMode, operations}, null, 2));
