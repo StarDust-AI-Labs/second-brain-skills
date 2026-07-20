@@ -50,7 +50,7 @@ C. 创建一个最小 Markdown 第二大脑（推荐给新用户）
 </HARD-GATE>
 
 <HARD-GATE id="onboarding-limited-write-scope">
-首次设置的写入范围仅限用户确认的存储根目录、五个最小目录和 Hub 本地配置；原始任务产生的笔记写入仍需通过对应场景的写入前置。
+首次设置的写入范围仅限用户确认的存储根目录、五个最小目录（Obsidian 模式含 `.obsidian/` 标记目录）和 Hub 本地配置；原始任务产生的笔记写入仍需通过对应场景的写入前置。
 </HARD-GATE>
 
 <HARD-GATE id="onboarding-resume-original-request">

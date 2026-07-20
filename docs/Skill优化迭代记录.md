@@ -134,3 +134,15 @@ tags: [Skill优化, 迭代记录, 变更日志]
 | 回顾引导式提醒 | review 工作流新增可选步骤：用户表达定期回顾意愿时，按 `weekly_review_day` 偏好提议下次回顾时间，确认后用当前 Agent 平台的定时提醒能力创建；不支持或未确认则跳过 | `skills/second-brain-hub/references/workflow-review.md` | 回应测评 8「周/月回顾自动化提醒」，不引入新依赖 | Kimi |
 
 > 经用户确认暂不执行：多 Vault 支持、自定义场景注册、垂直场景模板、团队协作文档集成。
+
+---
+
+## v1.3 — 安装提示词升级：非技术用户全程引导 + Obsidian 三分支（2026-07-19）
+
+> 对应需求：README「给其他用户的复制提示词」需让非技术人员在 Agent 引导下一步步完成本地知识库搭建；按 Obsidian 使用情况分三支处理。
+
+| 改进项 | 修改内容 | 涉及文件 | 预期效果 | 修改人 |
+|--------|---------|---------|---------|--------|
+| init-workspace 支持 Obsidian 模式 | `init-workspace.mjs` 新增 `--obsidian` 参数：除 PARA 五目录外额外创建 `.obsidian/` 标记目录（不写应用配置），使新建路径可被识别为 Vault；输出增加 `obsidian_mode` 字段。无需单独的 Vault 创建脚本 | `skills/second-brain-hub/scripts/init-workspace.mjs` | 新装 Obsidian 的用户可一键建库，后续可被只读探测发现 | Kimi |
+| 协议同步 | 最小工作区协议补充 Obsidian 标记目录规则；onboarding 写入范围门控同步纳入 `.obsidian/` 标记 | `references/minimal-workspace.md` `references/workflow-onboarding.md` | 契约与脚本行为一致 | Kimi |
+| 复制提示词重写（中英） | 全程大白话、每次只问一个问题、代为执行前先征得同意；安装后先只读探测 Obsidian 是否已装，再按三分支引导：①已装 → 只读探测 `.obsidian/` 候选库并对接；②想用未装 → 官网下载安装包（征得同意后）+ `--obsidian` 建新 Vault + 提醒首次打开方式；③不用 → 直接建最小 PARA 目录（Markdown 模式）。保留更新模式备份/保留 hub-state 等既有安全机制 | `README.md` `README.en.md`（英文版补齐此前缺失的更新模式等内容，与中文版对齐） | 非技术用户零门槛完成搭建；三种存储形态全覆盖 | Kimi |
