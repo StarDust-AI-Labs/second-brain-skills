@@ -146,3 +146,13 @@ tags: [Skill优化, 迭代记录, 变更日志]
 | init-workspace 支持 Obsidian 模式 | `init-workspace.mjs` 新增 `--obsidian` 参数：除 PARA 五目录外额外创建 `.obsidian/` 标记目录（不写应用配置），使新建路径可被识别为 Vault；输出增加 `obsidian_mode` 字段。无需单独的 Vault 创建脚本 | `skills/second-brain-hub/scripts/init-workspace.mjs` | 新装 Obsidian 的用户可一键建库，后续可被只读探测发现 | Kimi |
 | 协议同步 | 最小工作区协议补充 Obsidian 标记目录规则；onboarding 写入范围门控同步纳入 `.obsidian/` 标记 | `references/minimal-workspace.md` `references/workflow-onboarding.md` | 契约与脚本行为一致 | Kimi |
 | 复制提示词重写（中英） | 全程大白话、每次只问一个问题、代为执行前先征得同意；安装后先只读探测 Obsidian 是否已装，再按三分支引导：①已装 → 只读探测 `.obsidian/` 候选库并对接；②想用未装 → 官网下载安装包（征得同意后）+ `--obsidian` 建新 Vault + 提醒首次打开方式；③不用 → 直接建最小 PARA 目录（Markdown 模式）。保留更新模式备份/保留 hub-state 等既有安全机制 | `README.md` `README.en.md`（英文版补齐此前缺失的更新模式等内容，与中文版对齐） | 非技术用户零门槛完成搭建；三种存储形态全覆盖 | Kimi |
+
+---
+
+## v1.4 — 安装提示词修正：Skill 目录证据优先探测（2026-07-19）
+
+> 对应反馈：提示词在 OpenClaw 等列表外产品上实测时，能力较弱的模型只会照搬步骤 0 的产品列表让用户选择安装目录，不会主动探测。
+
+| 改进项 | 修改内容 | 涉及文件 | 预期效果 | 修改人 |
+|--------|---------|---------|---------|--------|
+| 步骤 0 改为证据优先 | 安装目标目录判定顺序改为：①agent 自身运行环境（产品名称、配置目录、已装技能位置）→ ②只读检查工作区/主目录实际存在的 skills 目录 → ③已知产品约定列表兜底（降级为参考而非菜单）；列表外产品按其自身 skills 约定或配置目录下 `skills/`；要求 agent 说明判断依据，无法确定时须带建议再询问 | `README.md` `README.en.md` | 弱模型在任意 agent 产品上也能自主确定正确安装目录，不再死板照搬列表 | Kimi |
