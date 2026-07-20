@@ -19,8 +19,9 @@
 3. 目录已存在时复用，不清空、不覆盖、不移动其中内容。
 4. 初始化是幂等操作；重复执行只报告已存在项。
 5. 初始化完成不代表原请求完成，必须返回 onboarding 流程恢复原任务。
+6. Obsidian 模式额外创建 `.obsidian/` 标记目录（不写入任何应用配置），使路径可被识别为 Vault；用户首次用 Obsidian 打开该文件夹时由应用自行填充配置。
 
-可优先运行 `scripts/init-workspace.mjs`；Node.js 不可用时按相同规则使用当前文件工具创建。
+可优先运行 `scripts/init-workspace.mjs`（Obsidian 模式加 `--obsidian`）；Node.js 不可用时按相同规则使用当前文件工具创建。
 
 <HARD-GATE id="minimal-workspace-safe-target">
 目标未经确认、位于磁盘根目录、等于用户主目录或无法证明写入边界安全时，禁止初始化。
