@@ -462,12 +462,31 @@ foreach ($gate in @("fallback-vault-boundary", "fallback-write-preflight")) {
 }
 $onboardingCases = Read-TestPrompts -Path $OnboardingCasePath
 if ($onboardingCases.Count -lt 10) { throw "Onboarding regression suite must contain at least 10 cases" }
+$requiredOnboardingCases = @(
+    "onboard-existing-single-vault",
+    "onboard-multiple-vaults",
+    "onboard-existing-markdown",
+    "onboard-create-markdown",
+    "onboard-invalid-path",
+    "onboard-root-path",
+    "onboard-init-failure",
+    "onboard-resume-original",
+    "onboard-delete-safety"
+)
+$onboardingIds = @($onboardingCases | ForEach-Object { $_.id })
+foreach ($requiredCase in $requiredOnboardingCases) {
+    if ($requiredCase -notin $onboardingIds) { throw "Onboarding regression suite is missing '$requiredCase'" }
+}
 $onboardingProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/workflow-onboarding.md"
 foreach ($gate in @("onboarding-path-confirmed", "onboarding-limited-write-scope", "onboarding-resume-original-request")) {
     if ($onboardingProtocol -notmatch [regex]::Escape("<HARD-GATE id=`"$gate`">")) { throw "Onboarding protocol is missing HARD-GATE '$gate'" }
 }
 $minimalWorkspace = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/minimal-workspace.md"
 if ($minimalWorkspace -notmatch [regex]::Escape('<HARD-GATE id="minimal-workspace-safe-target">')) { throw "Minimal workspace protocol is missing its safe-target gate" }
+$initWorkspace = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/scripts/init-workspace.mjs"
+foreach ($requiredToken in @("--path", "--dry-run", "--obsidian", "filesystem root", "user home directory", "obsidian_mode", "operations")) {
+    if ($initWorkspace -notmatch [regex]::Escape($requiredToken)) { throw "init-workspace.mjs is missing required safety/trace token '$requiredToken'" }
+}
 $contextBudget = Get-Content -Raw -Encoding UTF8 -LiteralPath $ContextBudgetPath | ConvertFrom-Json
 $fixedBytes = 0
 foreach ($fixedFile in @($contextBudget.fixed_load_files)) {
@@ -492,6 +511,10 @@ foreach ($case in $behaviorCases) {
     foreach ($property in @("id", "category", "input", "expected_intent", "expected_action")) { Assert-HasProperty -Item $case -Name $property -CaseId "<behavior-case>" }
     if ($behaviorIds.ContainsKey($case.id)) { throw "Duplicate behavior case id: $($case.id)" }
     $behaviorIds[$case.id] = $true
+}
+$diagnosisModule = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/module-second-brain-diagnosis.md"
+foreach ($requiredToken in @("duration", "target", "first_action", "done_when", "recommended_scene")) {
+    if ($diagnosisModule -notmatch [regex]::Escape($requiredToken)) { throw "Diagnosis module is missing actionable experiment field '$requiredToken'" }
 }
 $qualityGates = Get-Content -Raw -Encoding UTF8 -LiteralPath $qualityGatesPath | ConvertFrom-Json
 if ($qualityGates.minimum_overall_score -lt 4.6) { throw "Behavior quality gate must target at least 4.6" }

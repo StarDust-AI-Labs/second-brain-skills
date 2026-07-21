@@ -1,9 +1,9 @@
 # Hub State Schema
 
-- 当前版本: 1.1
-- 可提交模板: `.claude/hub-state.example.json`
-- 本地项目级状态文件: `.claude/hub-state.json`
-- Vault 运行态状态文件: `{vault_path}/.obsidian/hub-state.json`
+- 当前版本: 1.2
+- 可提交模板: `skills/second-brain-hub/hub-state.example.json`
+- 本地项目级状态文件: 安装后的 Hub 目录旁 `hub-state.json`
+- 运行态状态文件: Obsidian 模式为 `{vault_path}/.obsidian/hub-state.json`；Markdown 模式保存在 Hub 旁的本地状态文件
 - Legacy fallback: `.Codex/hub-state.json`
 
 ---
@@ -14,11 +14,11 @@
 
 `.claude/hub-state.example.json` 是可提交的配置模板，不能包含真实机器路径。
 
-`.claude/hub-state.json` 是 Hub 的本地配置来源，用于保存跨会话偏好和 Vault 定位信息。它应该由用户在安装后从 example 文件复制生成，不应提交到版本库。
+`.claude/hub-state.json` 是 Hub 的本地配置来源，用于保存跨会话偏好、存储模式和 Vault/Markdown 工作区定位信息。它应该由用户在安装后从 example 文件复制生成，不应提交到版本库。
 
-### Vault 运行态状态
+### 运行态状态
 
-`{vault_path}/.obsidian/hub-state.json` 是 Vault 内运行记录，用于保存最近操作、收件箱运行态、自动化任务状态等。
+Obsidian 模式的 `{vault_path}/.obsidian/hub-state.json` 是 Vault 内运行记录；Markdown 模式不要求 `.obsidian/`，运行记录保存在 Hub 旁的本地状态文件中。
 
 如果不存在，Hub 可以根据项目级状态创建。创建时不要覆盖用户已有 Obsidian 配置。
 
@@ -62,6 +62,9 @@
 
 ```json
 {
+  "storage_mode": null,
+  "workspace_path": null,
+  "workspace_name": null,
   "vault_path": null,
   "vault_name": null,
   "default_distill_level": 1,
@@ -74,8 +77,11 @@
 
 | 字段 | 类型 | 必填 | 默认值 | 说明 |
 |------|------|------|--------|------|
-| `vault_path` | string/null | 是 | `null` | Obsidian Vault 绝对路径。为空时 Hub 必须先询问用户。 |
-| `vault_name` | string/null | 是 | `null` | Obsidian Vault 名称，用于 Obsidian URI 和 CLI。 |
+| `storage_mode` | `obsidian`/`markdown`/null | 是 | `null` | 选定的存储模式。 |
+| `workspace_path` | string/null | 是 | `null` | 所选 Vault 或 Markdown 工作区绝对路径。 |
+| `workspace_name` | string/null | 是 | `null` | 所选工作区名称。 |
+| `vault_path` | string/null | 是 | `null` | Obsidian 兼容字段；Markdown 模式可指向同一工作区。 |
+| `vault_name` | string/null | 是 | `null` | Obsidian 兼容字段；Markdown 模式可使用工作区名称。 |
 | `default_distill_level` | number | 是 | `1` | 外源保存默认提炼层级。 |
 | `weekly_review_day` | string | 否 | `"friday"` | 周回顾偏好日期。 |
 | `inbox_warning_threshold` | number | 否 | `15` | 收件箱积压提醒阈值。 |

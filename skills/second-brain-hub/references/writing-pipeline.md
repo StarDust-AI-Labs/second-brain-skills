@@ -1,11 +1,11 @@
-# Obsidian 写入管道
+# 笔记存储写入管道
 
 ## 写入前置
 
 在创建、更新、移动或删除前检查 `route-contracts.json` 的 `write_preflight`：
 
-- 创建或更新：`target_path` 不为空且不是 Vault 根目录。
-- 移动：目标目录已确认且不是 Vault 根目录。
+- 创建或更新：`target_path` 不为空且不是所选存储工作区根目录。
+- 移动：目标目录已确认且不是所选存储工作区根目录。
 - 删除：用户已明确确认删除具体文件。
 - 创建笔记：`obsidian-markdown` 已输出 `final_markdown` 和必需 frontmatter。
 - 所有副作用：`write_allowed=true`。
@@ -36,4 +36,4 @@ distill_level: 0
 
 ## 写入回执
 
-写入后保存：操作类型、Vault 内路径、时间、模板状态和工具回执。工具失败时不要宣称成功。
+写入后保存：操作类型、工作区内路径、时间、模板状态和工具回执。工具失败时不要宣称成功。

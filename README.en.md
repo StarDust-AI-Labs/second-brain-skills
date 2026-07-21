@@ -101,9 +101,9 @@ Ground rules: check before acting; never use `git reset --hard`; do not delete m
 ├─────────────────────────────────────────────────────┤
 │  💾 Storage Layer                                    │
 │  ┌─────────────────────────────────────────────┐    │
-│  │  🗄️ Obsidian Vault · Second Brain Notebook   │    │
+│  │  🗄️ Obsidian Vault or Markdown Workspace     │    │
 │  │  PARA directories · .md notes ·              │    │
-│  │  hub-state.json · .canvas                    │    │
+│  │  hub-state.json · .canvas (optional)         │    │
 │  └─────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────┘
 ```
@@ -118,7 +118,7 @@ Ground rules: check before acting; never use `git reset --hard`; do not delete m
 
 | Skill | Description |
 |-------|-------------|
-| `second-brain-hub` | Only entry point: 8 intents → 7 Vault flows + 1 read-only diagnosis flow → Obsidian pipeline |
+| `second-brain-hub` | Only entry point: 8 intents → 7 storage-backed flows + 1 read-only diagnosis flow |
 
 ### 🧩 Unified SKILL Layer
 
@@ -194,10 +194,12 @@ second-brain/
 - **Runtime Boundary**: `scripts/`, `tests/`, `docs/`, `books/`, and `third-party/` are only for development, validation, documentation, and license archival. End users do not need them or Python at runtime.
 - **Multi-Agent Sync**: If you use multiple agent products simultaneously, after modifying Skill content, ensure you re-copy from the top-level `skills/` to each agent's target directory.
 - **Config Template**: `skills/second-brain-hub/hub-state.example.json` is the configuration template; copy it to create `hub-state.json` during installation.
-- **Local Runtime Config**: `hub-state.json` stores `vault_path`, `vault_name`, `active_projects`, preferences, and the 12 problems list. It is a local file and should NOT be committed to version control. When installed to an agent, place it in the corresponding skill directory.
-- **Vault Runtime State**: `{vault_path}/.obsidian/hub-state.json` stores in-vault runtime records; if absent, the Hub creates it from the project-level config.
+- **Local Runtime Config**: `hub-state.json` stores `storage_mode`, the selected Vault or Markdown workspace path/name, onboarding state, active projects, preferences, and the 12 problems list. It is local-only and must NOT be committed to version control.
+- **Runtime State**: Obsidian mode may store runtime records in `{vault_path}/.obsidian/hub-state.json`; Markdown mode keeps runtime state beside the Hub's local config and does not require `.obsidian/`.
 
 ### First-Time Setup
+
+If no valid storage configuration exists, the Hub runs a one-question onboarding flow. It can connect an existing Obsidian Vault, connect an existing Markdown folder, or create a minimal PARA workspace. The original request is resumed after setup; users do not need to repeat it.
 
 Copy the config template and fill in your own Obsidian vault info. If installing the entire project, use the project-level template:
 
@@ -211,13 +213,28 @@ If installing only the `second-brain-hub` Skill to an agent, copy the template a
 Copy-Item <second-brain-hub-skill-dir>\hub-state.example.json <second-brain-hub-skill-dir>\hub-state.json
 ```
 
-Then edit the local `hub-state.json`:
+Then edit the local `hub-state.json` only if you want to preconfigure storage manually:
 
 ```json
 {
   "preferences": {
+    "storage_mode": "obsidian",
+    "workspace_path": "<your Obsidian vault absolute path>",
+    "workspace_name": "<your Obsidian vault name>",
     "vault_path": "<your Obsidian vault absolute path>",
     "vault_name": "<your Obsidian vault name>"
+  }
+}
+```
+
+For a plain Markdown workspace:
+
+```json
+{
+  "preferences": {
+    "storage_mode": "markdown",
+    "workspace_path": "<your Markdown workspace absolute path>",
+    "workspace_name": "<your workspace name>"
   }
 }
 ```
@@ -228,6 +245,8 @@ You can also use environment variables instead of creating the file:
 $env:SECOND_BRAIN_VAULT_PATH = "<your Obsidian vault absolute path>"
 $env:SECOND_BRAIN_VAULT_NAME = "<your Obsidian vault name>"
 ```
+
+Markdown mode uses `SECOND_BRAIN_STORAGE_MODE=markdown`, `SECOND_BRAIN_WORKSPACE_PATH`, and `SECOND_BRAIN_WORKSPACE_NAME`.
 
 ---
 

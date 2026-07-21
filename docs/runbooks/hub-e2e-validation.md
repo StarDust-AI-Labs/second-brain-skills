@@ -1,6 +1,6 @@
 # Hub 端到端验收运行手册
 
-- 适用范围: `second-brain-hub` 的意图识别、场景路由、状态读取、Obsidian 写入/降级策略
+- 适用范围: `second-brain-hub` 的意图识别、场景路由、状态读取、Obsidian/Markdown 写入与降级策略
 - 当前权威 Skill 源: `skills/second-brain-hub/`
 - 安装镜像: `.agents/skills/second-brain-hub/`、`.claude/skills/second-brain-hub/`（仅用于运行时，不是规范源）
 - 路由契约: `skills/second-brain-hub/route-contracts.json`
@@ -72,15 +72,16 @@
 - `version`
 - `active_projects`
 - `last_operations`
-- `preferences.vault_path`
-- `preferences.vault_name`
+- `preferences.storage_mode`
+- `preferences.workspace_path` / `preferences.workspace_name`
+- `preferences.vault_path` / `preferences.vault_name`（Obsidian 兼容字段）
 - `preferences.default_distill_level`
 - `preferences.inbox_warning_threshold`
 - `twelve_problems`
 
-模板中的 `vault_path` 和 `vault_name` 应为 `null`。真实 `hub-state.json` 可在安装目录旁本地存在，但不应提交到版本库。
+模板中的 `storage_mode`、`workspace_path`、`workspace_name`、`vault_path` 和 `vault_name` 应为 `null`。真实 `hub-state.json` 可在安装目录旁本地存在，但不应提交到版本库。
 
-如果运行时缺失 `vault_path` 或 `vault_name`，Hub 必须先引导用户配置 Vault，不应继续写入。
+如果运行时缺失有效的存储模式和绝对工作区路径，Hub 必须先进入 onboarding，不应继续写入；Markdown 模式不要求 `.obsidian/`。
 
 ---
 
