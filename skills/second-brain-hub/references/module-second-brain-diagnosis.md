@@ -1,8 +1,14 @@
 # 第二大脑综合诊断器
 
+> **与 module-code-diagnosis 的分层关系**：
+> - `module-code-diagnosis`：纯 CODE 四步定位，仅输出 `bottleneck_stage`，适用于单一瓶颈场景。
+> - `module-second-brain-diagnosis`（本模块）：综合诊断器，在第一层定位后进一步输出 `next_experiment`（可执行实验）和 `recommended_scene`（推荐场景），适用于需要给用户行动方案的场景。
+> - 调用规则：`workflow-diagnosis` 始终先调用本模块，本模块内部 step 1 读取 `module-code-diagnosis` 完成 CODE 定位，step 2 根据需要读取 `module-diverge-converge`，step 3-4 补齐实验和场景推荐。
+
 输入：`system_symptoms`、`recent_example`。输出：`bottleneck_stage`、`diagnosis_evidence`、`recommended_scene`、`next_experiment`。
 
 ## 可执行性要求
+
 
 诊断不是泛泛建议。`next_experiment` 必须是一个能在 15-30 分钟内完成的小实验，并明确写出：
 
