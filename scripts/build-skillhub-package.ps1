@@ -27,6 +27,27 @@ if (@($dependencies.dependencies).Count -ne 5) {
     throw "SkillHub package must declare five hidden dependencies"
 }
 
+# 生成上传用 zip。不能用 Compress-Archive / 资源管理器压缩：
+# 它们写入反斜杠路径分隔符，Linux 端 unzip 会报
+# "appears to use backslashes as path separators" 导致安全扫描失败。
+# 这里逐条创建条目并强制使用正斜杠。
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$ZipPath = Join-Path (Split-Path -Parent $Destination) "second-brain-hub.zip"
+if (Test-Path -LiteralPath $ZipPath) {
+    Remove-Item -LiteralPath $ZipPath -Force
+}
+$zip = [System.IO.Compression.ZipFile]::Open($ZipPath, "Create")
+try {
+    foreach ($file in @(Get-ChildItem -LiteralPath $Destination -Recurse -File)) {
+        $relative = $file.FullName.Substring($Destination.TrimEnd('\').Length + 1) -replace '\\', '/'
+        $entryName = "second-brain-hub/$relative"
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $file.FullName, $entryName) | Out-Null
+    }
+} finally {
+    $zip.Dispose()
+}
+
 Write-Output "SkillHub package ready: $Destination"
+Write-Output "SkillHub upload zip: $ZipPath"
 Write-Output "Discoverable Skills: 1 (second-brain-hub)"
 Write-Output "Hidden install dependencies: $(@($dependencies.dependencies).Count)"

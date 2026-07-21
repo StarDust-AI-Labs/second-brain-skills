@@ -18,10 +18,13 @@
 默认输出：
 
 ```text
-artifacts/skillhub/second-brain-hub/
+artifacts/skillhub/second-brain-hub/      # 构建目录
+artifacts/skillhub/second-brain-hub.zip   # 上传用 zip
 ```
 
-该目录只包含一个可发现的 `SKILL.md`。将此目录提交给 SkillHub，不要直接让商店递归扫描仓库根目录的 `skills/`。
+该目录只包含一个可发现的 `SKILL.md`。将脚本生成的 zip 提交给 SkillHub，不要直接让商店递归扫描仓库根目录的 `skills/`。
+
+注意：必须用构建脚本生成的 zip 上传。手工压缩（资源管理器右键压缩、`Compress-Archive`）会在 zip 中写入反斜杠路径分隔符，Linux 端 `unzip` 安全扫描会报 "appears to use backslashes as path separators" 而失败。脚本逐条创建 zip 条目并强制正斜杠路径。
 
 ## 安装器要求
 
