@@ -72,6 +72,17 @@ hub_run_ledger:
 
 禁止用 Hub 自己的自由判断替代契约要求的能力输出。
 
+
+
+## hub-state.json 初始化
+
+首次运行且所有配置来源均为空时，按以下逻辑创建运行时状态文件：
+
+1. 如果 onboarding 完成且用户已确认存储路径，用 `hub-state.example.json` 为模板创建 `hub-state.json`，写入 `preferences.storage_mode` 和对应路径字段。
+2. 创建时必须包含 `version`、`updated`、`onboarding.completed=true` 和 `onboarding.first_success_at`。
+3. 如果 `twelve_problems` 为空数组，后续查询场景跳过 `twelve-favorite-problems` 能力（符合 route-contracts 的 skip_evidence）。
+4. `hub-state.json` 写入位置遵循配置优先级第2项（项目根目录 `.claude/hub-state.json`），仅在 onboarding 确认后执行写入。
+
 ## Vault 运行态
 
 Obsidian 模式配置通过后读取 `{vault_path}/.obsidian/hub-state.json`。Markdown 模式不要求 `.obsidian` 目录，运行状态保存在 Hub 旁的本地 `hub-state.json`。运行完成后将操作摘要加入 `last_operations`，最多保留最近 20 条。
