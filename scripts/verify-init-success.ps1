@@ -1,37 +1,39 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-  第二大脑 · 初始化成功卡确定性校验 harness。
+  Second-brain init-success card deterministic verification harness.
 
 .DESCRIPTION
-  读取 tests/hub/onboarding-cases.json 中带有 assert / verify 字段的用例，
-  对每个用例的 sample_output（及可选 sample_hub_state）执行确定性断言，
-  覆盖 init-success-card / init-success-verification 中定义的规则。
+  Reads cases with assert / verify fields from tests/hub/onboarding-cases.json and
+  executes deterministic assertions against each case's sample_output (and optional
+  sample_hub_state), implementing the rules defined in
+  references/init-success-card.md and references/init-success-verification.md.
 
-  与基于 LLM 的行为评测（run-hub-behavior-eval.ps1）不同，本脚本做纯确定性断言：
-  标记缺失、JSON 非法、状态不一致、出现两张成功卡、未知版本时，对应用例真实失败。
+  Unlike the LLM-based behavior eval (run-hub-behavior-eval.ps1), this script makes
+  purely deterministic checks: a missing marker, invalid JSON, state mismatch,
+  duplicate success cards, or an unknown version makes the matching case truly FAIL.
 
-  断言 / 校验 ID：
-    marker-json-parseable            标记块存在且 JSON 可解析、字段合法
-    no-second-brain-init-marker      输出中不得出现 status=success 的标记块
-    exactly-one-success-card         输出中恰好一张成功卡
-    marker-unrecognized-not-success  未知 version 判为未识别，不得静默成功
-    marker-matches-hub-state         标记与 hub-state.json 一致（配合 verify 列表）
-    hub-state-valid-json             hub-state 为合法 JSON
+  Assert / verify IDs:
+    marker-json-parseable            marker block present, JSON parses, fields valid
+    no-second-brain-init-marker      no status=success marker block may appear
+    exactly-one-success-card         exactly one success card in the output
+    marker-unrecognized-not-success  unknown version -> unrecognized, never silent success
+    marker-matches-hub-state         marker consistent with hub-state.json (uses verify list)
+    hub-state-valid-json             hub-state is valid JSON
     onboarding-completed-true        onboarding.completed == true
-    storage-mode-match               hub-state 与标记 storage_mode 一致
-    workspace-path-match             hub-state 与标记 workspace_path 一致
-    workspace-path-exists            workspace_path 真实存在（需 -CheckFileSystem）
+    storage-mode-match               hub-state storage_mode matches marker
+    workspace-path-match             hub-state workspace_path matches marker
+    workspace-path-exists            workspace_path exists (requires -CheckFileSystem)
 
 .PARAMETER CasesPath
-  用例文件路径，默认 tests/hub/onboarding-cases.json。
+  Path to the cases file. Defaults to tests/hub/onboarding-cases.json.
 
 .PARAMETER CaseId
-  只运行指定 id 的用例。
+  Run only the case with this id.
 
 .PARAMETER CheckFileSystem
-  启用后，workspace-path-exists 会真实检查文件系统（默认跳过并标记为 SKIP，
-  因为样例路径是虚构的）。在真实环境 / CI 中验证真实初始化时可开启。
+  When set, workspace-path-exists really checks the filesystem (skipped otherwise,
+  because sample paths are fictional). Enable it in real env / CI against a real init.
 
 .EXAMPLE
   pwsh scripts/verify-init-success.ps1
@@ -47,9 +49,40 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 if (-not $CasesPath) { $CasesPath = Join-Path $Root "tests/hub/onboarding-cases.json" }
 
-# 与 init-success-verification.md 保持一致的提取正则（. 匹配换行）。
+# Extraction regex kept in sync with init-success-verification.md (. matches newline).
 $MarkerPattern = '<!--\s*second-brain-init\s*([\s\S]*?)\s*-->'
 $SupportedVersions = @("1")
+
+# PowerShell 5.1 的 ConvertFrom-Json 对【顶层 JSON 数组】有 bug（会合并成单对象），
+# 但对【单个 JSON 对象】工作正常；且本环境缺少 System.Web.Extensions /
+# System.Runtime.Serialization.Json。因此：用正则把顶层数组拆成一个个对象文本，
+# 再逐个用内置 ConvertFrom-Json 解析（5.1 下稳定）。
+
+function Split-TopLevelJsonArray {
+    param([string]$JsonText)
+    # 提取顶层 [...] 内的每个 {...} 对象（按花括号配平切分，字符串内的 {} 需忽略）。
+    $objects = New-Object System.Collections.ArrayList
+    $depth = 0; $start = -1; $inStr = $false; $esc = $false
+    for ($i = 0; $i -lt $JsonText.Length; $i++) {
+        $ch = $JsonText[$i]
+        if ($inStr) {
+            if ($esc) { $esc = $false }
+            elseif ($ch -eq '\') { $esc = $true }
+            elseif ($ch -eq '"') { $inStr = $false }
+            continue
+        }
+        if ($ch -eq '"') { $inStr = $true; continue }
+        if ($ch -eq '{') { if ($depth -eq 0) { $start = $i }; $depth++ }
+        elseif ($ch -eq '}') { $depth--; if ($depth -eq 0 -and $start -ge 0) { [void]$objects.Add($JsonText.Substring($start, $i - $start + 1)); $start = -1 } }
+    }
+    return $objects
+}
+
+function ConvertTo-CaseObject {
+    # 用内置 ConvertFrom-Json 解析单个对象文本，返回 PSCustomObject。
+    param([string]$ObjectText)
+    return ($ObjectText | ConvertFrom-Json)
+}
 
 function Get-Markers {
     param([string]$Text)
@@ -62,100 +95,123 @@ function Get-Markers {
 }
 
 function Test-MarkerFormat {
-    # 返回 @{ ok; reason; data }；data 为解析后的对象（解析成功时）。
+    # Returns @{ ok; reason; data }; data is the parsed PSCustomObject when parse succeeds.
     param([string]$JsonText)
     try { $obj = $JsonText | ConvertFrom-Json -ErrorAction Stop }
-    catch { return @{ ok = $false; reason = "JSON 解析失败: $($_.Exception.Message)"; data = $null } }
+    catch { return @{ ok = $false; reason = "json-parse-failed: $($_.Exception.Message)"; data = $null } }
 
-    if ($obj.status -ne "success") { return @{ ok = $false; reason = "status != success"; data = $obj } }
+    if ([string]$obj.status -ne "success") { return @{ ok = $false; reason = "status-not-success"; data = $obj } }
     if ($SupportedVersions -notcontains [string]$obj.version) {
-        return @{ ok = $false; reason = "未知 version: $($obj.version)"; data = $obj }
+        return @{ ok = $false; reason = "unknown-version:$($obj.version)"; data = $obj }
     }
-    if (@("obsidian", "markdown") -notcontains $obj.storage_mode) {
-        return @{ ok = $false; reason = "非法 storage_mode: $($obj.storage_mode)"; data = $obj }
+    if (@("obsidian", "markdown") -notcontains [string]$obj.storage_mode) {
+        return @{ ok = $false; reason = "bad-storage-mode:$($obj.storage_mode)"; data = $obj }
     }
     if ([string]::IsNullOrWhiteSpace([string]$obj.workspace_path)) {
-        return @{ ok = $false; reason = "workspace_path 为空"; data = $obj }
+        return @{ ok = $false; reason = "empty-workspace-path"; data = $obj }
     }
     return @{ ok = $true; reason = ""; data = $obj }
 }
 
-$cases = @(Get-Content -Raw -Encoding utf8 $CasesPath | ConvertFrom-Json)
-$cases = @($cases | Where-Object { $_.assert -or $_.verify })
-if ($CaseId) {
-    $cases = @($cases | Where-Object id -eq $CaseId)
-    if ($cases.Count -eq 0) { throw "Unknown case: $CaseId" }
+$jsonText = Get-Content -Raw -Encoding utf8 $CasesPath
+$objectTexts = Split-TopLevelJsonArray -JsonText $jsonText
+$rawCases = New-Object System.Collections.ArrayList
+foreach ($t in $objectTexts) { [void]$rawCases.Add((ConvertTo-CaseObject -ObjectText $t)) }
+
+# 过滤出带 assert / verify 的用例（Hashtable 用 Contains 判断键）
+$casesList = New-Object System.Collections.ArrayList
+foreach ($c in $rawCases) {
+    $hasAssert = $c.Contains("assert") -and (-not [string]::IsNullOrEmpty([string]$c["assert"]))
+    $hasVerify = $c.Contains("verify") -and ($null -ne $c["verify"])
+    if ($hasAssert -or $hasVerify) { [void]$casesList.Add($c) }
 }
-if ($cases.Count -eq 0) { Write-Output "No init-success cases with assert/verify found."; exit 0 }
+if ($CaseId) {
+    $filtered = New-Object System.Collections.ArrayList
+    foreach ($c in $casesList) { if ([string]$c["id"] -eq $CaseId) { [void]$filtered.Add($c) } }
+    $casesList = $filtered
+    if ($casesList.Count -eq 0) { throw "Unknown case: $CaseId" }
+}
+if ($casesList.Count -eq 0) { Write-Output "No init-success cases with assert/verify found."; exit 0 }
 
 $pass = 0; $fail = 0; $skip = 0
-$failures = @()
+
+function Get-Field {
+    # 兼容 PSCustomObject 与 IDictionary，属性/键不存在时返回 $null。
+    param($obj, $name)
+    if ($null -eq $obj) { return $null }
+    if ($obj -is [System.Collections.IDictionary]) { if ($obj.Contains($name)) { return $obj[$name] }; return $null }
+    $prop = $obj.PSObject.Properties[$name]
+    if ($null -ne $prop) { return $prop.Value }
+    return $null
+}
 
 function Assert-Case {
     param($case)
-    $id = $case.id
-    $markers = Get-Markers -Text ([string]$case.sample_output)
+    $sampleOutput = [string](Get-Field $case "sample_output")
+    $assert = [string](Get-Field $case "assert")
+    $userPath = [string](Get-Field $case "user_path")
+    $markers = @(Get-Markers -Text $sampleOutput)
     $problems = @()
 
-    switch ($case.assert) {
+    switch ($assert) {
         "marker-json-parseable" {
-            if ($markers.Count -lt 1) { $problems += "缺少 second-brain-init 标记块"; break }
+            if ($markers.Count -lt 1) { $problems += "missing second-brain-init marker"; break }
             $r = Test-MarkerFormat -JsonText $markers[0]
-            if (-not $r.ok) { $problems += "标记格式非法：$($r.reason)" }
-            elseif ($case.user_path -and ([string]$r.data.workspace_path -cne [string]$case.user_path)) {
-                $problems += "workspace_path 解析结果与预期路径不一致：got='$($r.data.workspace_path)' want='$($case.user_path)'"
+            if (-not $r.ok) { $problems += "marker-format-invalid: $($r.reason)" }
+            elseif ($userPath -and ([string]$r.data.workspace_path -cne $userPath)) {
+                $problems += "workspace_path mismatch: got='$($r.data.workspace_path)' want='$userPath'"
             }
         }
         "no-second-brain-init-marker" {
             foreach ($mk in $markers) {
                 $r = Test-MarkerFormat -JsonText $mk
-                if ($r.ok) { $problems += "失败用例却出现合法 success 标记块" }
+                if ($r.ok) { $problems += "failure-case produced a valid success marker" }
             }
         }
         "exactly-one-success-card" {
             $successCount = 0
             foreach ($mk in $markers) { $r = Test-MarkerFormat -JsonText $mk; if ($r.ok) { $successCount++ } }
-            if ($successCount -ne 1) { $problems += "成功卡数量应为 1，实际 $successCount" }
+            if ($successCount -ne 1) { $problems += "expected exactly 1 success card, got $successCount" }
         }
         "marker-unrecognized-not-success" {
-            if ($markers.Count -lt 1) { $problems += "缺少标记块（用例需要未知版本标记）"; break }
+            if ($markers.Count -lt 1) { $problems += "missing marker (case needs unknown-version marker)"; break }
             $r = Test-MarkerFormat -JsonText $markers[0]
-            if ($r.ok) { $problems += "未知 version 被误判为成功" }
-            elseif ($r.reason -notmatch "version") { $problems += "失败原因应指向 version，实际：$($r.reason)" }
+            if ($r.ok) { $problems += "unknown version was treated as success" }
+            elseif ($r.reason -notmatch "version") { $problems += "failure reason should mention version, got: $($r.reason)" }
         }
         "marker-matches-hub-state" {
-            if ($markers.Count -lt 1) { $problems += "缺少标记块"; break }
+            if ($markers.Count -lt 1) { $problems += "missing marker"; break }
             $r = Test-MarkerFormat -JsonText $markers[0]
-            if (-not $r.ok) { $problems += "标记格式非法：$($r.reason)"; break }
-            # verify 列表
-            $hub = $null
-            foreach ($v in @($case.verify)) {
-                switch ($v) {
+            if (-not $r.ok) { $problems += "marker-format-invalid: $($r.reason)"; break }
+            $verify = @(Get-Field $case "verify")
+            foreach ($v in $verify) {
+                switch ([string]$v) {
                     "hub-state-valid-json" {
-                        try { $script:hubState = $case.sample_hub_state | ConvertFrom-Json -ErrorAction Stop }
-                        catch { $problems += "hub-state 不是合法 JSON: $($_.Exception.Message)" }
+                        try { $script:hubState = ([string](Get-Field $case "sample_hub_state")) | ConvertFrom-Json -ErrorAction Stop }
+                        catch { $problems += "hub-state invalid JSON: $($_.Exception.Message)" }
                     }
                     "onboarding-completed-true" {
-                        if ($script:hubState -and $script:hubState.onboarding.completed -ne $true) {
-                            $problems += "onboarding.completed != true"
-                        }
+                        $onb = Get-Field $script:hubState "onboarding"
+                        if ($onb -and (Get-Field $onb "completed") -ne $true) { $problems += "onboarding.completed != true" }
                     }
                     "storage-mode-match" {
-                        if ($script:hubState -and ([string]$script:hubState.preferences.storage_mode -cne [string]$r.data.storage_mode)) {
-                            $problems += "storage_mode 与 hub-state 不一致"
+                        $prefs = Get-Field $script:hubState "preferences"
+                        if ($prefs -and ([string](Get-Field $prefs "storage_mode") -cne [string]$r.data.storage_mode)) {
+                            $problems += "storage_mode mismatch with hub-state"
                         }
                     }
                     "workspace-path-match" {
-                        if ($script:hubState) {
-                            $cfgPath = [string]$script:hubState.preferences.workspace_path
-                            if (-not $cfgPath) { $cfgPath = [string]$script:hubState.preferences.vault_path }
-                            if ($cfgPath -cne [string]$r.data.workspace_path) { $problems += "workspace_path 与 hub-state 不一致" }
+                        $prefs = Get-Field $script:hubState "preferences"
+                        if ($prefs) {
+                            $cfgPath = [string](Get-Field $prefs "workspace_path")
+                            if (-not $cfgPath) { $cfgPath = [string](Get-Field $prefs "vault_path") }
+                            if ($cfgPath -cne [string]$r.data.workspace_path) { $problems += "workspace_path mismatch with hub-state" }
                         }
                     }
                     "workspace-path-exists" {
                         if ($CheckFileSystem) {
                             if (-not (Test-Path -LiteralPath ([string]$r.data.workspace_path))) {
-                                $problems += "workspace_path 在文件系统不存在：$($r.data.workspace_path)"
+                                $problems += "workspace_path does not exist: $($r.data.workspace_path)"
                             }
                         } else {
                             $script:skippedNote = $true
@@ -164,25 +220,26 @@ function Assert-Case {
                 }
             }
         }
-        default { $problems += "未知 assert: $($case.assert)" }
+        default { $problems += "unknown assert: $assert" }
     }
     return $problems
 }
 
-foreach ($case in $cases) {
+foreach ($case in $casesList) {
     $script:hubState = $null; $script:skippedNote = $false
-    $problems = Assert-Case -case $case
+    $cid = [string](Get-Field $case "id")
+    $problems = @(Assert-Case -case $case)
     if ($problems.Count -eq 0) {
-        if ($script:skippedNote) { $skip++; Write-Output "SKIP $($case.id)（含 workspace-path-exists，未启用 -CheckFileSystem）" }
-        else { $pass++; Write-Output "PASS $($case.id)" }
+        if ($script:skippedNote) { $skip++; Write-Output "SKIP $cid (has workspace-path-exists; -CheckFileSystem not set)" }
+        else { $pass++; Write-Output "PASS $cid" }
     } else {
         $fail++
-        Write-Output "FAIL $($case.id)"
-        foreach ($p in $problems) { Write-Output "     - $p"; $failures += "$($case.id): $p" }
+        Write-Output "FAIL $cid"
+        foreach ($p in $problems) { Write-Output "     - $p" }
     }
 }
 
 Write-Output ""
-Write-Output "init-success 校验结果：PASS=$pass FAIL=$fail SKIP=$skip / 共 $($cases.Count) 例"
+Write-Output "init-success verification: PASS=$pass FAIL=$fail SKIP=$skip / total $($casesList.Count)"
 if ($fail -gt 0) { exit 1 }
 exit 0
