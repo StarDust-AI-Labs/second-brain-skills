@@ -39,17 +39,10 @@
 
 ## 首次成功
 
-仅在 `onboarding.completed=true` 且 `onboarding.examples_shown=false` 的第一次成功写入后使用：
+仅在 `onboarding.completed=true` 且 `onboarding.examples_shown=false` 的第一次成功写入后使用。**这是首次使用唯一的一张完整成功卡片**：它同时承担"知识库已搭好"的仪式感确认和"第一条内容已保存"的结果反馈，不要在此之外再单独输出"初始化成功卡"。
 
-```text
-【已完成】你的第二大脑已经可以使用，第一条内容已保存
-【位置】{实际路径}
-【接下来可以试试】
-- “保存这篇文章 + URL”
-- “找一下关于 {当前主题} 的笔记”
-- “把刚才的笔记提炼到 L2”
-```
+输出时使用 [init-success-card.md](init-success-card.md) 的逐字模板（含给用户看的仪式感文案，以及末尾隐形的 `second-brain-init` JSON 校验块），将 `<workspace_path_display>`、`<workspace_path_json>`、`<storage_mode_text>`、`<storage_mode>` 替换为真实值；其中 `<workspace_path_json>` 必须经 JSON 序列化生成（Windows 反斜杠 → `\\`），详见该模板的"路径转义"硬规则。
 
 输出后将 `first_success_at` 写为当前时间，并将 `examples_shown=true`。后续恢复使用普通最小结果卡片。
 
-路径、文件名、数量和是否实际写入必须明确。不要显示裸命令、内部字段名或大段 JSON。
+路径、文件名、数量和是否实际写入必须明确。除 `init-success-card.md` 规定的校验块外，不要显示裸命令、内部字段名或大段 JSON。
