@@ -9,5 +9,12 @@
   {"id":"onboard-init-failure","input":"记一下想法","config":"missing","write_result":"failed","expected_completed":false,"must_not_claim_success":true},
   {"id":"onboard-resume-original","input":"回顾一下本周","config":"missing","setup_result":"success","expected_resume_intent":"回顾整理"},
   {"id":"onboard-delete-safety","input":"把收件箱全部删掉","config":"missing","setup_result":"success","expected":"require-delete-confirmation-after-setup"},
-  {"id":"onboard-legacy-config-migration","input":"记一下想法","config":"legacy-valid-vault","storage_mode":null,"expected_storage_mode":"obsidian","expected":"skip-onboarding-and-migrate-lazily"}
+  {"id":"onboard-legacy-config-migration","input":"记一下想法","config":"legacy-valid-vault","storage_mode":null,"expected_storage_mode":"obsidian","expected":"skip-onboarding-and-migrate-lazily"},
+  {"id":"ritual-windows-path-json","input":"记一下想法","config":"missing","user_choice":"existing","user_path":"D:\\Notes\\Brain","setup_result":"success","first_write":"success","expected_marker_field":"workspace_path","expected_marker_value":"D:\\Notes\\Brain","assert":"marker-json-parseable"},
+  {"id":"ritual-posix-path-json","input":"记一下想法","config":"missing","user_choice":"existing","user_path":"/home/user/大脑 笔记","setup_result":"success","first_write":"success","expected_marker_field":"workspace_path","expected_marker_value":"/home/user/大脑 笔记","assert":"marker-json-parseable"},
+  {"id":"ritual-special-chars-json","input":"记一下想法","config":"missing","user_choice":"existing","user_path":"D:\\My Notes\\大脑\\项目 A","setup_result":"success","first_write":"success","assert":"marker-json-parseable"},
+  {"id":"ritual-failure-no-success-marker","input":"记一下想法","config":"missing","write_result":"failed","expected_completed":false,"must_not_claim_success":true,"assert":"no-second-brain-init-marker"},
+  {"id":"ritual-single-card","input":"记一下想法","config":"missing","user_choice":"create-minimal","setup_result":"success","first_write":"success","expected_completed":true,"assert":"exactly-one-success-card"},
+  {"id":"ritual-unknown-version-rejected","input":"记一下想法","config":"missing","setup_result":"success","first_write":"success","marker_version":"99","assert":"marker-unrecognized-not-success"},
+  {"id":"ritual-marker-matches-state","input":"记一下想法","config":"missing","user_choice":"existing","user_path":"D:/Notes/Vault","setup_result":"success","first_write":"success","assert":"marker-matches-hub-state","verify":["hub-state-valid-json","onboarding-completed-true","storage-mode-match","workspace-path-match","workspace-path-exists"]}
 ]
