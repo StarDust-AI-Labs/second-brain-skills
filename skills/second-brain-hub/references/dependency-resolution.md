@@ -34,7 +34,7 @@ SkillHub 只公开 `second-brain-hub`。安装器读取 `dependencies.json`，�
 6. 写入后返回实际路径和文件系统回执，不得伪装成 Obsidian CLI 回执。
 
 <HARD-GATE id="fallback-vault-boundary">
-未确认 Vault 配置，或目标绝对路径不在 `vault_path` 内时，禁止直接文件系统降级。
+未确认存储配置，或目标绝对路径不在已确认的存储根目录内（Obsidian 为 `vault_path`，Markdown 为 `workspace_path`）时，禁止直接文件系统降级。
 </HARD-GATE>
 
 <HARD-GATE id="fallback-write-preflight">
