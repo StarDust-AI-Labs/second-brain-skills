@@ -7,25 +7,26 @@ description: 首次成功（首次配置完成 + 第一条笔记写入成功）�
 
 > **给 Agent 的使用规则**
 > 1. **触发时机**：仅当知识库首次配置完成、且用户原始请求产生的第一条笔记**真实写入成功**后，输出一次。配置写入失败、路径未确认、或笔记未写入成功时，**不得输出**本卡片。
-> 2. **逐字一致**：把下方 `<占位符>` 替换为真实值，其余字符一字不改。全文只用跨平台纯 Markdown 子集（加粗 / 列表 / 反引号 / emoji），不出现任何 Agent 或平台名称。
+> 2. **逐字一致**：把下方 `<占位符>` 替换为真实值，其余字符一字不改，不出现任何 Agent 或平台名称。用户可见部分使用跨平台 Markdown；机器标记使用 HTML 注释，其可用性依赖平台能够保留并提供**原始 Agent 输出**。
 > 3. **JSON 必须合法**：末尾 `second-brain-init` 块必须是一段**合法 JSON**。生成时用当前环境的 JSON 序列化能力构造，禁止用普通字符串直接拼接路径。
 > 4. 末尾 HTML 注释块原样保留，它对用户隐形、供机器校验；不要删除、不要改成可见代码块。
 
 ## ⚠️ 路径转义（硬规则）
 
-`<workspace_path>` 填入 JSON 时，必须按 JSON 字符串规则转义。最常见的错误是 Windows 反斜杠：
+路径在卡片里出现**两次**，必须用**两个不同占位符**，禁止用一次全局替换同时填两处：
 
-- 原始路径 `D:\Notes\Brain` → JSON 里必须写成 `"D:\\Notes\\Brain"`（每个反斜杠转义为两个）。
-- 含空格 `D:\My Notes\大脑` → `"D:\\My Notes\\大脑"`（空格和中文无需转义，反斜杠需要）。
-- 正斜杠路径 `D:/Notes/Brain` 或 `/home/user/大脑` → 原样可用，无需额外处理。
+- **`<workspace_path_display>`**（用户可见处）：填**原始路径**，原样显示。
+  例：`D:\Notes\Brain`、`/home/user/大脑`
+- **`<workspace_path_json>`**（JSON 块内）：必须填**经 JSON 序列化后的字符串**。
+  例：`D:\Notes\Brain` → `D:\\Notes\\Brain`；`/home/user/大脑` → `/home/user/大脑`
 
-**禁止**把原始 Windows 路径（单反斜杠）直接塞进 JSON，否则 `\N`、`\B` 等会被当成非法转义序列，标准解析器直接失败。
+**禁止**手工拼接、或用简单字符串替换把原始路径直接塞进 JSON。Windows 单反斜杠（`\N`、`\B`）会被当成非法转义序列，标准解析器直接失败。生成 `<workspace_path_json>` 时用当前环境的 JSON 序列化能力处理。
 
 ---
 
 🎉 **你的第二大脑，搭建完成！**
 
-✨ 知识库已就位：`<workspace_path>`
+✨ 知识库已就位：`<workspace_path_display>`
 📦 存储方式：<storage_mode_text>
 📝 第一条内容已经保存好了
 
@@ -40,5 +41,5 @@ description: 首次成功（首次配置完成 + 第一条笔记写入成功）�
 **记录交给我，创造留给你。** 🚀
 
 <!-- second-brain-init
-{"status":"success","version":"1","storage_mode":"<storage_mode>","workspace_path":"<workspace_path>"}
+{"status":"success","version":"1","storage_mode":"<storage_mode>","workspace_path":"<workspace_path_json>"}
 -->

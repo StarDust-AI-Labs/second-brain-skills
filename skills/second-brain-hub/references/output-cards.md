@@ -41,7 +41,7 @@
 
 仅在 `onboarding.completed=true` 且 `onboarding.examples_shown=false` 的第一次成功写入后使用。**这是首次使用唯一的一张完整成功卡片**：它同时承担"知识库已搭好"的仪式感确认和"第一条内容已保存"的结果反馈，不要在此之外再单独输出"初始化成功卡"。
 
-输出时使用 [init-success-card.md](init-success-card.md) 的逐字模板（含给用户看的仪式感文案，以及末尾隐形的 `second-brain-init` JSON 校验块），将 `<workspace_path>`、`<storage_mode_text>`、`<storage_mode>` 替换为真实值；路径写入 JSON 时必须按 JSON 规则转义（Windows 反斜杠 → `\\`），详见该模板的"路径转义"硬规则。
+输出时使用 [init-success-card.md](init-success-card.md) 的逐字模板（含给用户看的仪式感文案，以及末尾隐形的 `second-brain-init` JSON 校验块），将 `<workspace_path_display>`、`<workspace_path_json>`、`<storage_mode_text>`、`<storage_mode>` 替换为真实值；其中 `<workspace_path_json>` 必须经 JSON 序列化生成（Windows 反斜杠 → `\\`），详见该模板的"路径转义"硬规则。
 
 输出后将 `first_success_at` 写为当前时间，并将 `examples_shown=true`。后续恢复使用普通最小结果卡片。
 
