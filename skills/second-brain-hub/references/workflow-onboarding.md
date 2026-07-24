@@ -41,6 +41,16 @@ C. 创建一个最小 Markdown 第二大脑（推荐给新用户）
 
 配置写入 Hub 旁的本地 `hub-state.json`，不得写入版本库。写入失败时保持 `onboarding.completed=false`，不得留下声称成功的回执。
 
+## 4.5 初始化成功仪式卡
+
+配置真正写入成功（`onboarding.completed=true`）后、恢复原任务前，向用户交付一次"搭建完成"的仪式感确认：
+
+1. 完整读取 [init-success-card.md](init-success-card.md)，将 `<workspace_path>`、`<storage_mode_text>`、`<storage_mode>` 替换为本次真实值。
+2. 其余字符**一字不改**地输出整块卡片；保留末尾 `second-brain-init` HTML 注释块，供跨平台机器校验。
+3. `<storage_mode_text>` 取值：Obsidian 模式填 `Obsidian 知识库`，Markdown 模式填 `普通文件夹`。
+4. 仅当配置写入成功时才输出；写入失败、用户取消或路径未确认时**不得输出成功卡片**（详见 [init-success-verification.md](init-success-verification.md)）。
+5. 本卡片只确认"知识库已搭好"，不替代恢复原任务——输出后继续执行第 5 步。
+
 ## 5. 恢复原任务
 
 配置通过后将 `vault_config=pass`，恢复 `pending_request` 对应的场景契约并继续执行。成功后清空 `pending_request`。
