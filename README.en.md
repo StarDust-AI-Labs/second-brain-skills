@@ -10,7 +10,7 @@ This project engineers the methodologies from *Building a Second Brain* — the 
 
 **Core philosophy**: The endpoint of knowledge management is not collecting — it's creating.
 
-![Second Brain Concept Poster](docs/第二大脑概念海报.png)
+![Second Brain Concept Poster](<docs/第二大脑海报 (2).png>)
 
 ---
 
