@@ -54,35 +54,8 @@ $MarkerPattern = '<!--\s*second-brain-init\s*([\s\S]*?)\s*-->'
 $SupportedVersions = @("1")
 
 # PowerShell 5.1 的 ConvertFrom-Json 对【顶层 JSON 数组】有 bug（会合并成单对象），
-# 但对【单个 JSON 对象】工作正常；且本环境缺少 System.Web.Extensions /
-# System.Runtime.Serialization.Json。因此：用正则把顶层数组拆成一个个对象文本，
-# 再逐个用内置 ConvertFrom-Json 解析（5.1 下稳定）。
-
-function Split-TopLevelJsonArray {
-    param([string]$JsonText)
-    # 提取顶层 [...] 内的每个 {...} 对象（按花括号配平切分，字符串内的 {} 需忽略）。
-    $objects = New-Object System.Collections.ArrayList
-    $depth = 0; $start = -1; $inStr = $false; $esc = $false
-    for ($i = 0; $i -lt $JsonText.Length; $i++) {
-        $ch = $JsonText[$i]
-        if ($inStr) {
-            if ($esc) { $esc = $false }
-            elseif ($ch -eq '\') { $esc = $true }
-            elseif ($ch -eq '"') { $inStr = $false }
-            continue
-        }
-        if ($ch -eq '"') { $inStr = $true; continue }
-        if ($ch -eq '{') { if ($depth -eq 0) { $start = $i }; $depth++ }
-        elseif ($ch -eq '}') { $depth--; if ($depth -eq 0 -and $start -ge 0) { [void]$objects.Add($JsonText.Substring($start, $i - $start + 1)); $start = -1 } }
-    }
-    return $objects
-}
-
-function ConvertTo-CaseObject {
-    # 用内置 ConvertFrom-Json 解析单个对象文本，返回 PSCustomObject。
-    param([string]$ObjectText)
-    return ($ObjectText | ConvertFrom-Json)
-}
+# 但对【单个 JSON 对象】工作正常。规避办法：把顶层数组包成 {"_items":[ ... ]}
+# 对象，解析后取 _items，5.1 下稳定，无需任何外部程序集。
 
 function Get-Markers {
     param([string]$Text)
@@ -114,20 +87,21 @@ function Test-MarkerFormat {
 }
 
 $jsonText = Get-Content -Raw -Encoding utf8 $CasesPath
-$objectTexts = Split-TopLevelJsonArray -JsonText $jsonText
-$rawCases = New-Object System.Collections.ArrayList
-foreach ($t in $objectTexts) { [void]$rawCases.Add((ConvertTo-CaseObject -ObjectText $t)) }
+# 包成对象规避 5.1 顶层数组 bug
+$wrapped = '{"_items":' + $jsonText.Trim() + '}'
+$wrappedObj = $wrapped | ConvertFrom-Json -ErrorAction Stop
+$rawCases = @($wrappedObj._items)
 
-# 过滤出带 assert / verify 的用例（Hashtable 用 Contains 判断键）
+# 过滤出带 assert / verify 的用例（PSCustomObject 直接用属性访问）
 $casesList = New-Object System.Collections.ArrayList
 foreach ($c in $rawCases) {
-    $hasAssert = $c.Contains("assert") -and (-not [string]::IsNullOrEmpty([string]$c["assert"]))
-    $hasVerify = $c.Contains("verify") -and ($null -ne $c["verify"])
+    $hasAssert = ($null -ne $c.assert) -and (-not [string]::IsNullOrEmpty([string]$c.assert))
+    $hasVerify = ($null -ne $c.verify)
     if ($hasAssert -or $hasVerify) { [void]$casesList.Add($c) }
 }
 if ($CaseId) {
     $filtered = New-Object System.Collections.ArrayList
-    foreach ($c in $casesList) { if ([string]$c["id"] -eq $CaseId) { [void]$filtered.Add($c) } }
+    foreach ($c in $casesList) { if ([string]$c.id -eq $CaseId) { [void]$filtered.Add($c) } }
     $casesList = $filtered
     if ($casesList.Count -eq 0) { throw "Unknown case: $CaseId" }
 }
@@ -135,22 +109,29 @@ if ($casesList.Count -eq 0) { Write-Output "No init-success cases with assert/ve
 
 $pass = 0; $fail = 0; $skip = 0
 
+function Has-Prop {
+    param($obj, $name)
+    if ($null -eq $obj) { return $false }
+    $null -ne ($obj.PSObject.Properties | Where-Object Name -eq $name)
+}
 function Get-Field {
     # 兼容 PSCustomObject 与 IDictionary，属性/键不存在时返回 $null。
     param($obj, $name)
     if ($null -eq $obj) { return $null }
     if ($obj -is [System.Collections.IDictionary]) { if ($obj.Contains($name)) { return $obj[$name] }; return $null }
-    $prop = $obj.PSObject.Properties[$name]
-    if ($null -ne $prop) { return $prop.Value }
+    $p = $obj.PSObject.Properties | Where-Object Name -eq $name | Select-Object -First 1
+    if ($null -ne $p) { return $p.Value }
     return $null
 }
 
 function Assert-Case {
-    param($case)
-    $sampleOutput = [string](Get-Field $case "sample_output")
-    $assert = [string](Get-Field $case "assert")
-    $userPath = [string](Get-Field $case "user_path")
+    param([object]$case)
+    # 直接属性访问最可靠（Get-Field 在函数作用域偶有管道问题）
+    $sampleOutput = if ($case.sample_output) { [string]$case.sample_output } else { "" }
+    $assert = if ($case.assert) { [string]$case.assert } else { "" }
+    $userPath = if ($case.user_path) { [string]$case.user_path } else { "" }
     $markers = @(Get-Markers -Text $sampleOutput)
+    Write-Warning ("[Assert-Case] id=$($case.id) assert=$assert sampleLen=$($sampleOutput.Length) markers=$($markers.Count)")
     $problems = @()
 
     switch ($assert) {
@@ -183,28 +164,28 @@ function Assert-Case {
             if ($markers.Count -lt 1) { $problems += "missing marker"; break }
             $r = Test-MarkerFormat -JsonText $markers[0]
             if (-not $r.ok) { $problems += "marker-format-invalid: $($r.reason)"; break }
-            $verify = @(Get-Field $case "verify")
+            $verify = @($case.verify)
             foreach ($v in $verify) {
                 switch ([string]$v) {
                     "hub-state-valid-json" {
-                        try { $script:hubState = ([string](Get-Field $case "sample_hub_state")) | ConvertFrom-Json -ErrorAction Stop }
+                        try { $script:hubState = ([string]$case.sample_hub_state) | ConvertFrom-Json -ErrorAction Stop }
                         catch { $problems += "hub-state invalid JSON: $($_.Exception.Message)" }
                     }
                     "onboarding-completed-true" {
-                        $onb = Get-Field $script:hubState "onboarding"
-                        if ($onb -and (Get-Field $onb "completed") -ne $true) { $problems += "onboarding.completed != true" }
+                        $onb = $script:hubState.onboarding
+                        if ($onb -and $onb.completed -ne $true) { $problems += "onboarding.completed != true" }
                     }
                     "storage-mode-match" {
-                        $prefs = Get-Field $script:hubState "preferences"
-                        if ($prefs -and ([string](Get-Field $prefs "storage_mode") -cne [string]$r.data.storage_mode)) {
+                        $prefs = $script:hubState.preferences
+                        if ($prefs -and ([string]$prefs.storage_mode -cne [string]$r.data.storage_mode)) {
                             $problems += "storage_mode mismatch with hub-state"
                         }
                     }
                     "workspace-path-match" {
-                        $prefs = Get-Field $script:hubState "preferences"
+                        $prefs = $script:hubState.preferences
                         if ($prefs) {
-                            $cfgPath = [string](Get-Field $prefs "workspace_path")
-                            if (-not $cfgPath) { $cfgPath = [string](Get-Field $prefs "vault_path") }
+                            $cfgPath = [string]$prefs.workspace_path
+                            if (-not $cfgPath) { $cfgPath = [string]$prefs.vault_path }
                             if ($cfgPath -cne [string]$r.data.workspace_path) { $problems += "workspace_path mismatch with hub-state" }
                         }
                     }
@@ -227,7 +208,7 @@ function Assert-Case {
 
 foreach ($case in $casesList) {
     $script:hubState = $null; $script:skippedNote = $false
-    $cid = [string](Get-Field $case "id")
+    $cid = if ($case.id) { [string]$case.id } else { "<no-id>" }
     $problems = @(Assert-Case -case $case)
     if ($problems.Count -eq 0) {
         if ($script:skippedNote) { $skip++; Write-Output "SKIP $cid (has workspace-path-exists; -CheckFileSystem not set)" }
