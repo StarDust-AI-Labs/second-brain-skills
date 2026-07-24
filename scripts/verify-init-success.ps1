@@ -109,29 +109,20 @@ if ($casesList.Count -eq 0) { Write-Output "No init-success cases with assert/ve
 
 $pass = 0; $fail = 0; $skip = 0
 
-function Has-Prop {
-    param($obj, $name)
-    if ($null -eq $obj) { return $false }
-    $null -ne ($obj.PSObject.Properties | Where-Object Name -eq $name)
-}
-function Get-Field {
-    # 兼容 PSCustomObject 与 IDictionary，属性/键不存在时返回 $null。
-    param($obj, $name)
-    if ($null -eq $obj) { return $null }
-    if ($obj -is [System.Collections.IDictionary]) { if ($obj.Contains($name)) { return $obj[$name] }; return $null }
-    $p = $obj.PSObject.Properties | Where-Object Name -eq $name | Select-Object -First 1
-    if ($null -ne $p) { return $p.Value }
-    return $null
+function Get-CaseValue {
+    param([object]$Object, [string]$Name)
+    if ($null -eq $Object) { return $null }
+    $property = $Object.PSObject.Properties[$Name]
+    if ($null -eq $property) { return $null }
+    return $property.Value
 }
 
 function Assert-Case {
-    param([object]$case)
-    # 直接属性访问最可靠（Get-Field 在函数作用域偶有管道问题）
-    $sampleOutput = if ($case.sample_output) { [string]$case.sample_output } else { "" }
-    $assert = if ($case.assert) { [string]$case.assert } else { "" }
-    $userPath = if ($case.user_path) { [string]$case.user_path } else { "" }
+    param([object]$TestCase)
+    $sampleOutput = [string](Get-CaseValue -Object $TestCase -Name "sample_output")
+    $assert = [string](Get-CaseValue -Object $TestCase -Name "assert")
+    $userPath = [string](Get-CaseValue -Object $TestCase -Name "user_path")
     $markers = @(Get-Markers -Text $sampleOutput)
-    Write-Warning ("[Assert-Case] id=$($case.id) assert=$assert sampleLen=$($sampleOutput.Length) markers=$($markers.Count)")
     $problems = @()
 
     switch ($assert) {
@@ -144,15 +135,15 @@ function Assert-Case {
             }
         }
         "no-second-brain-init-marker" {
-            foreach ($mk in $markers) {
-                $r = Test-MarkerFormat -JsonText $mk
-                if ($r.ok) { $problems += "failure-case produced a valid success marker" }
-            }
+            if ($markers.Count -ne 0) { $problems += "failure-case produced a second-brain-init marker" }
         }
         "exactly-one-success-card" {
-            $successCount = 0
-            foreach ($mk in $markers) { $r = Test-MarkerFormat -JsonText $mk; if ($r.ok) { $successCount++ } }
-            if ($successCount -ne 1) { $problems += "expected exactly 1 success card, got $successCount" }
+            if ($markers.Count -ne 1) {
+                $problems += "expected exactly 1 success marker, got $($markers.Count)"
+                break
+            }
+            $r = Test-MarkerFormat -JsonText $markers[0]
+            if (-not $r.ok) { $problems += "single success marker is invalid: $($r.reason)" }
         }
         "marker-unrecognized-not-success" {
             if ($markers.Count -lt 1) { $problems += "missing marker (case needs unknown-version marker)"; break }
@@ -164,40 +155,54 @@ function Assert-Case {
             if ($markers.Count -lt 1) { $problems += "missing marker"; break }
             $r = Test-MarkerFormat -JsonText $markers[0]
             if (-not $r.ok) { $problems += "marker-format-invalid: $($r.reason)"; break }
-            $verify = @($case.verify)
+            $hubStateText = [string](Get-CaseValue -Object $TestCase -Name "sample_hub_state")
+            try { $hubState = $hubStateText | ConvertFrom-Json -ErrorAction Stop }
+            catch {
+                $hubState = $null
+                $hubStateParseError = $_.Exception.Message
+            }
+            $verify = @(Get-CaseValue -Object $TestCase -Name "verify")
             foreach ($v in $verify) {
                 switch ([string]$v) {
                     "hub-state-valid-json" {
-                        try { $script:hubState = ([string]$case.sample_hub_state) | ConvertFrom-Json -ErrorAction Stop }
-                        catch { $problems += "hub-state invalid JSON: $($_.Exception.Message)" }
+                        if ($null -eq $hubState) { $problems += "hub-state invalid JSON: $hubStateParseError" }
                     }
                     "onboarding-completed-true" {
-                        $onb = $script:hubState.onboarding
-                        if ($onb -and $onb.completed -ne $true) { $problems += "onboarding.completed != true" }
+                        if ($null -eq $hubState -or
+                            $null -eq $hubState.onboarding -or
+                            $hubState.onboarding.completed -isnot [bool] -or
+                            $hubState.onboarding.completed -ne $true) {
+                            $problems += "onboarding.completed != true"
+                        }
                     }
                     "storage-mode-match" {
-                        $prefs = $script:hubState.preferences
-                        if ($prefs -and ([string]$prefs.storage_mode -cne [string]$r.data.storage_mode)) {
+                        if ($null -eq $hubState -or $null -eq $hubState.preferences) {
+                            $problems += "hub-state preferences missing"
+                        } elseif ([string]$hubState.preferences.storage_mode -cne [string]$r.data.storage_mode) {
                             $problems += "storage_mode mismatch with hub-state"
                         }
                     }
                     "workspace-path-match" {
-                        $prefs = $script:hubState.preferences
-                        if ($prefs) {
-                            $cfgPath = [string]$prefs.workspace_path
-                            if (-not $cfgPath) { $cfgPath = [string]$prefs.vault_path }
-                            if ($cfgPath -cne [string]$r.data.workspace_path) { $problems += "workspace_path mismatch with hub-state" }
+                        if ($null -eq $hubState -or $null -eq $hubState.preferences) {
+                            $problems += "hub-state preferences missing"
+                        } else {
+                            $cfgPath = [string]$hubState.preferences.workspace_path
+                            if (-not $cfgPath) { $cfgPath = [string]$hubState.preferences.vault_path }
+                            if (-not $cfgPath -or $cfgPath -cne [string]$r.data.workspace_path) {
+                                $problems += "workspace_path mismatch with hub-state"
+                            }
                         }
                     }
                     "workspace-path-exists" {
                         if ($CheckFileSystem) {
-                            if (-not (Test-Path -LiteralPath ([string]$r.data.workspace_path))) {
-                                $problems += "workspace_path does not exist: $($r.data.workspace_path)"
+                            if (-not (Test-Path -LiteralPath ([string]$r.data.workspace_path) -PathType Container)) {
+                                $problems += "workspace_path directory does not exist: $($r.data.workspace_path)"
                             }
                         } else {
                             $script:skippedNote = $true
                         }
                     }
+                    default { $problems += "unknown verify rule: $v" }
                 }
             }
         }
@@ -207,9 +212,9 @@ function Assert-Case {
 }
 
 foreach ($case in $casesList) {
-    $script:hubState = $null; $script:skippedNote = $false
+    $script:skippedNote = $false
     $cid = if ($case.id) { [string]$case.id } else { "<no-id>" }
-    $problems = @(Assert-Case -case $case)
+    $problems = @(Assert-Case -TestCase $case)
     if ($problems.Count -eq 0) {
         if ($script:skippedNote) { $skip++; Write-Output "SKIP $cid (has workspace-path-exists; -CheckFileSystem not set)" }
         else { $pass++; Write-Output "PASS $cid" }
@@ -222,5 +227,4 @@ foreach ($case in $casesList) {
 
 Write-Output ""
 Write-Output "init-success verification: PASS=$pass FAIL=$fail SKIP=$skip / total $($casesList.Count)"
-if ($fail -gt 0) { exit 1 }
-exit 0
+if ($fail -gt 0) { throw "Init-success verification failed: $fail case(s)" }
