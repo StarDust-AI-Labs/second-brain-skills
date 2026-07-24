@@ -22,7 +22,7 @@ description: 第二大脑唯一公开入口。用于记录灵感、保存网页�
 
 1. 完整读取 [references/runtime-protocol.md](references/runtime-protocol.md)，建立 `Hub Run Ledger`。
 2. 先按下表确定唯一场景；不确定时只追问一个问题。系统诊断记录配置不需要。
-3. Vault 场景缺少有效配置时，完整读取 [references/workflow-onboarding.md](references/workflow-onboarding.md)，暂存原请求并进入首次运行引导；配置完成后恢复原场景。
+3. Vault 场景缺少有效配置时，完整读取 [references/workflow-onboarding.md](references/workflow-onboarding.md)，暂存原请求并进入首次运行引导；配置完成后恢复原场景。用户明确要求初始化、搭建或重设知识库，或需查阅初始化的细化操作时，再按需读取 [SETUP.md](SETUP.md)；它不是常规上下文。
 4. 从 `route-contracts.json` 只读取选中场景、全局前置和对应写入前置，不加载无关场景。
 5. 完整读取该场景对应的工作流文件；从 `capability-contracts.json` 只读取当前步骤涉及的能力记录。
 6. 仅在首次调用外部工具 Skill、依赖状态未知或工具调用失败时读取 `dependencies.json`；只有发生依赖缺失时才完整读取 [references/dependency-resolution.md](references/dependency-resolution.md)。
