@@ -19,7 +19,7 @@ description: 第二大脑知识库初始化引导（仅供 Agent 阅读执行）
 3. **不猜路径**：知识库路径必须由用户确认，禁止用默认路径、禁止建在磁盘根目录或用户主目录本身。
 4. **保护已有数据**：发现已有 Vault 或已有 `hub-state.json` 时，优先沿用，不覆盖。
 5. **可降级**：缺工具时用安全等价能力，缺 Node 时用文件工具兜底，不因此中断。
-6. **隐私最小**：`hub-state.json` 是本地文件，绝不提交到 Git，绝不外发。
+6. **配置隔离**：`hub-state.json` 是运行态配置文件，不得提交到 Git。
 
 ---
 
@@ -126,7 +126,7 @@ description: 第二大脑知识库初始化引导（仅供 Agent 阅读执行）
 ```
 
 3. 其余字段（`active_projects`、`twelve_problems`、`inbox_count` 等）保持模板默认，后续使用中由系统维护。
-4. **重申**：`hub-state.json` 不进 Git、不外发。
+4. **重申**：`hub-state.json` 不提交到 Git。
 
 ---
 

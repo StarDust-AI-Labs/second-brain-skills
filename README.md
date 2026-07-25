@@ -58,7 +58,7 @@
    - 将这6个目录复制到步骤0确定的目标 skills 目录，保持每个 `SKILL.md` 位于目标 skills 目录的第一层
    - 不要复制 `scripts/`、`tests/`、`docs/`、`books/`、`artifacts/` 或 `third-party/`
    - 更新模式：先备份现有6个 Skill 目录；必须保留 `second-brain-hub/hub-state.json`（里面有我的知识库配置），不得用 `hub-state.example.json` 覆盖；我修改过其他 Skill 文件时先展示差异，经我确认后再替换
-   - 在目标 Skill 根目录写入或更新 `.second-brain-install.json`，记录 `source_repository`、`source_commit`、`installed_at`、`agent_type` 和已安装的6个 Skill 名称；不得记录知识库路径等隐私信息
+   - 在目标 Skill 根目录写入或更新 `.second-brain-install.json`，记录 `source_repository`、`source_commit`、`installed_at`、`agent_type` 和已安装的6个 Skill 名称；不得记录知识库路径等本地运行配置
 
 4. 引导我选择知识库形态（更新模式跳过本步，沿用保留的 hub-state.json；仅当配置缺失或路径失效时才重新引导）：
    先只读检测本机是否已安装 Obsidian（常见安装目录、开始菜单、/Applications、`which obsidian` 等），再问我一个问题："你的笔记想用 Obsidian 管理，还是用普通文件夹管理？"并按情况处理：
