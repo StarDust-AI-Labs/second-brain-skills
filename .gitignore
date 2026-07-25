@@ -22,3 +22,6 @@
 
 # Local evaluation reports
 artifacts/
+
+# 本地代理说明，不纳入版本控制（仅仓库根目录）
+/AGENT.md

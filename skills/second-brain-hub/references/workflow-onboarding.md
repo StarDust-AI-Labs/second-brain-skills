@@ -41,6 +41,8 @@ C. 创建一个最小 Markdown 第二大脑（推荐给新用户）
 
 配置写入 Hub 旁的本地 `hub-state.json`，不得写入版本库。写入失败时保持 `onboarding.completed=false`，不得留下声称成功的回执。
 
+> 注：首次配置完成**不在此单独输出"初始化成功卡"**。仪式感成功卡片统一在第一次成功写入笔记后，由 `output-cards.md` 的「首次成功」节输出一次（含机器校验块），避免首次使用连续出现两张成功卡。
+
 ## 5. 恢复原任务
 
 配置通过后将 `vault_config=pass`，恢复 `pending_request` 对应的场景契约并继续执行。成功后清空 `pending_request`。
