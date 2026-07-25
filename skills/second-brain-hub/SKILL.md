@@ -5,43 +5,21 @@ description: 第二大脑唯一公开入口。用于记录灵感、保存网页�
 
 # 第二大脑中枢
 
-将本 Skill 作为第二大脑体系的唯一用户入口。不要尝试触发独立的方法论 Skill；方法论已作为本 Skill 的内部能力模块，由场景契约按需加载。
+本 Skill 是第二大脑唯一用户入口。场景契约按需组合方法模块与工具能力，不触发旧的独立方法论 Skill。
 
-## 核心职责
+## 每轮固定流程
 
-1. 定位并验证 Obsidian Vault 或 Markdown 工作区配置。
-2. 将用户意图归类到一个明确场景。
-3. 读取机器可执行契约并建立运行台账。
-4. 按契约加载必要的工作流和能力模块。
-5. 在所有门控通过后读取或写入已选择的笔记存储。
-6. 用简短结果卡片反馈，不向普通用户倾倒内部台账。
+严格按顺序执行：
 
-## 强制入口流程
-
-每次触发后严格按顺序执行：
-
-1. 完整读取 [references/runtime-protocol.md](references/runtime-protocol.md)，建立 `Hub Run Ledger`。
-2. 先按下表确定唯一场景；不确定时只追问一个问题。系统诊断记录配置不需要。
-3. Vault 场景缺少有效配置时，完整读取 [references/workflow-onboarding.md](references/workflow-onboarding.md)，暂存原请求并进入首次运行引导；配置完成后恢复原场景。用户明确要求初始化、搭建或重设知识库，或需查阅初始化的细化操作时，再按需读取 [SETUP.md](SETUP.md)；它不是常规上下文。
-4. 从 `route-contracts.json` 只读取选中场景、全局前置和对应写入前置，不加载无关场景。
-5. 完整读取该场景对应的工作流文件；从 `capability-contracts.json` 只读取当前步骤涉及的能力记录。
-6. 仅在首次调用外部工具 Skill、依赖状态未知或工具调用失败时读取 `dependencies.json`；只有发生依赖缺失时才完整读取 [references/dependency-resolution.md](references/dependency-resolution.md)。
-7. 按契约顺序读取工作流点名的内部能力模块或外部工具 Skill。
-8. 有写入副作用时，完整读取 [references/writing-pipeline.md](references/writing-pipeline.md) 并通过写入前置。
-9. 普通完成使用下方最小结果卡片。"首次成功"判定标准：`onboarding.first_success_at` 为 null 且本次为第一次场景完成——满足时读取 [references/output-cards.md](references/output-cards.md) 使用新手结果卡片。需要决策或复杂报告时同样读取该文件；其余使用最小结果卡片。
-
-当输入明确包含 `HUB_EVAL_MODE` 时，改为完整读取 [references/evaluation-protocol.md](references/evaluation-protocol.md)，只生成机器可读行为 Trace，不执行任何真实工具或副作用。
-
-不得凭记忆补写、删除或改变 `required_steps` 的顺序。条件步骤不执行时，必须在 `optional_steps_skipped` 记录契约中的跳过证据。
-
-台账字段的完整定义和初始化值参见 [references/runtime-protocol.md](references/runtime-protocol.md) 的 Hub Run Ledger 节。每次运行必须在步骤 1 建立台账，步骤间持续更新，场景完成后归档 `last_operations`。
-
-解析 `capability-contracts.json` 的 `implementation` 时：
-
-- `type: reference`：相对于本 `second-brain-hub` Skill 根目录读取 `path`。
-- `type: skill`：按当前 Agent 已安装的 Skill `name` 调用，不拼接仓库路径。
-
-工具 Skill 缺失时不要直接判定整个 Hub 不可用。按 dependency-resolution 将当前能力解析为首选实现、安全降级或局部阻塞，并把结果记录到运行台账。
+1. 完整读取 [references/runtime-protocol.md](references/runtime-protocol.md)，建立并持续更新 `Hub Run Ledger`。
+2. 按下表归类唯一意图；无法唯一判断时只追问一个问题。
+3. Vault 场景配置缺失时读取 [references/workflow-onboarding.md](references/workflow-onboarding.md)，暂存原请求，配置后恢复执行。仅在初始化、重设或需要细化操作时读取 [SETUP.md](SETUP.md)。
+4. 从 `route-contracts.json` 只取全局前置、所选场景及相关写入前置；完整读取对应 `workflow-*.md`。
+5. 从 `capability-contracts.json` 只取当前步骤涉及的能力。`reference` 路径相对 Hub 根目录；`skill` 按安装名称调用。
+6. 外部工具状态未知或调用失败时才读取 `dependencies.json`；缺失时读取 [references/dependency-resolution.md](references/dependency-resolution.md) 选择 `primary`、`fallback` 或 `blocked`。
+7. 严格按契约顺序执行。必选步骤不得改序或省略；条件步骤未执行时记录契约规定的跳过证据。
+8. 任何写入、更新、移动或删除前读取 [references/writing-pipeline.md](references/writing-pipeline.md) 并通过写入前置。
+9. 决策、复杂报告、首次成功或需要完整卡片时读取 [references/output-cards.md](references/output-cards.md)；其他结果使用简短完成卡。场景结束后归档操作回执。
 
 ## 意图路由
 
@@ -64,70 +42,12 @@ description: 第二大脑唯一公开入口。用于记录灵感、保存网页�
 4. 其余按动作词匹配。
 5. 仍无法判断时询问：“你是想记下来、找东西、开始创作、整理回顾，还是诊断系统问题？”
 
-<HARD-GATE id="vault-config">
-未确认存储模式和绝对路径前，不得执行任何笔记文件读写。配置缺失时进入 onboarding，不得猜测路径或使用默认路径。Markdown 模式以已确认的 `workspace_path` 满足本门控。
-</HARD-GATE>
-
-<HARD-GATE id="intent-confirmed">
-意图未归类到唯一场景前，不得调用场景能力、读取 Vault 或执行写入。
-</HARD-GATE>
-
-<HARD-GATE id="contract-loaded">
-未读取选中场景契约和当前步骤所需能力契约，并把 `required_steps` 写入运行台账前，不得开始场景执行。无关场景、无关能力和依赖降级全文不属于固定前置。
-</HARD-GATE>
-
-<HARD-GATE id="dependency-resolved">
-执行工具能力前必须记录其实现为 `primary`、`fallback` 或 `blocked`。缺少工具 Skill 本身不是全局阻塞理由；只有当前能力没有安全降级时才局部停止。
-</HARD-GATE>
-
-<HARD-GATE id="write-preflight-complete">
-写入、更新、移动或删除前，必须满足目标路径、模板、授权以及场景规定的全部输出凭证。
-</HARD-GATE>
-
-<HARD-GATE id="evaluation-isolation">
-`HUB_EVAL_MODE` 下必须遵循 evaluation-protocol，禁止真实 Vault、网络和文件副作用。
-
-
-<GATE-TIMEOUT>
-每个 HARD-GATE 最多等待 3 次重试，单次超时视为阻塞。连续 2 个门控阻塞时停止当前场景，将 `blocked_reason` 写入台账并提示用户。
-门控重试不改变参数或跳过步骤；阻塞后不允许静默降级执行后续步骤。
-</GATE-TIMEOUT>
-
-## SKILL 层能力索引
-
-方法论模块和工具能力统一属于 SKILL 层。只读取当前工作流点名的实现：
-
-| 模块 | 能力 | 实现 |
-|---|---|---|
-| 抓取 | 保存价值判断 | [references/module-capture-criteria.md](references/module-capture-criteria.md) |
-| 抓取 | 长期兴趣匹配 | [references/module-twelve-favorite-problems.md](references/module-twelve-favorite-problems.md) |
-| 组织 | PARA 归属 | [references/module-para-system.md](references/module-para-system.md) |
-| 提炼 | 渐进式提炼 | [references/module-progressive-summarization.md](references/module-progressive-summarization.md) |
-| 表达 | 半熟素材识别 | [references/module-intermediate-packets.md](references/module-intermediate-packets.md) |
-| 表达 | 创作工作流 | [references/module-creative-workflow.md](references/module-creative-workflow.md) |
-| 系统维护与诊断 | 知识生命周期 | [references/module-knowledge-lifecycle.md](references/module-knowledge-lifecycle.md) |
-| 系统维护与诊断 | 发散/聚合诊断 | [references/module-diverge-converge.md](references/module-diverge-converge.md) |
-| 系统维护与诊断 | CODE 系统诊断 | [references/module-code-diagnosis.md](references/module-code-diagnosis.md) |
-| 系统维护与诊断 | 综合诊断器 | [references/module-second-brain-diagnosis.md](references/module-second-brain-diagnosis.md) |
-
-用户要求方法论原文、案例或历史审计时，读取 [references/methodology-sources.md](references/methodology-sources.md)。这些档案不是运行时入口。典型触发场景：系统诊断中需要引用 CODE 方法论原文佐证诊断结论，或回顾整理中用户询问某条 PARA 分类的理论依据。
-
-工具模块包含 `defuddle`、`obsidian-markdown`、`obsidian-cli`、`obsidian-bases` 和 `json-canvas`。SkillHub 将它们作为隐藏依赖随 Hub 安装；运行时优先读取其 `SKILL.md`，缺失时按 dependency-resolution 安全降级。
-
-## 最小结果卡片
-
-```text
-【完成】{用户请求的直接结果}
-【位置】{实际路径；只读或诊断可省略}
-【下一步】{一个最自然的后续动作}
-```
-
-不要向普通用户展示契约、台账、门控、能力 ID 或依赖解析细节。首次成功时改用 output-cards 中的新手结果卡片。
-
 ## 边界
 
 - 纯 Obsidian 插件安装、主题、快捷键或语法问题：直接使用对应 Obsidian 工具能力。
 - 简单资讯查询、天气、一次性事实：直接回答，不启动第二大脑流程。
 - 用户要求删除内容：必须再次取得明确删除确认。
-- 工具不可用：先按依赖协议选择安全降级；无法降级时按能力契约的 `failure_mode` 局部停止，不得静默跳过方法论步骤。
+- 工具不可用：按依赖协议安全降级；无法降级时按能力契约局部停止，不得静默跳步。
 - 系统诊断场景只给出瓶颈、证据和推荐场景，不自动修改 Vault。
+- 用户要求方法论原文、案例或历史审计时，才读取 [references/methodology-sources.md](references/methodology-sources.md)。
+- 不向普通用户展示契约、台账、门控或能力 ID。

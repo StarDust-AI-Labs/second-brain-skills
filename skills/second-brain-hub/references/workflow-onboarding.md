@@ -41,6 +41,8 @@ C. 创建一个最小 Markdown 第二大脑（推荐给新用户）
 
 配置写入 Hub 旁的本地 `hub-state.json`，不得写入版本库。写入失败时保持 `onboarding.completed=false`，不得留下声称成功的回执。
 
+创建状态时以 `hub-state.example.json` 为模板，写入 `version`、`updated`、`onboarding.completed=true`、`onboarding.first_success_at` 和已确认的存储字段。状态位置遵循运行协议的配置优先级；仅在用户确认后写入。`twelve_problems` 为空时，查询场景按契约跳过长期问题匹配。
+
 > 注：首次配置完成**不在此单独输出"初始化成功卡"**。仪式感成功卡片统一在第一次成功写入笔记后，由 `output-cards.md` 的「首次成功」节输出一次（含机器校验块），避免首次使用连续出现两张成功卡。
 
 ## 5. 恢复原任务
