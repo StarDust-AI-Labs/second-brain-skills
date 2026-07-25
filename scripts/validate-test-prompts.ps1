@@ -474,11 +474,30 @@ $requiredOnboardingCases = @(
     "onboard-delete-safety",
     "onboard-setup-completes-state",
     "onboard-pure-setup-no-synthetic-note",
-    "onboard-installed-skill-script-path"
+    "onboard-installed-skill-script-path",
+    "ritual-windows-path-json",
+    "ritual-posix-path-json",
+    "ritual-special-chars-json",
+    "ritual-failure-no-success-marker",
+    "ritual-single-card",
+    "ritual-unknown-version-rejected",
+    "ritual-marker-matches-state"
 )
 $onboardingIds = @($onboardingCases | ForEach-Object { $_.id })
 foreach ($requiredCase in $requiredOnboardingCases) {
     if ($requiredCase -notin $onboardingIds) { throw "Onboarding regression suite is missing '$requiredCase'" }
+}
+$initSuccessVerifier = Join-Path $PSScriptRoot "verify-init-success.ps1"
+if (-not (Test-Path -LiteralPath $initSuccessVerifier)) { throw "Missing init-success verifier: $initSuccessVerifier" }
+& $initSuccessVerifier -CasesPath $OnboardingCasePath
+$initSuccessCardPath = "skills/second-brain-hub/references/init-success-card.md"
+$initSuccessVerificationPath = "skills/second-brain-hub/references/init-success-verification.md"
+foreach ($requiredFile in @($initSuccessCardPath, $initSuccessVerificationPath)) {
+    if (-not (Test-Path -LiteralPath $requiredFile)) { throw "Missing init-success protocol file: $requiredFile" }
+}
+$initSuccessCard = Get-Content -Raw -Encoding UTF8 -LiteralPath $initSuccessCardPath
+foreach ($token in @("<workspace_path_display>", "<workspace_path_json>", "<storage_mode_text>", "<storage_mode>", "second-brain-init")) {
+    if ($initSuccessCard -notmatch [regex]::Escape($token)) { throw "Init-success card is missing token '$token'" }
 }
 $onboardingProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/workflow-onboarding.md"
 foreach ($gate in @("onboarding-path-confirmed", "onboarding-limited-write-scope", "onboarding-resume-original-request")) {
