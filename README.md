@@ -21,66 +21,29 @@
 
 本项目将《打造第二大脑》中的 CODE 信管法则、PARA 组织系统、渐进式归纳、十二问过滤和**海明威之桥**等方法论，工程化为 AI Agent 可直接调用的 Skill 体系。`second-brain-hub` 作为唯一入口，内置 9 个方法论能力模块和 5 个 Obsidian 工具 Skill——用户只需说"记一下灵感""保存这篇网页""提炼到 L2""帮我诊断为什么只收集不产出"，Agent 自动完成意图路由、契约编排、门控检查和知识写入。适配 Claude Code / Codex / Cursor / Coze / WorkBuddy 等主流 Agent 平台。
 
-![第二大脑概念海报](docs/第二大脑概念海报.png)
+![第二大脑概念海报](<docs/第二大脑海报 (2).png>)
 
 ***
 
 ## 给其他用户的复制提示词
 
-把下面这段提示词直接发给你的 agent。不需要任何技术背景——agent 会全程用大白话一步一步引导你：自动判断首次安装还是更新、把 Skill 同步到正确目录，并帮你选好知识库的存放方式（对接已有 Obsidian Vault、新装 Obsidian 并建库，或直接用普通文件夹）：
+把下面这段提示词直接发给你的 agent。它只负责安全安装或更新 Skill；安装完成后，知识库初始化统一交给 `second-brain-hub/SETUP.md`，避免 README 和运行时流程重复维护：
 
 ```text
-请帮我安装并搭建「第二大脑」知识管理系统。请全程用大白话和我交流，每次只问我一个问题；需要执行命令或修改文件时，先说明要做什么、征得我同意后再做，不要让我自己敲命令或手工编辑文件。
+请帮我安装或更新「第二大脑」Skill，并在安装后按项目内置 SOP 帮我完成知识库设置。全程用大白话交流，每次只问一个问题；需要执行命令或修改文件时先说明并征得我同意，不要让我手工敲命令或编辑配置。
 
-请按下面步骤执行：
+仓库：git@github.com:StarDust-AI-Labs/second-brain-skills.git（SSH 不可用时改用 HTTPS）。
 
-0. 确定 Skill 安装目标目录——基于实际证据判断，不要让我从下面的产品列表中做选择：
-   - 你自身就是首要证据：你正在运行的 agent 产品是什么、你的配置目录在哪里、你已安装的技能（如有）放在哪个目录；本机已存在技能目录时，优先沿用它作为安装目标
-   - 再只读检查：当前工作区和用户主目录下实际存在的 agent 配置/技能目录（如 `.claude/skills/`、`.agents/skills/`、`.cursor/skills/`、`.coze/skills/`、`.workbuddy/skills/`、`.opencode/` 等），存在哪个就用哪个
-   - 以上都无果时才参考已知约定：Claude Code → .claude/skills/；Codex → .agents/skills/；Cursor → .cursor/skills/；Coze（扣子）→ .coze/skills/；WorkBuddy → .workbuddy/skills/；列表之外的产品（如 OpenClaw 等）按该 agent 自身文档中的 skills 约定，查不到约定就用其配置目录下的 `skills/`
-   - 用一句话告诉我你确定的目标目录和判断依据；确实无法确定时，附上你的建议目录再问我
-   本项目以顶层 skills/ 为单一规范源，所有安装都从此目录复制。
+请执行：
 
-1. 检测现有安装：
-   - 检查目标 skills 目录中是否存在 `second-brain-hub/SKILL.md`，同级是否存在 `defuddle`、`obsidian-markdown`、`obsidian-cli`、`obsidian-bases`、`json-canvas`
-   - 存在 `second-brain-hub` 则进入"更新模式"，否则进入"首次安装模式"
-   - 同名 Skill 无法确认来自本仓库时，不要直接覆盖，先展示来源或差异并询问我
+1. 根据当前 Agent 的实际配置和本机已有目录，确定它真正使用的 skills 目录，并告诉我判断依据；无法确定时再询问我。
+2. 安全获取仓库最新 `main`。已有仓库存在未提交修改时不要覆盖或清理，改用临时目录或先询问我。
+3. 从仓库顶层 `skills/` 安装或更新这 6 个目录：`second-brain-hub`、`defuddle`、`obsidian-markdown`、`obsidian-cli`、`obsidian-bases`、`json-canvas`。更新前备份现有版本，保留 `second-brain-hub/hub-state.json` 和我的自定义修改。
+4. 安装完成后，完整读取已安装目录中的 `second-brain-hub/SETUP.md`，严格按该文档完成首次初始化、配置修复或已有知识库复用；不要自行重复或改写 `SETUP.md` 的初始化步骤。
+5. 验证 6 个 Skill 的 `SKILL.md` 均存在，并用大白话告诉我本次是安装还是更新、Skill 安装目录、使用的 Git commit，以及知识库设置结果。
 
-2. 获取仓库最新版本：
-   - 仓库地址：git@github.com:StarDust-AI-Labs/second-brain-skills.git
-   - 本机已有该仓库且工作区干净时，执行 `git fetch` 后用安全的 fast-forward 更新到最新 `main`
-   - 已有仓库包含未提交修改时，不要 reset、清理或覆盖；改为克隆到新的临时目录，或先询问我如何处理
-   - 没有仓库则克隆；SSH 不可用时改用 HTTPS 地址
-   - 记录本次安装使用的 Git commit
+安全约束：先检查再操作；禁止 `git reset --hard`；不得删除、覆盖来源不明或带有未提交修改的文件；`hub-state.json` 不得提交到 Git。
 
-3. 安装或更新 Skill：
-   - 需要同步的目录严格限定为：`second-brain-hub`、`defuddle`、`obsidian-markdown`、`obsidian-cli`、`obsidian-bases`、`json-canvas`
-   - 将这6个目录复制到步骤0确定的目标 skills 目录，保持每个 `SKILL.md` 位于目标 skills 目录的第一层
-   - 不要复制 `scripts/`、`tests/`、`docs/`、`books/`、`artifacts/` 或 `third-party/`
-   - 更新模式：先备份现有6个 Skill 目录；必须保留 `second-brain-hub/hub-state.json`（里面有我的知识库配置），不得用 `hub-state.example.json` 覆盖；我修改过其他 Skill 文件时先展示差异，经我确认后再替换
-   - 在目标 Skill 根目录写入或更新 `.second-brain-install.json`，记录 `source_repository`、`source_commit`、`installed_at`、`agent_type` 和已安装的6个 Skill 名称；不得记录知识库路径等本地运行配置
-
-4. 引导我选择知识库形态（更新模式跳过本步，沿用保留的 hub-state.json；仅当配置缺失或路径失效时才重新引导）：
-   先只读检测本机是否已安装 Obsidian（常见安装目录、开始菜单、/Applications、`which obsidian` 等），再问我一个问题："你的笔记想用 Obsidian 管理，还是用普通文件夹管理？"并按情况处理：
-   - 已安装 Obsidian：优先对接我已有的笔记库（Vault）。在常见位置（文档、桌面、用户主目录等）只读探测包含 `.obsidian/` 的目录，最多列出3个候选让我选；我也可以直接告诉你路径。确认后写入本地 `hub-state.json`（Obsidian 模式）。如果我想新建 Vault，按下一条的新建流程处理
-   - 未安装、但我想用 Obsidian：告诉我将从官网 https://obsidian.md/download 下载安装包，征得我同意后，按我的操作系统下载对应安装包（Windows 用 .exe，也可用 winget；macOS 用 .dmg；Linux 用 AppImage）并指导我完成安装。然后问我笔记库放在哪里（给出建议位置，如"文档/SecondBrain"，必须是我确认的绝对路径），运行仓库里的 `skills/second-brain-hub/scripts/init-workspace.mjs --path <确认路径> --obsidian` 创建新 Vault（含 PARA 五个目录和 `.obsidian/` 标记）；Node.js 不可用时用当前文件工具按同样规则创建。提醒我第一次打开 Obsidian 时选择"打开本地仓库/Open folder as vault"并选中这个目录。最后写入本地 `hub-state.json`（Obsidian 模式）
-   - 我选择普通文件夹（不用 Obsidian）：问我知识库放在哪里，确认绝对路径后运行 `init-workspace.mjs --path <确认路径>` 创建最小 PARA 目录（📥 收件箱 / 📂 项目 / 📂 领域 / 📂 资源 / 📦 存档），写入本地 `hub-state.json`（Markdown 模式）
-   - 任何情况下不得猜测路径，不得把知识库建在磁盘根目录或用户主目录本身；`hub-state.json` 不得提交到 Git
-
-5. 做一次最小可用验证：
-   - 检查6个 Skill 的 `SKILL.md` 均存在，核对5个隐藏依赖已安装；缺失时报告降级能力
-   - 检查我选定的知识库路径存在，且能在其中创建一条 Markdown 笔记
-   - 用测试输入"记一下：这是 second-brain-skill 的安装验证"触发 second-brain-hub，把测试笔记写入知识库的收件箱
-   - 更新模式验证失败时，恢复更新前备份并报告失败原因
-
-6. 完成后用大白话告诉我：
-   - 本次是首次安装还是更新
-   - 我的知识库放在哪里、用的是 Obsidian 还是普通文件夹
-   - 项目安装位置、Skill 安装目录、使用的 Git commit
-   - 我以后可以怎么对你说话来保存网页、记录灵感、整理笔记、启动创作和每周回顾
-   - 询问我："如果这个项目对你有帮助，要不要给 GitHub 仓库 Star 支持一下？"；我愿意时，使用当前可用的 GitHub 登录态/CLI/API 给仓库 `StarDust-AI-Labs/second-brain-skills` 点 Star；缺少认证或工具不可用时，给我仓库链接让我手动操作
-
-全程约束：先检查再操作；禁止 `git reset --hard`；未经我确认不得删除我的文件，也不得下载或运行任何安装程序；遇到来源不明的同名 Skill、未提交修改或覆盖风险时先问我。
 ```
 
 ***
