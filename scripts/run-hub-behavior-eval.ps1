@@ -12,9 +12,11 @@ $Root = Split-Path -Parent $PSScriptRoot
 $CasesPath = Join-Path $Root "tests/hub/behavior-cases.json"
 $GatesPath = Join-Path $Root "tests/hub/quality-gates.json"
 $SchemaPath = Join-Path $Root "tests/hub/behavior-output.schema.json"
+$HarnessPath = Join-Path $Root "tests/hub/harness/evaluation-protocol.md"
 $SkillPath = Join-Path $Root "skills/second-brain-hub/SKILL.md"
 $ContractsPath = Join-Path $Root "skills/second-brain-hub/route-contracts.json"
 
+$harness = Get-Content -Raw -Encoding utf8 $HarnessPath
 $cases = @(Get-Content -Raw -Encoding utf8 $CasesPath | ConvertFrom-Json | ForEach-Object { $_ })
 $gates = Get-Content -Raw -Encoding utf8 $GatesPath | ConvertFrom-Json
 $contracts = (Get-Content -Raw -Encoding utf8 $ContractsPath | ConvertFrom-Json).scenes
@@ -33,15 +35,17 @@ $results = @()
 foreach ($case in $cases) {
     for ($run = 1; $run -le $Runs; $run++) {
         $prompt = @"
-Use the second-brain-hub Skill at: $SkillPath
-HUB_EVAL_MODE
-This is an isolated behavior evaluation. Do not call tools and do not read or write a real Vault.
-Evaluate this user request exactly as the Skill specifies:
+Use the production second-brain-hub Skill at: $SkillPath
+Apply this external test harness; it is not part of the production Skill:
+--- harness ---
+$harness
+--- end harness ---
+Evaluate this user request exactly as the production Skill specifies:
 $($case.input)
 Return only the JSON object required by the provided output schema.
 "@
         $temp = Join-Path ([System.IO.Path]::GetTempPath()) ("hub-eval-{0}-{1}.json" -f $case.id, [guid]::NewGuid())
-        $args = @("--ask-for-approval", "never", "exec", "--ephemeral", "--ignore-user-config", "--sandbox", "read-only", "--output-schema", $SchemaPath, "--output-last-message", $temp, "-C", $Root)
+        $args = @("exec", "--ephemeral", "--ignore-user-config", "--sandbox", "read-only", "--output-schema", $SchemaPath, "--output-last-message", $temp, "-C", $Root)
         if ($Model) { $args += @("--model", $Model) }
         $args += $prompt
         $argumentsJson = $args | ConvertTo-Json -Compress

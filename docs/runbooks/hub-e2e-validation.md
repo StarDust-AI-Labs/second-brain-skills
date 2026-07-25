@@ -41,7 +41,7 @@
 | 端到端验收 | `tests/hub/e2e-cases.json` | 场景、最终副作用、前置证据和关键条件分支是否具备可人工验收的断言 |
 | 行为评测 | `tests/hub/behavior-cases.json` | 真实 Agent 在独立会话中的路由、流程、产物、安全和 Trace 质量 |
 
-端到端夹具用于人工 dry-run 或真实 Vault 验收。行为评测通过 `HUB_EVAL_MODE` 启动无副作用独立会话，执行真实 Agent 判断，但禁止访问真实 Vault。
+端到端夹具用于人工 dry-run 或真实 Vault 验收。行为 runner 从 `tests/hub/harness/` 外部注入无副作用评测协议，生产 Skill 不包含测试分支或期望答案；独立会话执行真实 Agent 判断，但禁止访问真实 Vault。
 
 ### 1.3 行为评测与发布门禁
 
