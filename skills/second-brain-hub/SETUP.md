@@ -85,9 +85,9 @@ description: 第二大脑知识库初始化引导（仅供 Agent 阅读执行）
 📦 存档        （Archives：完结/不再活跃的一切）
 ```
 
-- **优先用脚本**（有 Node 时）：
-  - Obsidian 模式：`node skills/second-brain-hub/scripts/init-workspace.mjs --path <确认路径> --obsidian`
-  - Markdown 模式：`node skills/second-brain-hub/scripts/init-workspace.mjs --path <确认路径>`
+- **优先用脚本**（有 Node 时）：先将 `<hub_root>` 解析为当前 `SETUP.md` 所在的 `second-brain-hub` 目录，不得假设当前工作目录是仓库根目录。
+  - Obsidian 模式：`node "<hub_root>/scripts/init-workspace.mjs" --path "<确认路径>" --obsidian`
+  - Markdown 模式：`node "<hub_root>/scripts/init-workspace.mjs" --path "<确认路径>"`
   - 脚本自带护栏（拒绝根目录/家目录），并输出 JSON 结果。
 - **Node 不可用时**：用当前文件工具按同样结构创建；Obsidian 模式额外创建 `.obsidian/` 子目录。
 - 目录已存在时跳过，不删除、不清空。
@@ -120,23 +120,40 @@ description: 第二大脑知识库初始化引导（仅供 Agent 阅读执行）
   "preferences": {
     "storage_mode": "markdown",
     "workspace_path": "<工作区绝对路径>",
-    "workspace_name": "<工作区名称>"
+    "workspace_name": "<工作区名称>",
+    "vault_path": "<工作区绝对路径>",
+    "vault_name": "<工作区名称>"
   }
 }
 ```
 
-3. 其余字段（`active_projects`、`twelve_problems`、`inbox_count` 等）保持模板默认，后续使用中由系统维护。
-4. **重申**：`hub-state.json` 不提交到 Git。
+3. 路径、目录和配置 JSON 全部验证通过后，明确写入初始化状态：
+
+```json
+{
+  "onboarding": {
+    "completed": true,
+    "first_success_at": null,
+    "examples_shown": false
+  }
+}
+```
+
+   不得在验证失败时设置 `onboarding.completed=true`。
+4. 其余字段（`active_projects`、`twelve_problems`、`inbox_count` 等）保持模板默认，后续使用中由系统维护。
+5. **重申**：`hub-state.json` 不提交到 Git。
 
 ---
 
 ## 第 5 步 · 最小可用验证
 
-确认真的"能用了"再交付：
+<!-- setup-write-scope: directories-and-config-only -->
 
-1. 知识库路径存在，且能在其中创建一条 Markdown 笔记。
-2. 触发一次灵感速记：写入测试笔记 `记一下：这是我的第一条第二大脑笔记` 到 **📥 收件箱**。
-3. 让用户能在 Obsidian 或文件管理器里**亲眼看到这条笔记**。
+确认配置真的可用再交付；本阶段只验证初始化被授权创建的目录和配置，不写测试笔记：
+
+1. 知识库路径和五个 PARA 目录存在；Obsidian 模式额外确认 `.obsidian/` 目录存在。
+2. `hub-state.json` 是合法 JSON，`storage_mode`、`workspace_path`、兼容字段和实际选择一致，且 `onboarding.completed=true`。
+3. 如果初始化由一条待处理的原始请求触发，返回 `workflow-onboarding.md` 恢复该请求；涉及笔记写入时，必须重新通过对应场景的写入前置。纯初始化请求到此结束，不额外创建笔记。
 
 任何一步失败：报告卡在哪一步、原因是什么、建议怎么解决；必要时回滚新建的配置。
 
@@ -147,7 +164,7 @@ description: 第二大脑知识库初始化引导（仅供 Agent 阅读执行）
 用大白话告诉用户：
 
 - ✅ 知识库搭好了，位置在 `<路径>`，用的是 Obsidian 还是普通文件夹；
-- ✅ 第一条笔记已经躺在收件箱里了；
+- 如果已恢复原始写入请求且确实成功：✅ 第一条内容已经保存；否则不要声称已有笔记写入；
 - 📣 以后可以这样对我说话：
   - "记一下……" —— 记灵感
   - "保存这篇文章 <链接>" —— 存网页

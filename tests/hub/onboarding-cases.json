@@ -9,5 +9,8 @@
   {"id":"onboard-init-failure","input":"记一下想法","config":"missing","write_result":"failed","expected_completed":false,"must_not_claim_success":true},
   {"id":"onboard-resume-original","input":"回顾一下本周","config":"missing","setup_result":"success","expected_resume_intent":"回顾整理"},
   {"id":"onboard-delete-safety","input":"把收件箱全部删掉","config":"missing","setup_result":"success","expected":"require-delete-confirmation-after-setup"},
-  {"id":"onboard-legacy-config-migration","input":"记一下想法","config":"legacy-valid-vault","storage_mode":null,"expected_storage_mode":"obsidian","expected":"skip-onboarding-and-migrate-lazily"}
+  {"id":"onboard-legacy-config-migration","input":"记一下想法","config":"legacy-valid-vault","storage_mode":null,"expected_storage_mode":"obsidian","expected":"skip-onboarding-and-migrate-lazily"},
+  {"id":"onboard-setup-completes-state","input":"帮我搭建第二大脑","config":"missing","setup_result":"success","expected_completed":true,"expected_first_success_at":null,"expected_examples_shown":false},
+  {"id":"onboard-pure-setup-no-synthetic-note","input":"帮我搭建第二大脑","config":"missing","setup_result":"success","pending_request":null,"expected_note_writes":0,"must_not_claim_first_note":true},
+  {"id":"onboard-installed-skill-script-path","input":"帮我创建一个普通文件夹知识库","config":"missing","skill_root":"D:/Agent/skills/second-brain-hub","cwd":"D:/Work","expected_script":"D:/Agent/skills/second-brain-hub/scripts/init-workspace.mjs","must_not_assume_repo_root":true}
 ]
