@@ -472,6 +472,9 @@ $requiredOnboardingCases = @(
     "onboard-init-failure",
     "onboard-resume-original",
     "onboard-delete-safety",
+    "onboard-setup-completes-state",
+    "onboard-pure-setup-no-synthetic-note",
+    "onboard-installed-skill-script-path",
     "ritual-windows-path-json",
     "ritual-posix-path-json",
     "ritual-special-chars-json",
@@ -499,6 +502,10 @@ foreach ($token in @("<workspace_path_display>", "<workspace_path_json>", "<stor
 $onboardingProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/workflow-onboarding.md"
 foreach ($gate in @("onboarding-path-confirmed", "onboarding-limited-write-scope", "onboarding-resume-original-request")) {
     if ($onboardingProtocol -notmatch [regex]::Escape("<HARD-GATE id=`"$gate`">")) { throw "Onboarding protocol is missing HARD-GATE '$gate'" }
+}
+$setupProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/SETUP.md"
+foreach ($requiredToken in @('"completed": true', '<hub_root>/scripts/init-workspace.mjs', 'setup-write-scope: directories-and-config-only', 'workflow-onboarding.md')) {
+    if ($setupProtocol -notmatch [regex]::Escape($requiredToken)) { throw "SETUP.md is missing required initialization rule '$requiredToken'" }
 }
 $minimalWorkspace = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/minimal-workspace.md"
 if ($minimalWorkspace -notmatch [regex]::Escape('<HARD-GATE id="minimal-workspace-safe-target">')) { throw "Minimal workspace protocol is missing its safe-target gate" }
