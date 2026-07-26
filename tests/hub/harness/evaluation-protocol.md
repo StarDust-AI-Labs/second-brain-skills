@@ -27,3 +27,14 @@
 - `final_action`：`create`、`edit`、`move-or-delete`、`read`、`advisory`、`clarify` 或 `none`。
 - `side_effects_attempted`：必须为空数组。
 - `blocked_reason`：未阻塞时为 `null`。
+- `progress_events`：按 `progress_map` 顺序输出的显示步骤事件数组，每项含 `sequence`、`display_id`、`label`、`state`、`trace`、`reason`，降级时另含 `fallback`。
+
+## progress_events 状态机
+
+- `state` 合法值：`pending`、`in_progress`、`completed`、`skipped`、`blocked`。
+- 事件顺序必须单调递增且与 `progress_map` 显示顺序一致。
+- 合法迁移：`pending → in_progress → completed|skipped|blocked`；`blocked` 之后不得再出现后续步骤的 `in_progress` 或 `completed`。
+- 条件步骤未触发时必须产生一条 `state: "skipped"` 且 `reason` 非空（对应契约跳过证据）。
+- 降级用 `state: "completed"` 且必须另含非空 `fallback` 与原因。
+- `blocked` 事件必须 `reason` 非空，且 `blocked_reason` 字段同步非空。
+- 任一 `state` 为 `completed` 或 `blocked` 的事件，`trace` 必须非空。

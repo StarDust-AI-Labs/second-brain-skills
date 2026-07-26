@@ -9,4 +9,10 @@
 5. 输出一个主瓶颈、证据、最小纠偏动作和推荐进入的现有场景。
 6. 不自动写入、不自动改目录、不同时启动多个场景。
 
+## 步骤痕迹
+
+地图卡每个显示步骤完成后留下的可见痕迹（显示步与顺序见 `route-contracts.json` 的 `progress_map`）：
+
+- 采集现状、定位瓶颈并给出建议：具体症状、CODE 主瓶颈、证据、最小纠偏动作与推荐场景。
+
 必需输出：`bottleneck_stage`、`diagnosis_evidence`、`recommended_scene`、`next_experiment`。

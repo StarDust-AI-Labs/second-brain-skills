@@ -46,6 +46,55 @@ function Assert-HasProperty {
     }
 }
 
+function Assert-ProgressMap {
+    param(
+        [object]$Scene
+    )
+
+    if (-not ($Scene.PSObject.Properties.Name -contains "progress_map")) {
+        throw "Route contract '$($Scene.id)' is missing progress_map"
+    }
+
+    $stepOrder = @($Scene.step_order)
+    $requiredSteps = @($Scene.required_steps)
+    $conditionalIds = @($Scene.conditional_steps | ForEach-Object { $_.id })
+    $coveredRequired = @{}
+
+    foreach ($map in @($Scene.progress_map)) {
+        foreach ($property in @("display_id", "label", "kind", "source_steps")) {
+            if (-not ($map.PSObject.Properties.Name -contains $property)) {
+                throw "Route contract '$($Scene.id)' has progress_map entry missing '$property'"
+            }
+        }
+        if ($map.kind -notin @("required", "conditional")) {
+            throw "Route contract '$($Scene.id)' progress_map '$($map.display_id)' has unknown kind '$($map.kind)'"
+        }
+        if ([string]::IsNullOrWhiteSpace($map.label)) {
+            throw "Route contract '$($Scene.id)' progress_map '$($map.display_id)' has empty label"
+        }
+        foreach ($src in @($map.source_steps)) {
+            if ($src -notin $stepOrder) {
+                throw "Route contract '$($Scene.id)' progress_map '$($map.display_id)' references step '$src' not in step_order"
+            }
+            if ($src -in $requiredSteps) { $coveredRequired[$src] = $true }
+        }
+        # P0-3: conditional 显示步必须至少引用一个条件步骤
+        if ($map.kind -eq "conditional") {
+            $hasConditionalSource = @($map.source_steps | Where-Object { $_ -in $conditionalIds }).Count -gt 0
+            if (-not $hasConditionalSource) {
+                throw "Route contract '$($Scene.id)' progress_map '$($map.display_id)' is kind=conditional but references no conditional_steps"
+            }
+        }
+    }
+
+    # P0-1: 所有必选步骤必须被 progress_map 覆盖
+    foreach ($req in $requiredSteps) {
+        if (-not $coveredRequired.ContainsKey($req)) {
+            throw "Route contract '$($Scene.id)' progress_map does not cover required step '$req'"
+        }
+    }
+}
+
 function Read-RouteContracts {
     param([string]$Path)
 
@@ -102,6 +151,8 @@ function Read-RouteContracts {
         if ($scene.mode -eq "write" -and "obsidian-markdown" -notin $requiredSteps) {
             throw "Write route '$($scene.id)' must render obsidian-markdown"
         }
+
+        Assert-ProgressMap -Scene $scene
 
         $contracts[$scene.id] = $scene
     }

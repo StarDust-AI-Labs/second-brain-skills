@@ -19,7 +19,7 @@ description: 第二大脑唯一公开入口。用于记录灵感、保存网页�
 6. 外部工具状态未知或调用失败时才读取 `dependencies.json`；缺失时读取 [references/dependency-resolution.md](references/dependency-resolution.md) 选择 `primary`、`fallback` 或 `blocked`。
 7. 严格按契约顺序执行。必选步骤不得改序或省略；条件步骤未执行时记录契约规定的跳过证据。
 8. 任何写入、更新、移动或删除前读取 [references/writing-pipeline.md](references/writing-pipeline.md) 并通过写入前置。
-9. 决策、复杂报告、首次成功或需要完整卡片时读取 [references/output-cards.md](references/output-cards.md)；其他结果使用简短完成卡。场景结束后归档操作回执。
+9. 进入场景后按需读取 [references/output-visualization.md](references/output-visualization.md) 输出步骤链地图卡；决策、复杂报告、首次成功或需要完整卡片时再读取 [references/output-cards.md](references/output-cards.md)。其他结果使用简短完成卡。场景结束后归档操作回执。
 
 ## 意图路由
 
