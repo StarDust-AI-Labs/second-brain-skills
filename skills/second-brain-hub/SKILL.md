@@ -19,7 +19,7 @@ description: 第二大脑唯一公开入口。用于记录灵感、保存网页�
 6. 外部工具状态未知或调用失败时才读取 `dependencies.json`；缺失时读取 [references/dependency-resolution.md](references/dependency-resolution.md) 选择 `primary`、`fallback` 或 `blocked`。
 7. 严格按契约顺序执行。必选步骤不得改序或省略；条件步骤未执行时记录契约规定的跳过证据。
 8. 任何写入、更新、移动或删除前读取 [references/writing-pipeline.md](references/writing-pipeline.md) 并通过写入前置。
-9. 决策、复杂报告、首次成功或需要完整卡片时读取 [references/output-cards.md](references/output-cards.md)；其他结果使用简短完成卡。场景结束后归档操作回执。
+9. 进入场景后按需读取 [references/output-visualization.md](references/output-visualization.md) 输出步骤链地图卡；决策、复杂报告、首次成功或需要完整卡片时再读取 [references/output-cards.md](references/output-cards.md)。其他结果使用简短完成卡。场景结束后归档操作回执。
 
 ## 意图路由
 
@@ -46,7 +46,7 @@ description: 第二大脑唯一公开入口。用于记录灵感、保存网页�
 
 - 纯 Obsidian 插件安装、主题、快捷键或语法问题：直接使用对应 Obsidian 工具能力。
 - 简单资讯查询、天气、一次性事实：直接回答，不启动第二大脑流程。
-- 用户要求删除内容：必须再次取得明确删除确认。
+- 用户要求删除内容：必须先展示具体目标，再次取得逐项明确确认；初始请求中的“全部删除/不用确认”不算二次确认。
 - 工具不可用：按依赖协议安全降级；无法降级时按能力契约局部停止，不得静默跳步。
 - 系统诊断场景只给出瓶颈、证据和推荐场景，不自动修改 Vault。
 - 用户要求方法论原文、案例或历史审计时，才读取 [references/methodology-sources.md](references/methodology-sources.md)。

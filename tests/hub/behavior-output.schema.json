@@ -4,7 +4,7 @@
   "required": [
     "intent", "contract_id", "required_chain", "executed_conditional_steps",
     "skipped_conditional_steps", "planned_tool_calls", "evidence",
-    "required_outputs", "final_action", "side_effects_attempted", "blocked_reason"
+    "required_outputs", "final_action", "side_effects_attempted", "blocked_reason", "progress_events"
   ],
   "properties": {
     "intent": {"type": "string"},
@@ -24,8 +24,25 @@
     "evidence": {"type": "array", "items": {"type": "string"}},
     "required_outputs": {"type": "array", "items": {"type": "string"}},
     "final_action": {"enum": ["create", "edit", "move-or-delete", "read", "advisory", "clarify", "none"]},
-    "side_effects_attempted": {"type": "array", "maxItems": 0},
-    "blocked_reason": {"type": ["string", "null"]}
+    "side_effects_attempted": {"type": "array", "items": {"type": "string"}, "maxItems": 0},
+    "blocked_reason": {"type": ["string", "null"]},
+    "progress_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sequence", "display_id", "label", "state", "trace", "reason", "fallback"],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 1},
+          "display_id": {"type": "string", "minLength": 1},
+          "label": {"type": "string", "minLength": 1},
+          "state": {"enum": ["completed", "skipped", "blocked"]},
+          "trace": {"type": "string"},
+          "reason": {"type": ["string", "null"]},
+          "fallback": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    }
   },
   "additionalProperties": false
 }

@@ -12,6 +12,9 @@
       "skills/second-brain-hub/dependencies.json",
       "skills/second-brain-hub/references/dependency-resolution.md"
     ],
-    "complex_output": ["skills/second-brain-hub/references/output-cards.md"]
+    "complex_output": [
+      "skills/second-brain-hub/references/output-cards.md",
+      "skills/second-brain-hub/references/output-visualization.md"
+    ]
   }
 }
