@@ -491,7 +491,7 @@ $initSuccessVerifier = Join-Path $PSScriptRoot "verify-init-success.ps1"
 if (-not (Test-Path -LiteralPath $initSuccessVerifier)) { throw "Missing init-success verifier: $initSuccessVerifier" }
 & $initSuccessVerifier -CasesPath $OnboardingCasePath
 $initSuccessCardPath = "skills/second-brain-hub/references/init-success-card.md"
-$initSuccessVerificationPath = "skills/second-brain-hub/references/init-success-verification.md"
+$initSuccessVerificationPath = "tests/hub/harness/init-success-verification.md"
 foreach ($requiredFile in @($initSuccessCardPath, $initSuccessVerificationPath)) {
     if (-not (Test-Path -LiteralPath $requiredFile)) { throw "Missing init-success protocol file: $requiredFile" }
 }
@@ -528,7 +528,8 @@ if (-not ($hubStateExample.PSObject.Properties.Name -contains "onboarding")) { t
 $behaviorCasesPath = "tests/hub/behavior-cases.json"
 $qualityGatesPath = "tests/hub/quality-gates.json"
 $behaviorSchemaPath = "tests/hub/behavior-output.schema.json"
-foreach ($requiredBehaviorFile in @($behaviorCasesPath, $qualityGatesPath, $behaviorSchemaPath, "skills/second-brain-hub/references/evaluation-protocol.md", "skills/second-brain-hub/scripts/init-workspace.mjs", "scripts/run-hub-behavior-eval.ps1", "scripts/build-skillhub-package.ps1")) {
+$evaluationProtocolPath = "tests/hub/harness/evaluation-protocol.md"
+foreach ($requiredBehaviorFile in @($behaviorCasesPath, $qualityGatesPath, $behaviorSchemaPath, $evaluationProtocolPath, "skills/second-brain-hub/scripts/init-workspace.mjs", "scripts/run-hub-behavior-eval.ps1", "scripts/build-skillhub-package.ps1")) {
     if (-not (Test-Path -LiteralPath $requiredBehaviorFile)) { throw "Missing behavior evaluation file: $requiredBehaviorFile" }
 }
 $behaviorCases = @(Get-Content -Raw -Encoding UTF8 -LiteralPath $behaviorCasesPath | ConvertFrom-Json | ForEach-Object { $_ })
@@ -544,8 +545,21 @@ foreach ($requiredToken in @("duration", "target", "first_action", "done_when", 
 }
 $qualityGates = Get-Content -Raw -Encoding UTF8 -LiteralPath $qualityGatesPath | ConvertFrom-Json
 if ($qualityGates.minimum_overall_score -lt 4.6) { throw "Behavior quality gate must target at least 4.6" }
-$evaluationProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/evaluation-protocol.md"
+$evaluationProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath $evaluationProtocolPath
 if ($evaluationProtocol -notmatch [regex]::Escape('<HARD-GATE id="eval-no-side-effects">')) { throw "Evaluation protocol is missing eval-no-side-effects gate" }
+$productionSkillRoot = "skills/second-brain-hub"
+$forbiddenProductionFiles = @(Get-ChildItem -LiteralPath $productionSkillRoot -Recurse -File | Where-Object {
+    $_.Name -match '(?i)(evaluation|verification|(^|[-_.])test([-_.]|$)|fixture|quality-gate|behavior-case)'
+})
+if ($forbiddenProductionFiles.Count -ne 0) {
+    throw "Production Skill contains test-only file(s): $(@($forbiddenProductionFiles.FullName) -join ', ')"
+}
+foreach ($file in @(Get-ChildItem -LiteralPath $productionSkillRoot -Recurse -File | Where-Object { $_.Extension -in @('.md', '.json', '.yaml', '.yml', '.mjs') })) {
+    $content = Get-Content -Raw -Encoding UTF8 -LiteralPath $file.FullName
+    foreach ($marker in @('HUB_EVAL_MODE', 'eval-no-side-effects')) {
+        if ($content -match [regex]::Escape($marker)) { throw "Production Skill contains test-only marker '$marker': $($file.FullName)" }
+    }
+}
 $primary = Read-TestPrompts -Path $PrimaryPath
 $contracts = Read-RouteContracts -Path $ContractPath
 $routeContractDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath $ContractPath | ConvertFrom-Json

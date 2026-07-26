@@ -7,7 +7,8 @@
   Reads cases with assert / verify fields from tests/hub/onboarding-cases.json and
   executes deterministic assertions against each case's sample_output (and optional
   sample_hub_state), implementing the rules defined in
-  references/init-success-card.md and references/init-success-verification.md.
+  skills/second-brain-hub/references/init-success-card.md and
+  tests/hub/harness/init-success-verification.md.
 
   Unlike the LLM-based behavior eval (run-hub-behavior-eval.ps1), this script makes
   purely deterministic checks: a missing marker, invalid JSON, state mismatch,
@@ -49,7 +50,7 @@ $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 if (-not $CasesPath) { $CasesPath = Join-Path $Root "tests/hub/onboarding-cases.json" }
 
-# Extraction regex kept in sync with init-success-verification.md (. matches newline).
+# Extraction regex kept in sync with tests/hub/harness/init-success-verification.md.
 $MarkerPattern = '<!--\s*second-brain-init\s*([\s\S]*?)\s*-->'
 $SupportedVersions = @("1")
 
