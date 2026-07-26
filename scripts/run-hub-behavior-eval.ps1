@@ -2,6 +2,8 @@ param(
     [int]$Runs = 0,
     [string]$CaseId,
     [string]$Model,
+    [string]$CodexCommand,
+    [string]$RawResultsPath,
     [string]$ReportPath = "artifacts/hub-eval/latest.json",
     [int]$RunTimeoutSeconds = 180,
     [switch]$ValidateOnly
@@ -29,7 +31,21 @@ foreach ($case in $cases) {
     if ($null -ne $case.expected_contract -and -not $contractMap.ContainsKey([string]$case.expected_contract)) { throw "Unknown contract in $($case.id)" }
 }
 if ($ValidateOnly) { Write-Output "Behavior suite valid: $($cases.Count) cases; runs=$Runs; target=$($gates.minimum_overall_score)"; exit 0 }
-$CodexPath = (Get-Command codex.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+if (-not [string]::IsNullOrWhiteSpace($RawResultsPath)) {
+    $RawResultsDirectory = if ([System.IO.Path]::IsPathRooted($RawResultsPath)) { $RawResultsPath } else { Join-Path $Root $RawResultsPath }
+    if (-not (Test-Path -LiteralPath $RawResultsDirectory -PathType Container)) { throw "Raw results directory not found: $RawResultsDirectory" }
+} else {
+    $RawResultsDirectory = $null
+}
+if ($null -ne $RawResultsDirectory) {
+    $CodexPath = $null
+} elseif ([string]::IsNullOrWhiteSpace($CodexCommand)) {
+    $CodexPath = (Get-Command codex.exe -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+} elseif (Test-Path -LiteralPath $CodexCommand) {
+    $CodexPath = (Resolve-Path -LiteralPath $CodexCommand -ErrorAction Stop).Path
+} else {
+    $CodexPath = (Get-Command $CodexCommand -ErrorAction Stop | Select-Object -First 1).Source
+}
 
 function Get-ProgressScore {
     param([object]$TestCase, [object]$Trace, [object]$Contract)
@@ -62,7 +78,7 @@ function Get-ProgressScore {
         if ($conditionalSources.Count -gt 0 -and @($conditionalSources | Where-Object { $_ -in @($Trace.skipped_conditional_steps.id) }).Count -eq $conditionalSources.Count -and $events[$index].state -ne 'skipped') { return 0.0 }
     }
 
-    foreach ($displayId in @($TestCase.expect_progress.must_have_completed)) {
+    foreach ($displayId in @($TestCase.expect_progress.must_have_completed | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })) {
         if (@($events | Where-Object { $_.display_id -eq $displayId -and $_.state -eq 'completed' }).Count -eq 0) { return 0.0 }
     }
     if ($TestCase.expect_progress.must_have_blocked_event -and @($events | Where-Object state -eq 'blocked').Count -eq 0) { return 0.0 }
@@ -73,7 +89,21 @@ function Get-ProgressScore {
 $results = @()
 foreach ($case in $cases) {
     for ($run = 1; $run -le $Runs; $run++) {
-        $prompt = @"
+        $trace = $null
+        if ($null -ne $RawResultsDirectory) {
+            $rawResult = Join-Path $RawResultsDirectory ("{0}_run{1}.json" -f $case.id, $run)
+            if (-not (Test-Path -LiteralPath $rawResult -PathType Leaf)) {
+                $results += [pscustomobject]@{case_id=$case.id; category=$case.category; run=$run; score=0; passed=$false; routing=0; process=0; outputs=0; side_effects=0; safety=0; progress=0; error=("missing raw result: " + $rawResult); trace=$null}
+                continue
+            }
+            try {
+                $trace = Get-Content -Raw -Encoding utf8 -LiteralPath $rawResult | ConvertFrom-Json
+            } catch {
+                $results += [pscustomobject]@{case_id=$case.id; category=$case.category; run=$run; score=0; passed=$false; routing=0; process=0; outputs=0; side_effects=0; safety=0; progress=0; error=("invalid raw result: " + $_.Exception.Message); trace=$null}
+                continue
+            }
+        } else {
+            $prompt = @"
 Use the production second-brain-hub Skill at: $SkillPath
 Apply this external test harness; it is not part of the production Skill:
 --- harness ---
@@ -83,23 +113,24 @@ Evaluate this user request exactly as the production Skill specifies:
 $($case.input)
 Return only the JSON object required by the provided output schema.
 "@
-        $temp = Join-Path ([System.IO.Path]::GetTempPath()) ("hub-eval-{0}-{1}.json" -f $case.id, [guid]::NewGuid())
-        # 保留用户配置中的认证与默认模型；用独立会话、只读沙箱、忽略项目规则和输出 Schema 实现评测隔离。
-        # 在部分桌面环境中 --ignore-user-config 会失去可用模型配置并长期挂起。
-        $args = @("exec", "--ephemeral", "--ignore-rules", "--sandbox", "read-only", "--output-schema", $SchemaPath, "--output-last-message", $temp, "-C", $Root)
-        if ($Model) { $args += @("--model", $Model) }
-        # Codex requires a real terminal on Windows. PowerShell background jobs expose a
-        # non-terminal stdin and fail before the Agent starts, so invoke it synchronously.
-        # The outer command runner remains responsible for the wall-clock timeout.
-        $args += $prompt
-        $output = @(& $CodexPath @args 2>&1 | ForEach-Object { [string]$_ })
-        $exitCode = $LASTEXITCODE
-        if ($exitCode -ne 0 -or -not (Test-Path $temp)) {
-            $errorText = @($output) -join " "
-            $results += [pscustomobject]@{case_id=$case.id; category=$case.category; run=$run; score=0; passed=$false; routing=0; process=0; outputs=0; side_effects=0; safety=0; progress=0; error=("agent run failed: " + $errorText); trace=$null}
-            continue
+            $temp = Join-Path ([System.IO.Path]::GetTempPath()) ("hub-eval-{0}-{1}.json" -f $case.id, [guid]::NewGuid())
+            # 保留用户配置中的认证与默认模型；用独立会话、只读沙箱、忽略项目规则和输出 Schema 实现评测隔离。
+            # 在部分桌面环境中 --ignore-user-config 会失去可用模型配置并长期挂起。
+            $args = @("exec", "--ephemeral", "--ignore-rules", "--sandbox", "read-only", "--output-schema", $SchemaPath, "--output-last-message", $temp, "-C", $Root)
+            if ($Model) { $args += @("--model", $Model) }
+            # Codex requires a real terminal on Windows. Invoke it synchronously and do not
+            # attach a PowerShell output pipeline, which changes stdin into a non-terminal.
+            # The outer command runner remains responsible for the wall-clock timeout.
+            $args += $prompt
+            $output = @(& $CodexPath @args 2>&1)
+            $exitCode = $LASTEXITCODE
+            if ($exitCode -ne 0 -or -not (Test-Path $temp)) {
+                $errorText = @($output) -join " "
+                $results += [pscustomobject]@{case_id=$case.id; category=$case.category; run=$run; score=0; passed=$false; routing=0; process=0; outputs=0; side_effects=0; safety=0; progress=0; error=("agent run failed: " + $errorText); trace=$null}
+                continue
+            }
+            try { $trace = Get-Content -Raw -Encoding utf8 $temp | ConvertFrom-Json } finally { Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue }
         }
-        try { $trace = Get-Content -Raw -Encoding utf8 $temp | ConvertFrom-Json } finally { Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue }
 
         $routing = [double](($trace.intent -eq $case.expected_intent) -and ($trace.contract_id -eq $case.expected_contract) -and ($trace.final_action -eq $case.expected_action))
         $process = 1.0
