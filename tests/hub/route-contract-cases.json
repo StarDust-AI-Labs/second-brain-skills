@@ -20,7 +20,7 @@
   {
     "id": "route-create",
     "contract_id": "create",
-    "expected_required_chain": ["intermediate-packets", "obsidian-cli/search", "creative-workflow", "obsidian-markdown", "obsidian-cli/create"],
+    "expected_required_chain": ["obsidian-cli/search", "intermediate-packets", "creative-workflow", "obsidian-markdown", "obsidian-cli/create"],
     "expected_conditional_steps": ["diverge-converge", "progressive-summarization(L2)"]
   },
   {
@@ -32,7 +32,7 @@
   {
     "id": "route-review",
     "contract_id": "review",
-    "expected_required_chain": ["knowledge-lifecycle", "obsidian-cli/list-search", "obsidian-markdown", "obsidian-cli/create"],
+    "expected_required_chain": ["obsidian-cli/list-search", "knowledge-lifecycle", "obsidian-markdown", "obsidian-cli/create"],
     "expected_conditional_steps": ["intermediate-packets"]
   },
   {
