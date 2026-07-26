@@ -11,4 +11,15 @@
 7. 调用 `obsidian-markdown` 渲染项目笔记。
 8. 完成写入前置后调用 `obsidian-cli/create`。
 
+## 步骤痕迹
+
+地图卡每个显示步骤完成后留下的可见痕迹（显示步与顺序见 `route-contracts.json` 的 `progress_map`）：
+
+- 明确主题：主题与产物形式；发散/聚合诊断跳过时展示跳过证据。
+- 检索素材：可用素材包规模与素材缺口。
+- 深化素材至 L2：达到 L2 的素材数；全部已达 L2 时展示跳过证据。
+- 搭建大纲：大纲要点数。
+- 形成创作产物：产物类型（大纲或下一中间产物，不承诺初稿）。
+- 写入归档：Vault 内实际路径。
+
 必需输出：`usable_packets`、`outline_or_next_artifact`、`hemingway_bridge`、`target_path`。
