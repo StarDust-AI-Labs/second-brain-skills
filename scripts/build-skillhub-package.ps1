@@ -17,6 +17,21 @@ if (Test-Path -LiteralPath $Destination) {
 New-Item -ItemType Directory -Force -Path $Destination | Out-Null
 Copy-Item -Path (Join-Path $Source "*") -Destination $Destination -Recurse -Force
 
+$forbiddenPackageFiles = @(Get-ChildItem -LiteralPath $Destination -Recurse -File | Where-Object {
+    $_.Name -match '(?i)(evaluation|verification|(^|[-_.])test([-_.]|$)|fixture|quality-gate|behavior-case)'
+})
+if ($forbiddenPackageFiles.Count -ne 0) {
+    throw "SkillHub package contains test-only file(s): $(@($forbiddenPackageFiles.FullName) -join ', ')"
+}
+foreach ($file in @(Get-ChildItem -LiteralPath $Destination -Recurse -File | Where-Object { $_.Extension -in @('.md', '.json', '.yaml', '.yml', '.mjs') })) {
+    $content = Get-Content -Raw -Encoding utf8 -LiteralPath $file.FullName
+    foreach ($marker in @('HUB_EVAL_MODE', 'eval-no-side-effects')) {
+        if ($content -match [regex]::Escape($marker)) {
+            throw "SkillHub package contains test-only marker '$marker': $($file.FullName)"
+        }
+    }
+}
+
 $skillFiles = @(Get-ChildItem -LiteralPath $Destination -Recurse -File -Filter "SKILL.md")
 if ($skillFiles.Count -ne 1 -or $skillFiles[0].Directory.Name -ne "second-brain-hub") {
     throw "SkillHub package must contain exactly one discoverable SKILL.md"
