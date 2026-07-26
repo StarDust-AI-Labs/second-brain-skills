@@ -143,16 +143,16 @@
       "requires_vault": true,
       "step_order": [
         "diverge-converge",
-        "intermediate-packets",
         "obsidian-cli/search",
+        "intermediate-packets",
         "progressive-summarization(L2)",
         "creative-workflow",
         "obsidian-markdown",
         "obsidian-cli/create"
       ],
       "required_steps": [
-        "intermediate-packets",
         "obsidian-cli/search",
+        "intermediate-packets",
         "creative-workflow",
         "obsidian-markdown",
         "obsidian-cli/create"
@@ -224,15 +224,15 @@
       "mode": "write",
       "requires_vault": true,
       "step_order": [
-        "knowledge-lifecycle",
         "obsidian-cli/list-search",
+        "knowledge-lifecycle",
         "intermediate-packets",
         "obsidian-markdown",
         "obsidian-cli/create"
       ],
       "required_steps": [
-        "knowledge-lifecycle",
         "obsidian-cli/list-search",
+        "knowledge-lifecycle",
         "obsidian-markdown",
         "obsidian-cli/create"
       ],

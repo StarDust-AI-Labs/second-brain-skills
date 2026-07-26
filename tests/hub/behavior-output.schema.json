@@ -24,13 +24,13 @@
     "evidence": {"type": "array", "items": {"type": "string"}},
     "required_outputs": {"type": "array", "items": {"type": "string"}},
     "final_action": {"enum": ["create", "edit", "move-or-delete", "read", "advisory", "clarify", "none"]},
-    "side_effects_attempted": {"type": "array", "maxItems": 0},
+    "side_effects_attempted": {"type": "array", "items": {"type": "string"}, "maxItems": 0},
     "blocked_reason": {"type": ["string", "null"]},
     "progress_events": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["sequence", "display_id", "label", "state", "trace", "reason"],
+        "required": ["sequence", "display_id", "label", "state", "trace", "reason", "fallback"],
         "properties": {
           "sequence": {"type": "integer", "minimum": 1},
           "display_id": {"type": "string", "minLength": 1},

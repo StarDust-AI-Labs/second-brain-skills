@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const RAW_DIR = 'D:/aiCoding/projects/second-brain/tests/hub/eval-results/raw';
+const RAW_DIR = path.join(__dirname, 'raw');
 
 // Hidden expectations (now revealed for scoring)
 const expectations = {
@@ -296,6 +296,7 @@ function scoreProgress(result, exp) {
 // Main scoring
 console.log('='.repeat(80));
 console.log('SECOND-BRAIN-HUB BEHAVIOR EVALUATION REPORT');
+console.log('LEGACY HISTORICAL SCORER — release gates use scripts/run-hub-behavior-eval.ps1');
 console.log('='.repeat(80));
 console.log(`Date: 2026-07-15`);
 console.log(`Total cases: 16 × 3 runs = 48 evaluations`);
@@ -433,7 +434,8 @@ console.log('');
 // Dimension averages
 const dimAvgs = {};
 for (const dim of Object.keys(dimensionWeights)) {
-  dimAvgs[dim] = allResults.reduce((s, r) => s + r[dim], 0) / allResults.length;
+  const resultKey = dim === 'trace_quality' ? 'trace' : dim;
+  dimAvgs[dim] = allResults.reduce((s, r) => s + r[resultKey], 0) / allResults.length;
   console.log(`Dimension "${dim}": ${(dimAvgs[dim]*10).toFixed(1)}/10 (weight: ${dimensionWeights[dim]})`);
 }
 console.log('');
@@ -537,7 +539,7 @@ for (const [caseId, runs] of Object.entries(caseResults)) {
 // Write full report JSON
 const report = {
   meta: {
-    date: '2026-07-15',
+    date: new Date().toISOString().slice(0, 10),
     evaluator: 'Skill Evaluation Host (Claude Opus 4.8)',
     totalEvaluations: allResults.length,
     totalCases: Object.keys(expectations).length,
@@ -559,10 +561,7 @@ const report = {
   all_runs: allResults,
 };
 
-fs.writeFileSync(
-  'D:/aiCoding/projects/second-brain/tests/hub/eval-results/behavior-report.json',
-  JSON.stringify(report, null, 2)
-);
+fs.writeFileSync(path.join(__dirname, 'behavior-report.json'), JSON.stringify(report, null, 2));
 
 console.log('');
 console.log('Full report written to: tests/hub/eval-results/behavior-report.json');

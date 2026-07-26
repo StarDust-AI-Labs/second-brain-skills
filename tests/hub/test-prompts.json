@@ -106,8 +106,8 @@
         "input":  "我想写一篇关于AI如何改变创作方式的文章",
         "expected_intent":  "创作启动",
         "expected_chain":  [
-                               "intermediate-packets",
                                "obsidian-cli/search",
+                               "intermediate-packets",
                                "progressive-summarization(L2)",
                                "creative-workflow",
                                "obsidian-markdown",
@@ -121,8 +121,8 @@
         "input":  "帮我做一个关于第二大脑的分享PPT大纲",
         "expected_intent":  "创作启动",
         "expected_chain":  [
-                               "intermediate-packets",
                                "obsidian-cli/search",
+                               "intermediate-packets",
                                "progressive-summarization(L2)",
                                "creative-workflow",
                                "obsidian-markdown",
@@ -136,8 +136,8 @@
         "input":  "回顾一下这周做了什么",
         "expected_intent":  "回顾整理",
         "expected_chain":  [
-                               "knowledge-lifecycle",
                                "obsidian-cli/list-search",
+                               "knowledge-lifecycle",
                                "obsidian-markdown",
                                "obsidian-cli/create"
                            ]
@@ -162,8 +162,8 @@
         "input":  "本月回顾",
         "expected_intent":  "回顾整理",
         "expected_chain":  [
-                               "knowledge-lifecycle",
                                "obsidian-cli/list-search",
+                               "knowledge-lifecycle",
                                "obsidian-markdown",
                                "obsidian-cli/create"
                            ],
@@ -264,8 +264,8 @@
         "input":  "写一篇关于AI创作工具对比的文章，先帮我找找相关素材",
         "expected_intent":  "创作启动",
         "expected_chain":  [
-                               "intermediate-packets",
                                "obsidian-cli/search",
+                               "intermediate-packets",
                                "progressive-summarization(L2)",
                                "creative-workflow",
                                "obsidian-markdown",

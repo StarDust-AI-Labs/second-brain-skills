@@ -59,6 +59,9 @@ function Assert-ProgressMap {
     $requiredSteps = @($Scene.required_steps)
     $conditionalIds = @($Scene.conditional_steps | ForEach-Object { $_.id })
     $coveredRequired = @{}
+    $coveredConditional = @{}
+    $displayIds = @{}
+    $lastSourceIndex = -1
 
     foreach ($map in @($Scene.progress_map)) {
         foreach ($property in @("display_id", "label", "kind", "source_steps")) {
@@ -72,12 +75,27 @@ function Assert-ProgressMap {
         if ([string]::IsNullOrWhiteSpace($map.label)) {
             throw "Route contract '$($Scene.id)' progress_map '$($map.display_id)' has empty label"
         }
+        if ([string]::IsNullOrWhiteSpace($map.display_id) -or $displayIds.ContainsKey([string]$map.display_id)) {
+            throw "Route contract '$($Scene.id)' has empty or duplicate progress_map display_id '$($map.display_id)'"
+        }
+        $displayIds[[string]$map.display_id] = $true
+        if (@($map.source_steps).Count -eq 0) {
+            throw "Route contract '$($Scene.id)' progress_map '$($map.display_id)' has no source_steps"
+        }
+        $sourceIndexes = @()
         foreach ($src in @($map.source_steps)) {
             if ($src -notin $stepOrder) {
                 throw "Route contract '$($Scene.id)' progress_map '$($map.display_id)' references step '$src' not in step_order"
             }
+            $sourceIndex = [array]::IndexOf($stepOrder, $src)
+            $sourceIndexes += $sourceIndex
             if ($src -in $requiredSteps) { $coveredRequired[$src] = $true }
+            if ($src -in $conditionalIds) { $coveredConditional[$src] = $true }
         }
+        if (($sourceIndexes | Measure-Object -Minimum).Minimum -lt $lastSourceIndex) {
+            throw "Route contract '$($Scene.id)' progress_map '$($map.display_id)' is out of step_order sequence"
+        }
+        $lastSourceIndex = ($sourceIndexes | Measure-Object -Maximum).Maximum
         # P0-3: conditional 显示步必须至少引用一个条件步骤
         if ($map.kind -eq "conditional") {
             $hasConditionalSource = @($map.source_steps | Where-Object { $_ -in $conditionalIds }).Count -gt 0
@@ -91,6 +109,11 @@ function Assert-ProgressMap {
     foreach ($req in $requiredSteps) {
         if (-not $coveredRequired.ContainsKey($req)) {
             throw "Route contract '$($Scene.id)' progress_map does not cover required step '$req'"
+        }
+    }
+    foreach ($conditionalId in $conditionalIds) {
+        if (-not $coveredConditional.ContainsKey($conditionalId)) {
+            throw "Route contract '$($Scene.id)' progress_map does not cover conditional step '$conditionalId'"
         }
     }
 }
@@ -580,6 +603,7 @@ $behaviorCasesPath = "tests/hub/behavior-cases.json"
 $qualityGatesPath = "tests/hub/quality-gates.json"
 $behaviorSchemaPath = "tests/hub/behavior-output.schema.json"
 $evaluationProtocolPath = "tests/hub/harness/evaluation-protocol.md"
+$routeContractDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath $ContractPath | ConvertFrom-Json
 foreach ($requiredBehaviorFile in @($behaviorCasesPath, $qualityGatesPath, $behaviorSchemaPath, $evaluationProtocolPath, "skills/second-brain-hub/scripts/init-workspace.mjs", "scripts/run-hub-behavior-eval.ps1", "scripts/build-skillhub-package.ps1")) {
     if (-not (Test-Path -LiteralPath $requiredBehaviorFile)) { throw "Missing behavior evaluation file: $requiredBehaviorFile" }
 }
@@ -589,13 +613,27 @@ foreach ($case in $behaviorCases) {
     foreach ($property in @("id", "category", "input", "expected_intent", "expected_action")) { Assert-HasProperty -Item $case -Name $property -CaseId "<behavior-case>" }
     if ($behaviorIds.ContainsKey($case.id)) { throw "Duplicate behavior case id: $($case.id)" }
     $behaviorIds[$case.id] = $true
+    if ($null -ne $case.expected_contract) {
+        $behaviorContract = $routeContractDocument.scenes | Where-Object id -eq $case.expected_contract | Select-Object -First 1
+        if ($null -eq $behaviorContract) { throw "Behavior case '$($case.id)' references unknown contract '$($case.expected_contract)'" }
+        $progressIds = @($behaviorContract.progress_map | ForEach-Object { $_.display_id })
+        foreach ($progressId in @($case.expect_progress.must_have_completed | Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) })) {
+            if ($progressId -notin $progressIds) { throw "Behavior case '$($case.id)' references unknown progress display_id '$progressId'" }
+        }
+    }
 }
 $diagnosisModule = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/module-second-brain-diagnosis.md"
 foreach ($requiredToken in @("duration", "target", "first_action", "done_when", "recommended_scene")) {
     if ($diagnosisModule -notmatch [regex]::Escape($requiredToken)) { throw "Diagnosis module is missing actionable experiment field '$requiredToken'" }
 }
 $qualityGates = Get-Content -Raw -Encoding UTF8 -LiteralPath $qualityGatesPath | ConvertFrom-Json
-if ($qualityGates.minimum_overall_score -lt 4.6) { throw "Behavior quality gate must target at least 4.6" }
+if ($qualityGates.score_scale -ne 100) { throw "Behavior quality gate must use the unified 100-point scale" }
+if ($qualityGates.minimum_overall_score -lt 90) { throw "Behavior quality gate must target at least 90/100" }
+$weightTotal = 0.0
+foreach ($weight in $qualityGates.dimension_weights.PSObject.Properties.Value) { $weightTotal += [double]$weight }
+if ([Math]::Abs($weightTotal - 1.0) -gt 0.0001) { throw "Behavior dimension weights must sum to 1.0, got $weightTotal" }
+$goldenContracts = @($behaviorCases | Where-Object category -eq 'golden' | ForEach-Object { $_.expected_contract } | Sort-Object -Unique)
+if (@($routeContractDocument.scenes | Where-Object { $_.id -notin $goldenContracts }).Count -ne 0) { throw "Golden behavior cases must cover all route contracts" }
 $evaluationProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath $evaluationProtocolPath
 if ($evaluationProtocol -notmatch [regex]::Escape('<HARD-GATE id="eval-no-side-effects">')) { throw "Evaluation protocol is missing eval-no-side-effects gate" }
 $productionSkillRoot = "skills/second-brain-hub"
@@ -613,7 +651,6 @@ foreach ($file in @(Get-ChildItem -LiteralPath $productionSkillRoot -Recurse -Fi
 }
 $primary = Read-TestPrompts -Path $PrimaryPath
 $contracts = Read-RouteContracts -Path $ContractPath
-$routeContractDocument = Get-Content -Raw -Encoding UTF8 -LiteralPath $ContractPath | ConvertFrom-Json
 $capabilities = Read-CapabilityContracts -Path $CapabilityContractPath -RouteContracts $contracts
 $intentCases = Read-TestPrompts -Path $IntentCasePath
 $routeCases = Assert-RouteCases -Path $RouteCasePath -RouteContracts $contracts
