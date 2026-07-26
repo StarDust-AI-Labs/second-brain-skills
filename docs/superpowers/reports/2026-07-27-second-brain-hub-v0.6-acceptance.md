@@ -3,7 +3,8 @@
 - 日期：2026-07-27
 - 候选分支：`feat/progress-map-cards-main`
 - 基线：`origin/main` at `147e0b974f8e7ed5093658a2dd434db412337327`
-- 已验证候选：`8f430f9`（包含评测夹具最终修正；本报告提交在其后）
+- 已验证候选：`8f430f9`（评测夹具最终修正）
+- 本地 PR 合并提交：`dfd33a8`（最终门禁已在该提交上复验）
 - 计划 tag：`v0.6.0`
 - 当前结论：候选版本通过全部发布门禁；应先合并到 `main`，再把 annotated tag 打在合并后的 `main` 提交上。
 
@@ -70,7 +71,7 @@
 - 能力契约：12 个能力；
 - 三层测试：intent 16、route 8、e2e 9、gates 5；
 - 行为用例：17；
-- 固定上下文：`7495 / 10000 bytes`；
+- 固定上下文：`7496 / 10000 bytes`；
 - Progress Map 必选和条件步骤覆盖、显示顺序及唯一 ID 校验通过。
 
 ### 初始化成功仪式
@@ -105,7 +106,7 @@
 评分报告：`D:\aiCoding\projects\second-brain\artifacts\hub-eval\latest-v0.6.0.json`
 
 - 大小：312,824 bytes；
-- SHA-256：`048ED7C0FB9273177474C3715A14AEEB612F12F86409A4C2FC6EA1DC43D71211`。
+- SHA-256：`D12E109680C569A4829AD270BD9EA12F2BF48A587B2FBF32F379A65E66D2259A`。
 
 ### SkillHub 发布包
 
@@ -125,8 +126,8 @@
 
 发布包：`D:\aiCoding\projects\second-brain\artifacts\skillhub\second-brain-hub.zip`
 
-- 大小：43,254 bytes；
-- SHA-256：`7BBBFE1BA17EEE8DC475D8F209B22C421741A152BF8DBD4A9B4147ACEBAE01B5`。
+- 大小：43,239 bytes；
+- SHA-256：`9A7B82280A31CCCCB943BC4D0897A3B23ABBA49E28E065CB71D59B0396681184`。
 
 ### Git 检查
 
