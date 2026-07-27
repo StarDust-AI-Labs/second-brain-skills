@@ -5,10 +5,13 @@ description: 第二大脑知识库初始化引导（仅供 Agent 阅读执行）
 
 # 第二大脑 · 知识库初始化 SOP（Agent 专用）
 
+<!-- setup-source-of-truth: install-and-runtime -->
+
 > **这份文档是写给 AI Agent 看的，不是写给普通用户的。**
 > 你的任务：带用户完成知识库的首次搭建——选定存储形态、建好 PARA 目录、写入 `hub-state.json`、做一次最小验证。
 >
 > **职责边界**：本 SOP 只管"Skill 装好之后的知识库初始化"。Skill 本身的安装由仓库 README 的安装提示词负责，不在这里。
+> **唯一事实源**：无论是安装提示词完成后的初始化、手工安装后第一次调用触发的 onboarding，还是用户主动重设/修复配置，核心初始化都必须完整执行本文件。其他文档只能负责入口、上下文暂存和完成后的恢复，不得复制或改写本文件步骤。
 
 ---
 
@@ -20,6 +23,16 @@ description: 第二大脑知识库初始化引导（仅供 Agent 阅读执行）
 4. **保护已有数据**：发现已有 Vault 或已有 `hub-state.json` 时，优先沿用，不覆盖。
 5. **可降级**：缺工具时用安全等价能力，缺 Node 时用文件工具兜底，不因此中断。
 6. **配置隔离**：`hub-state.json` 是运行态配置文件，不得提交到 Git。
+
+## 入口上下文
+
+`setup_trigger` 是调用者在当前对话/运行台账中传入的瞬时字段，不写入 `hub-state.json`。开始第 0 步前先读取它：
+
+- **安装后直接初始化**：README 安装提示词传入 `setup_trigger=post-install-prompt`；没有待处理请求，完成第 5 步验证后执行第 6 步交付并结束，不创建测试笔记。
+- **首次调用触发**：`workflow-onboarding.md` 在 `Hub Run Ledger` 写入 `setup_trigger=runtime-missing-config` 并保存 `pending_request`，再完整执行本 SOP；本 SOP 返回验证结果，由适配层恢复原请求。
+- **重设或修复配置**：Hub 直接传入 `setup_trigger=explicit-reset-or-repair` 并调用本 SOP，不经过 `workflow-onboarding.md` 适配层；先按第 0 步检查并保护现有配置，再执行同一套步骤。
+
+入口不同不得改变目录、状态或验证标准。完成或明确失败后由调用者清空 `setup_trigger`；本 SOP 不消费或改写 `pending_request`。
 
 ---
 
@@ -153,7 +166,9 @@ description: 第二大脑知识库初始化引导（仅供 Agent 阅读执行）
 
 1. 知识库路径和五个 PARA 目录存在；Obsidian 模式额外确认 `.obsidian/` 目录存在。
 2. `hub-state.json` 是合法 JSON，`storage_mode`、`workspace_path`、兼容字段和实际选择一致，且 `onboarding.completed=true`。
-3. 如果初始化由一条待处理的原始请求触发，返回 `workflow-onboarding.md` 恢复该请求；涉及笔记写入时，必须重新通过对应场景的写入前置。纯初始化请求到此结束，不额外创建笔记。
+3. 验证成功后向调用方返回统一结果：`setup_status=success`、实际 `storage_mode`、`workspace_path`、`hub_state_path` 和 `onboarding_completed=true`。验证失败返回 `setup_status=failed` 和原因，不得声称完成。
+4. 如果初始化由一条待处理的原始请求触发，把统一结果返回 `workflow-onboarding.md`；本 SOP 不消费或改写 `pending_request`。涉及笔记写入时，适配层恢复场景后必须重新通过对应写入前置。
+5. 纯初始化请求到此结束，不额外创建测试笔记或合成笔记。
 
 任何一步失败：报告卡在哪一步、原因是什么、建议怎么解决；必要时回滚新建的配置。
 
@@ -161,7 +176,7 @@ description: 第二大脑知识库初始化引导（仅供 Agent 阅读执行）
 
 ## 第 6 步 · 交付与下一步引导
 
-用大白话告诉用户：
+直接安装/主动初始化入口用大白话告诉用户；首次调用入口先把结果交还 `workflow-onboarding.md`，由它恢复原请求后统一交付：
 
 - ✅ 知识库搭好了，位置在 `<路径>`，用的是 Obsidian 还是普通文件夹；
 - 如果已恢复原始写入请求且确实成功：✅ 第一条内容已经保存；否则不要声称已有笔记写入；
