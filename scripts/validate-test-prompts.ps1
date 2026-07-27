@@ -549,6 +549,8 @@ $requiredOnboardingCases = @(
     "onboard-setup-completes-state",
     "onboard-pure-setup-no-synthetic-note",
     "onboard-installed-skill-script-path",
+    "onboard-install-entry-uses-setup-sop",
+    "onboard-runtime-entry-uses-setup-sop",
     "ritual-windows-path-json",
     "ritual-posix-path-json",
     "ritual-special-chars-json",
@@ -577,10 +579,68 @@ $onboardingProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/secon
 foreach ($gate in @("onboarding-path-confirmed", "onboarding-limited-write-scope", "onboarding-resume-original-request")) {
     if ($onboardingProtocol -notmatch [regex]::Escape("<HARD-GATE id=`"$gate`">")) { throw "Onboarding protocol is missing HARD-GATE '$gate'" }
 }
+$onboardingAdapterMarker = "onboarding-adapter-only: setup-source=../SETUP.md"
+if ($onboardingProtocol -notmatch [regex]::Escape($onboardingAdapterMarker) -or $onboardingProtocol -notmatch [regex]::Escape("[../SETUP.md](../SETUP.md)")) {
+    throw "Runtime onboarding must delegate to the installed SETUP.md as its only setup source"
+}
+foreach ($duplicatedSetupToken in @("hub-state.example.json", "init-workspace.mjs", "storage_mode=markdown")) {
+    if ($onboardingProtocol -match [regex]::Escape($duplicatedSetupToken)) { throw "Runtime onboarding duplicates SETUP implementation token '$duplicatedSetupToken'" }
+}
 $setupProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/SETUP.md"
-foreach ($requiredToken in @('"completed": true', '<hub_root>/scripts/init-workspace.mjs', 'setup-write-scope: directories-and-config-only', 'workflow-onboarding.md')) {
+foreach ($requiredToken in @('"completed": true', '<hub_root>/scripts/init-workspace.mjs', 'setup-write-scope: directories-and-config-only', 'workflow-onboarding.md', 'setup-source-of-truth: install-and-runtime', 'setup_status=success', 'setup_trigger=post-install-prompt', 'setup_trigger=runtime-missing-config', 'setup_trigger=explicit-reset-or-repair')) {
     if ($setupProtocol -notmatch [regex]::Escape($requiredToken)) { throw "SETUP.md is missing required initialization rule '$requiredToken'" }
 }
+$runtimeProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/runtime-protocol.md"
+foreach ($requiredToken in @('setup_trigger=null', 'post-install-prompt', 'runtime-missing-config', 'explicit-reset-or-repair')) {
+    if ($runtimeProtocol -notmatch [regex]::Escape($requiredToken)) { throw "Runtime protocol is missing setup-trigger transport rule '$requiredToken'" }
+}
+$setupEntryCases = @($onboardingCases | Where-Object { $_.id -in @("onboard-install-entry-uses-setup-sop", "onboard-runtime-entry-uses-setup-sop", "onboard-explicit-reset-uses-setup-sop") })
+if ($setupEntryCases.Count -ne 3 -or @($setupEntryCases | Where-Object { $_.expected_setup_source -ne "second-brain-hub/SETUP.md" }).Count -ne 0) {
+    throw "Install, runtime onboarding, and explicit reset cases must share second-brain-hub/SETUP.md"
+}
+$expectedSetupTriggers = @{
+    "onboard-install-entry-uses-setup-sop" = "post-install-prompt"
+    "onboard-runtime-entry-uses-setup-sop" = "runtime-missing-config"
+    "onboard-explicit-reset-uses-setup-sop" = "explicit-reset-or-repair"
+}
+foreach ($entryCase in $setupEntryCases) {
+    if ($entryCase.expected_setup_trigger -ne $expectedSetupTriggers[$entryCase.id]) { throw "Onboarding case '$($entryCase.id)' has the wrong setup trigger" }
+}
+if (@($setupEntryCases | Where-Object { $_.id -eq 'onboard-explicit-reset-uses-setup-sop' -and -not $_.expected_bypass_onboarding_adapter }).Count -ne 0) {
+    throw "Explicit reset must bypass the runtime onboarding adapter"
+}
+
+function Assert-ReadmeSetupPrompt {
+    param(
+        [string]$Name,
+        [string]$Content,
+        [string[]]$RequiredPromptTokens
+    )
+
+    if ($Content -notmatch [regex]::Escape("second-brain-hub/SETUP.md")) { throw "$Name installation guidance must delegate to second-brain-hub/SETUP.md" }
+    $fences = @([regex]::Matches($Content, '(?ms)```[^\r\n]*\r?\n(.*?)\r?\n```'))
+    $setupBlocks = @($fences | Where-Object { $_.Groups[1].Value -match [regex]::Escape('second-brain-hub/SETUP.md') })
+    if ($setupBlocks.Count -ne 1) { throw "$Name must contain exactly one SETUP-delegating installation prompt block" }
+    $promptBlock = $setupBlocks[0].Groups[1].Value
+    foreach ($token in $RequiredPromptTokens) {
+        if ($promptBlock -notmatch [regex]::Escape($token)) { throw "$Name installation prompt is missing safety/delegation token '$token'" }
+    }
+
+    foreach ($fence in $fences) {
+        $body = $fence.Groups[1].Value
+        if ($body -eq $promptBlock) { continue }
+        $mentionsState = $body -match '(?i)hub-state(?:\.example)?\.json'
+        $implementsSetup = $body -match '(?i)(Copy-Item|\bcp\s+|storage_mode|workspace_path|vault_path|onboarding\.completed|ConvertFrom-Json)'
+        if ($mentionsState -and $implementsSetup) { throw "$Name contains a second fenced implementation of hub-state setup outside the delegated installation prompt" }
+    }
+}
+
+$readmeZh = Get-Content -Raw -Encoding UTF8 -LiteralPath "README.md"
+$readmeEn = Get-Content -Raw -Encoding UTF8 -LiteralPath "README.en.md"
+$zhPromptTokens = @()
+foreach ($decodedToken in ('["\u6bcf\u6b21\u53ea\u95ee\u4e00\u4e2a\u95ee\u9898","\u5f81\u5f97\u6211\u540c\u610f","\u5148\u5224\u65ad\u672c\u6b21\u662f\u9996\u6b21\u5b89\u88c5\u8fd8\u662f\u66f4\u65b0","\u5907\u4efd\u73b0\u6709 6 \u4e2a Skill \u76ee\u5f55","\u6765\u6e90\u4e0d\u660e\u7684\u540c\u540d Skill \u65f6\u5148\u95ee\u6211","\u9010\u9879\u62a5\u544a\u964d\u7ea7\u80fd\u529b"]' | ConvertFrom-Json)) { $zhPromptTokens += [string]$decodedToken }
+Assert-ReadmeSetupPrompt -Name "Chinese README" -Content $readmeZh -RequiredPromptTokens @($zhPromptTokens + @('`second-brain-hub/hub-state.json`', 'setup_trigger=post-install-prompt', 'git reset --hard'))
+Assert-ReadmeSetupPrompt -Name "English README" -Content $readmeEn -RequiredPromptTokens @('ask only one question at a time', 'asking for my consent', 'Determine whether this is a first-time install or an update', 'Back up all six existing Skill directories', 'preserve `second-brain-hub/hub-state.json`', 'same-named Skill of unknown origin', 'report each degraded capability', 'setup_trigger=post-install-prompt', 'git reset --hard')
 $minimalWorkspace = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/minimal-workspace.md"
 if ($minimalWorkspace -notmatch [regex]::Escape('<HARD-GATE id="minimal-workspace-safe-target">')) { throw "Minimal workspace protocol is missing its safe-target gate" }
 $initWorkspace = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/scripts/init-workspace.mjs"

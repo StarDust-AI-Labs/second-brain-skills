@@ -37,12 +37,12 @@
 请执行：
 
 1. 根据当前 Agent 的实际配置和本机已有目录，确定它真正使用的 skills 目录，并告诉我判断依据；无法确定时再询问我。
-2. 安全获取仓库最新 `main`。已有仓库存在未提交修改时不要覆盖或清理，改用临时目录或先询问我。
-3. 从仓库顶层 `skills/` 安装或更新这 6 个目录：`second-brain-hub`、`defuddle`、`obsidian-markdown`、`obsidian-cli`、`obsidian-bases`、`json-canvas`。更新前备份现有版本，保留 `second-brain-hub/hub-state.json` 和我的自定义修改。
-4. 安装完成后，完整读取已安装目录中的 `second-brain-hub/SETUP.md`，严格按该文档完成首次初始化、配置修复或已有知识库复用；不要自行重复或改写 `SETUP.md` 的初始化步骤。
-5. 验证 6 个 Skill 的 `SKILL.md` 均存在，并用大白话告诉我本次是安装还是更新、Skill 安装目录、使用的 Git commit，以及知识库设置结果。
+2. 先判断本次是首次安装还是更新，再安全获取仓库最新 `main`。已有仓库存在未提交修改时不要覆盖或清理，改用临时目录或先询问我。
+3. 从仓库顶层 `skills/` 安装或更新这 6 个目录：`second-brain-hub`、`defuddle`、`obsidian-markdown`、`obsidian-cli`、`obsidian-bases`、`json-canvas`。更新模式覆盖前，先说明备份方案并征得我同意；备份现有 6 个 Skill 目录，保留 `second-brain-hub/hub-state.json` 和我的自定义修改。发现来源不明的同名 Skill 时先问我，不要覆盖。
+4. 安装完成后，以 `setup_trigger=post-install-prompt` 完整读取已安装目录中的 `second-brain-hub/SETUP.md`，严格按该文档完成首次初始化、配置修复或已有知识库复用；不要自行重复或改写 `SETUP.md` 的初始化步骤。
+5. 验证 6 个 Skill 的 `SKILL.md` 均存在，并用大白话告诉我本次是安装还是更新、Skill 安装目录、使用的 Git commit、知识库设置结果；如果某个工具或能力不可用，逐项报告降级能力、替代方案和影响，不要静默跳过。
 
-安全约束：先检查再操作；禁止 `git reset --hard`；不得删除、覆盖来源不明或带有未提交修改的文件；`hub-state.json` 不得提交到 Git。
+安全约束：先检查再操作；禁止 `git reset --hard`；不得删除、覆盖来源不明或带有未提交修改的文件；更新时必须保留已有 `hub-state.json`；任何能力降级都要逐项说明；`hub-state.json` 不得提交到 Git。
 
 ```
 
@@ -165,7 +165,7 @@ second-brain/
 - **Agent 自适应安装**：直接复制顶层 `skills/` 下的 6 个目录；重构前的方法论档案已归档到 `docs/archive/methodology-legacy/`，不随 Skill 安装分发，不要安装为平级 Skill。
 - **运行时边界**：`scripts/`、`tests/`、`docs/`、`books/` 和 `third-party/` 仅用于开发、验证、文档与许可证归档，用户运行第二大脑时不需要安装，也不需要 Python。
 - **多 agent 同步**：如果你同时使用多个 agent 产品，修改 Skill 内容后请确保从顶层 `skills/` 重新复制到各 agent 的目标目录。
-- **配置模板**：`skills/second-brain-hub/hub-state.example.json` 是配置模板，安装时复制生成 `hub-state.json`。
+- **配置模板**：`skills/second-brain-hub/hub-state.example.json` 只由 `second-brain-hub/SETUP.md` 在初始化时读取并生成本地 `hub-state.json`；普通用户不手工复制或编辑。
 - **本地运行态配置**：`hub-state.json` 保存存储模式、Vault 或 Markdown 工作区路径、引导状态、偏好和 12 问题清单，属于本地文件，不提交到版本库。
 - **Vault 运行态状态**：Obsidian 模式可在 `{vault_path}/.obsidian/hub-state.json` 保存 Vault 内运行记录；Markdown 模式只使用 Hub 旁的本地状态。
 
@@ -177,48 +177,9 @@ second-brain/
 记一下：这是我的第一条第二大脑笔记
 ```
 
-如果尚未配置，Hub 会用一个问题让你选择：已有 Obsidian Vault、已有 Markdown 文件夹，或创建最小 Markdown 第二大脑。配置完成后会自动继续保存上面的原始笔记，不需要重新输入。
+如果尚未配置，Hub 会通过运行时适配层完整执行已安装目录中的 `second-brain-hub/SETUP.md`，用同一套 SOP 让你选择已有 Obsidian Vault、已有 Markdown 文件夹，或创建最小 Markdown 第二大脑。配置完成后会自动继续保存上面的原始笔记，不需要重新输入。
 
-如需预先手工配置 Obsidian 模式，可复制模板并填写：
-
-```powershell
-Copy-Item <second-brain-hub-skill-dir>\hub-state.example.json <second-brain-hub-skill-dir>\hub-state.json
-```
-
-然后编辑本地 `hub-state.json`：
-
-```json
-{
-  "preferences": {
-    "storage_mode": "obsidian",
-    "workspace_path": "<你的 Obsidian Vault 绝对路径>",
-    "workspace_name": "<你的 Obsidian Vault 名称>",
-    "vault_path": "<你的 Obsidian Vault 绝对路径>",
-    "vault_name": "<你的 Obsidian Vault 名称>"
-  }
-}
-```
-
-纯 Markdown 模式只需设置：
-
-```json
-{
-  "preferences": {
-    "storage_mode": "markdown",
-    "workspace_path": "<Markdown 工作区绝对路径>",
-    "workspace_name": "<工作区名称>"
-  }
-}
-```
-
-也可以使用环境变量：
-
-```powershell
-$env:SECOND_BRAIN_VAULT_PATH = "<你的 Obsidian Vault 绝对路径>"
-$env:SECOND_BRAIN_VAULT_NAME = "<你的 Obsidian Vault 名称>"
-```
-
-Markdown 模式对应 `SECOND_BRAIN_STORAGE_MODE=markdown`、`SECOND_BRAIN_WORKSPACE_PATH` 和 `SECOND_BRAIN_WORKSPACE_NAME`。
+即使你是手工复制 Skill，也不需要复制模板或编辑 JSON；第一次使用时仍会进入同一份 `SETUP.md`。如果想在第一次记笔记前完成设置，直接对 Agent 说：“完整读取已安装的 `second-brain-hub/SETUP.md`，按 SOP 帮我初始化知识库。”
 
 ***
 
