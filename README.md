@@ -37,12 +37,12 @@
 请执行：
 
 1. 根据当前 Agent 的实际配置和本机已有目录，确定它真正使用的 skills 目录，并告诉我判断依据；无法确定时再询问我。
-2. 安全获取仓库最新 `main`。已有仓库存在未提交修改时不要覆盖或清理，改用临时目录或先询问我。
-3. 从仓库顶层 `skills/` 安装或更新这 6 个目录：`second-brain-hub`、`defuddle`、`obsidian-markdown`、`obsidian-cli`、`obsidian-bases`、`json-canvas`。更新前备份现有版本，保留 `second-brain-hub/hub-state.json` 和我的自定义修改。
-4. 安装完成后，完整读取已安装目录中的 `second-brain-hub/SETUP.md`，严格按该文档完成首次初始化、配置修复或已有知识库复用；不要自行重复或改写 `SETUP.md` 的初始化步骤。
-5. 验证 6 个 Skill 的 `SKILL.md` 均存在，并用大白话告诉我本次是安装还是更新、Skill 安装目录、使用的 Git commit，以及知识库设置结果。
+2. 先判断本次是首次安装还是更新，再安全获取仓库最新 `main`。已有仓库存在未提交修改时不要覆盖或清理，改用临时目录或先询问我。
+3. 从仓库顶层 `skills/` 安装或更新这 6 个目录：`second-brain-hub`、`defuddle`、`obsidian-markdown`、`obsidian-cli`、`obsidian-bases`、`json-canvas`。更新模式覆盖前，先说明备份方案并征得我同意；备份现有 6 个 Skill 目录，保留 `second-brain-hub/hub-state.json` 和我的自定义修改。发现来源不明的同名 Skill 时先问我，不要覆盖。
+4. 安装完成后，以 `setup_trigger=post-install-prompt` 完整读取已安装目录中的 `second-brain-hub/SETUP.md`，严格按该文档完成首次初始化、配置修复或已有知识库复用；不要自行重复或改写 `SETUP.md` 的初始化步骤。
+5. 验证 6 个 Skill 的 `SKILL.md` 均存在，并用大白话告诉我本次是安装还是更新、Skill 安装目录、使用的 Git commit、知识库设置结果；如果某个工具或能力不可用，逐项报告降级能力、替代方案和影响，不要静默跳过。
 
-安全约束：先检查再操作；禁止 `git reset --hard`；不得删除、覆盖来源不明或带有未提交修改的文件；`hub-state.json` 不得提交到 Git。
+安全约束：先检查再操作；禁止 `git reset --hard`；不得删除、覆盖来源不明或带有未提交修改的文件；更新时必须保留已有 `hub-state.json`；任何能力降级都要逐项说明；`hub-state.json` 不得提交到 Git。
 
 ```
 

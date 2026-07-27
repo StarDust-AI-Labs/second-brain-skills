@@ -26,12 +26,12 @@ Repository: git@github.com:StarDust-AI-Labs/second-brain-skills.git (use HTTPS i
 Please do the following:
 
 1. Determine the skills directory actually used by this Agent from current configuration and existing directories, and tell me the evidence. Ask me only if it cannot be determined.
-2. Safely obtain the latest `main`. If an existing repository has uncommitted changes, do not overwrite or clean it; use a temporary directory or ask me first.
-3. Install or update these six directories from the repository's top-level `skills/`: `second-brain-hub`, `defuddle`, `obsidian-markdown`, `obsidian-cli`, `obsidian-bases`, and `json-canvas`. Back up existing versions first and preserve `second-brain-hub/hub-state.json` and my custom changes.
-4. After installation, completely read `second-brain-hub/SETUP.md` from the installed directory. Follow it exactly for first-time initialization, configuration repair, or reuse of an existing knowledge base. Do not duplicate or rewrite its initialization steps, and do not create a synthetic test note.
-5. Verify that all six `SKILL.md` files exist. Then tell me whether this was an install or update, the Skill directory, the Git commit used, and the knowledge-base setup result.
+2. Determine whether this is a first-time install or an update, then safely obtain the latest `main`. If an existing repository has uncommitted changes, do not overwrite or clean it; use a temporary directory or ask me first.
+3. Install or update these six directories from the repository's top-level `skills/`: `second-brain-hub`, `defuddle`, `obsidian-markdown`, `obsidian-cli`, `obsidian-bases`, and `json-canvas`. In update mode, explain the backup plan and obtain my consent before overwriting anything. Back up all six existing Skill directories, preserve `second-brain-hub/hub-state.json` and my custom changes, and ask before touching a same-named Skill of unknown origin.
+4. After installation, set `setup_trigger=post-install-prompt` and completely read `second-brain-hub/SETUP.md` from the installed directory. Follow it exactly for first-time initialization, configuration repair, or reuse of an existing knowledge base. Do not duplicate or rewrite its initialization steps, and do not create a synthetic test note.
+5. Verify that all six `SKILL.md` files exist. Then tell me whether this was an install or update, the Skill directory, the Git commit used, and the knowledge-base setup result. If any tool or capability is unavailable, report each degraded capability, its fallback, and the user-visible impact; never skip it silently.
 
-Safety rules: inspect before changing anything; never use `git reset --hard`; do not delete or overwrite files of unknown origin or files with uncommitted changes; never commit `hub-state.json`.
+Safety rules: inspect before changing anything; never use `git reset --hard`; do not delete or overwrite files of unknown origin or files with uncommitted changes; preserve the existing `hub-state.json` during updates; report every capability degradation; never commit `hub-state.json`.
 ```
 
 ---

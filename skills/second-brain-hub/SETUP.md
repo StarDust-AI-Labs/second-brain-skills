@@ -26,9 +26,13 @@ description: 第二大脑知识库初始化引导（仅供 Agent 阅读执行）
 
 ## 入口上下文
 
-- **安装后直接初始化**：没有待处理请求；完成第 5 步验证后执行第 6 步交付并结束，不创建测试笔记。
-- **首次调用触发**：`workflow-onboarding.md` 先保存 `pending_request`，再完整执行本 SOP；本 SOP 返回验证结果，由适配层恢复原请求。
-- **重设或修复配置**：先按第 0 步检查并保护现有配置，再执行同一套步骤；不得因为入口不同而改变目录、状态或验证标准。
+`setup_trigger` 是调用者在当前对话/运行台账中传入的瞬时字段，不写入 `hub-state.json`。开始第 0 步前先读取它：
+
+- **安装后直接初始化**：README 安装提示词传入 `setup_trigger=post-install-prompt`；没有待处理请求，完成第 5 步验证后执行第 6 步交付并结束，不创建测试笔记。
+- **首次调用触发**：`workflow-onboarding.md` 在 `Hub Run Ledger` 写入 `setup_trigger=runtime-missing-config` 并保存 `pending_request`，再完整执行本 SOP；本 SOP 返回验证结果，由适配层恢复原请求。
+- **重设或修复配置**：Hub 直接传入 `setup_trigger=explicit-reset-or-repair` 并调用本 SOP，不经过 `workflow-onboarding.md` 适配层；先按第 0 步检查并保护现有配置，再执行同一套步骤。
+
+入口不同不得改变目录、状态或验证标准。完成或明确失败后由调用者清空 `setup_trigger`；本 SOP 不消费或改写 `pending_request`。
 
 ---
 

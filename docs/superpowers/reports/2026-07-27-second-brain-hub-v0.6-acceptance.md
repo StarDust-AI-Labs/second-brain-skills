@@ -163,7 +163,7 @@ git diff --check origin/main...origin/feat/progress-map-cards-main
 
 - `v0.6.0` 已落在 `main@33ea17a`；本节是 tag 之后的新改动，不能继续复用 `v0.6.0`。
 - 工作分支：`codex/unify-onboarding-setup-sop`。
-- 已推送提交：`2a23622`（本地与 `origin/codex/unify-onboarding-setup-sop` 同步）。
+- 已推送提交：`2a23622`（实现）与 `8dad06e`（交接记录）；本地与 `origin/codex/unify-onboarding-setup-sop` 同步。
 - PR 创建入口：`https://github.com/StarDust-AI-Labs/second-brain-skills/pull/new/codex/unify-onboarding-setup-sop`。当前机器没有可复用的 GitHub API 登录，自动创建停在授权前；公开查询确认截至本记录写入时尚无开放 PR。
 - 目标：提示词安装完成后与手工复制 Skill 后的首次 Hub 调用，都完整执行已安装的 `second-brain-hub/SETUP.md`。
 - 真实边界：通用手工复制没有统一的安装后钩子，因此它在第一次调用 Hub 时进入同一 SOP；提示词安装则在复制完成后直接执行该 SOP。
@@ -174,12 +174,15 @@ git diff --check origin/main...origin/feat/progress-map-cards-main
 - `workflow-onboarding.md` 只保留运行时适配职责：暂存 `pending_request`、调用 `SETUP.md`、接收统一结果、重新通过业务写入门控并恢复原请求。
 - 中英文 README 的安装提示词均委托已安装的 `second-brain-hub/SETUP.md`，不再重复初始化实现，也不创建合成测试笔记。
 - 新增安装入口与运行时入口共用 `SETUP.md` 的 onboarding 夹具，并在主验证器中阻止两套流程再次漂移。
+- `setup_trigger` 已定义为运行台账/调用上下文中的瞬时字段：安装后、运行时缺配置、显式重设分别使用可机器判定的三个值；显式重设直接进入 `SETUP.md`，不经过 onboarding 适配层。
+- 中英文 README 安装提示词恢复更新模式、覆盖前备份授权、保留 `hub-state.json`、未知来源同名 Skill 保护和逐项能力降级报告；主验证器对两种语言执行对称白名单检查。
 
 ### 本轮验证
 
 - Skill 结构：`quick_validate.py` 通过。
 - 初始化成功验证：`PASS=6 FAIL=0 SKIP=1`，唯一 SKIP 是未启用真实文件系统检查时的预期项。
 - 主结构验证：通过；onboarding 用例 23 个，固定上下文 `7607 / 10000 bytes`。
+- 安装入口、运行时入口和显式重设入口的 onboarding 用例属于结构性契约验证；它们证明统一 SOP、trigger 和恢复语义存在，不等同于真实 Agent 执行。运行时行为层由 `b15 x 3` 定向会话兜底。
 - 真实行为：缺配置用例 `b15 x 3` 由独立只读 `codex exec` 会话生成，再用正式评分器复核；综合分、运行通过率、连续成功率和安全率均为 `100%`，质量门禁为 `True`。
 - `git diff --check`：通过。
 - 当前发布 ZIP：`D:\aiCoding\projects\second-brain\artifacts\skillhub\second-brain-hub.zip`，43,572 bytes，SHA-256 `CC3A2575EB44DD9008F4BFDC771F5CE3919D78F282FE977C62A20FB010C9AEB7`。
@@ -188,6 +191,12 @@ git diff --check origin/main...origin/feat/progress-map-cards-main
 ### 合并与下一 tag
 
 1. 审查并合并 `codex/unify-onboarding-setup-sop` 的 PR。
-2. 在合并后的 `main` 上重新运行初始化验证、主结构验证、打包和 ZIP 审计；如果合并后代码没有新增变化，可复用本节的 `b15 x 3` 行为报告作为本 PR 的定向证据，但下一次完整发版仍应按发布门禁决定是否重跑 17 个行为用例。
+2. 在合并后的 `main` 上重新运行初始化验证、主结构验证、打包和 ZIP 审计。只有以下命令返回退出码 0，才能认定合并树相对已审查远端分支在发布相关文件上“无新增变化”，并复用本节的 `b15 x 3` 定向行为报告：
+
+   ```powershell
+   git diff --quiet origin/codex/unify-onboarding-setup-sop..main -- README.md README.en.md skills tests scripts
+   ```
+
+   若发生 rebase、冲突解决或上述 diff 非空，必须重新生成受影响行为用例；下一次完整发版仍应按发布门禁决定是否重跑全部 17 个行为用例。
 3. 根据本次发布范围确定新 tag；若只包含本兼容修复，建议 `v0.6.1`。不得移动或覆盖现有 `v0.6.0` tag。
 4. 只在合并后的 `main` 提交创建并推送新 tag，随后核对远端 tag SHA 和最终 ZIP 哈希。
