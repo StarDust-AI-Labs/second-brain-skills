@@ -25,7 +25,7 @@
 
 ```yaml
 vault_config=unchecked; storage_mode=null; storage_path=null
-onboarding_status=not_needed; pending_request=null
+onboarding_status=not_needed; setup_trigger=null; pending_request=null
 intent=unclassified; scenario_contract=null
 contract_version=null; capability_contract_version=null; dependency_manifest_version=null
 dependency_resolution={}; global_preflight=[]; write_preflight=[]
@@ -33,6 +33,14 @@ required_chain=[]; completed_steps=[]; optional_steps_skipped=[]
 capability_outputs={}; target_path=null; template_ready=false; write_allowed=false
 blocked_reason=null
 ```
+
+`setup_trigger` 是初始化入口的瞬时传输字段，只存在于本轮运行上下文，不写入 `hub-state.json`：
+
+- `post-install-prompt`：README 安装提示词复制完成后直接调用 `SETUP.md`；没有 `pending_request`。
+- `runtime-missing-config`：`workflow-onboarding.md` 在运行台账写入该值并保存 `pending_request`，随后把同一台账上下文交给 `SETUP.md`。
+- `explicit-reset-or-repair`：用户明确要求重设或修复配置时，Hub 直接调用 `SETUP.md`，不经过 onboarding 适配层。
+
+初始化完成或明确失败并交付结果后清空 `setup_trigger`；只有原业务请求完成或明确阻塞后才清空 `pending_request`。
 
 ## 全局执行门控
 

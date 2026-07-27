@@ -8,13 +8,13 @@
 
 ## 1. 暂存原请求
 
-将用户原始输入、已分类意图和目标场景写入运行台账的 `pending_request`。不得要求用户配置完成后重新描述任务，也不得把原请求交给 `SETUP.md` 消费或改写。
+将用户原始输入、已分类意图和目标场景写入运行台账的 `pending_request`，并在同一台账写入 `setup_trigger=runtime-missing-config`。不得要求用户配置完成后重新描述任务，也不得把原请求交给 `SETUP.md` 消费或改写。
 
 ## 2. 调用唯一初始化 SOP
 
-完整读取并严格执行 [../SETUP.md](../SETUP.md)，传入以下入口上下文：
+完整读取并严格执行 [../SETUP.md](../SETUP.md)。入口上下文通过当前 `Hub Run Ledger` 传递；`SETUP.md` 在第 0 步前读取该台账，不创建第二份参数文件：
 
-- `setup_trigger=runtime-missing-config`
+- 台账字段 `setup_trigger=runtime-missing-config`
 - 当前配置检查结果
 - `pending_request` 已由本适配层保存
 - 初始化完成后返回本适配层
@@ -35,7 +35,7 @@
 
 ## 4. 恢复原任务
 
-成功时将 `vault_config=pass`，恢复 `pending_request` 对应的场景契约并继续执行；涉及笔记写入、更新、移动或删除时，必须重新通过该场景的写入前置，初始化授权不得继承为业务操作授权。原任务完成或明确阻塞后再清空 `pending_request`。
+成功时将 `vault_config=pass`，恢复 `pending_request` 对应的场景契约并继续执行；涉及笔记写入、更新、移动或删除时，必须重新通过该场景的写入前置，初始化授权不得继承为业务操作授权。初始化结果交付后清空 `setup_trigger`；原任务完成或明确阻塞后再清空 `pending_request`。
 
 ## 5. 用户可见交付
 
