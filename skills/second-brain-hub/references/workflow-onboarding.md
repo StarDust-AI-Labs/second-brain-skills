@@ -1,62 +1,54 @@
-# 首次运行引导
+# 首次运行适配
 
-仅在 Vault 场景缺少有效存储配置时读取。目标是在最多一次用户选择后完成配置，并恢复执行用户的原始请求。
+<!-- onboarding-adapter-only: setup-source=../SETUP.md -->
+
+本文件只负责在 Hub 运行中接入初始化、保存上下文和恢复原任务，不定义知识库初始化步骤。唯一初始化 SOP 是 [../SETUP.md](../SETUP.md)；安装提示词、手工安装后的首次调用、重设和配置修复都必须执行同一份 SOP。
+
+仅在 Vault 场景缺少有效存储配置时读取本文件。无需存储的系统诊断不进入初始化。
 
 ## 1. 暂存原请求
 
-将用户原始输入、已分类意图和目标场景写入运行台账的 `pending_request`。不得要求用户配置完成后重新描述任务。
+将用户原始输入、已分类意图和目标场景写入运行台账的 `pending_request`。不得要求用户配置完成后重新描述任务，也不得把原请求交给 `SETUP.md` 消费或改写。
 
-## 2. 只读探测
+## 2. 调用唯一初始化 SOP
 
-按当前环境能力检查：
+完整读取并严格执行 [../SETUP.md](../SETUP.md)，传入以下入口上下文：
 
-- 本轮用户已经给出的绝对路径。
-- 当前工作区及其父目录中包含 `.obsidian/` 的目录。
-- 用户主目录下常见的 `Documents/Obsidian`、`Obsidian`、`Vaults` 目录。
-- 已存在且包含 Markdown 文件的普通目录。
+- `setup_trigger=runtime-missing-config`
+- 当前配置检查结果
+- `pending_request` 已由本适配层保存
+- 初始化完成后返回本适配层
 
-探测阶段只读，不递归扫描整个磁盘，不读取笔记正文。找到一个候选时仍需用户确认；找到多个时最多展示三个最可能候选。
+不得在本文件重复定义环境探测、存储选择、PARA 目录创建、配置模板写入或最小验证。已有有效配置时按 `SETUP.md` 第 0 步跳过初始化并返回；配置缺失或失效时完整执行同一 SOP。
 
-## 3. 一个问题完成选择
+## 3. 接收统一结果
 
-优先给出：
+只有 `SETUP.md` 第 5 步验证成功，并返回以下结果时，初始化才算完成：
 
-```text
-【首次设置】选择第二大脑的存储位置：
-A. 使用检测到的 Obsidian Vault：{path}
-B. 使用其他已有 Vault 或 Markdown 文件夹
-C. 创建一个最小 Markdown 第二大脑（推荐给新用户）
-```
+- `setup_status=success`
+- 已确认的 `storage_mode`
+- 已验证的 `workspace_path`
+- 已验证的 `hub_state_path`
+- `onboarding_completed=true`
 
-没有候选路径时只提供 B 和 C。不要向新用户解释 CODE、PARA、契约、台账或门控。
+失败时保持 `vault_config=blocked`，保留 `pending_request`，向用户说明失败步骤、原因和恢复办法。不得留下成功回执、成功卡或继续执行 Vault 场景。
 
-## 4. 建立配置
+## 4. 恢复原任务
 
-- Obsidian 模式：`storage_mode=obsidian`，写入 `vault_path`、`vault_name`，并将 `workspace_path` 指向同一目录。
-- Markdown 模式：`storage_mode=markdown`，写入 `workspace_path`、`workspace_name`；兼容字段 `vault_path` 指向同一目录，`vault_name` 使用工作区名称。
-- 已有目录：不创建或重命名现有内容。
-- 新工作区：用户确认目标绝对路径后，按最小工作区协议初始化。
+成功时将 `vault_config=pass`，恢复 `pending_request` 对应的场景契约并继续执行；涉及笔记写入、更新、移动或删除时，必须重新通过该场景的写入前置，初始化授权不得继承为业务操作授权。原任务完成或明确阻塞后再清空 `pending_request`。
 
-用户对某个已有目录的确认，只授权保存本地配置；用户确认“在 {path} 创建最小工作区”时，只授权创建最小工作区列出的五个目录和本地配置。不得把首次设置授权扩展为其他笔记写入、移动或删除授权。
+## 5. 用户可见交付
 
-配置写入 Hub 旁的本地 `hub-state.json`，不得写入版本库。写入失败时保持 `onboarding.completed=false`，不得留下声称成功的回执。
-
-创建状态时以 `hub-state.example.json` 为模板，写入 `version`、`updated`、`onboarding.completed=true`、`onboarding.first_success_at` 和已确认的存储字段。状态位置遵循运行协议的配置优先级；仅在用户确认后写入。`twelve_problems` 为空时，查询场景按契约跳过长期问题匹配。
-
-> 注：首次配置完成**不在此单独输出"初始化成功卡"**。仪式感成功卡片统一在第一次成功写入笔记后，由 `output-cards.md` 的「首次成功」节输出一次（含机器校验块），避免首次使用连续出现两张成功卡。
-
-## 5. 恢复原任务
-
-配置通过后将 `vault_config=pass`，恢复 `pending_request` 对应的场景契约并继续执行。成功后清空 `pending_request`。
+纯初始化的交付文案由 `SETUP.md` 第 6 步负责。首次调用触发初始化时，不单独再输出一张“初始化成功卡”；只有原请求确实完成第一次笔记写入后，才按 `output-cards.md` 输出唯一的首次成功卡。原请求失败时只报告真实状态。
 
 <HARD-GATE id="onboarding-path-confirmed">
-用户未确认已有目录或新建目标的绝对路径前，不得创建目录、配置文件或笔记。
+`SETUP.md` 尚未取得用户对已有目录或新建目标绝对路径的确认时，不得创建目录、配置文件或笔记。
 </HARD-GATE>
 
 <HARD-GATE id="onboarding-limited-write-scope">
-首次设置的写入范围仅限用户确认的存储根目录、五个最小目录（Obsidian 模式含 `.obsidian/` 标记目录）和 Hub 本地配置；原始任务产生的笔记写入仍需通过对应场景的写入前置。
+初始化写入范围只能是 `SETUP.md` 明确授权的存储根目录、最小目录结构和 Hub 本地配置；原始任务的任何副作用必须重新授权并通过对应场景前置。
 </HARD-GATE>
 
 <HARD-GATE id="onboarding-resume-original-request">
-首次配置完成后必须恢复原始用户请求；不得以“配置完成”代替用户最初要求的产物。
+初始化成功后必须恢复原始用户请求；不得以“配置完成”代替用户最初要求的产物，也不得要求用户重新输入。
 </HARD-GATE>

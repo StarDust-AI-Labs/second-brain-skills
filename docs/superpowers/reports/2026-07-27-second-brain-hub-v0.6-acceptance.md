@@ -156,3 +156,36 @@ git diff --check origin/main...origin/feat/progress-map-cards-main
 ```
 
 确认报告提交在 feature 分支、PR 已合并且测试没有新变化后，按第 4 节完成 `v0.6.0`。不要把 tag 直接打在未合并的 feature 分支上，也不要用仓库中历史 `tests/hub/eval-results/behavior-report.json` 代替本次真实报告。
+
+## 6. v0.6.0 后续：统一初始化 SOP
+
+### 当前状态
+
+- `v0.6.0` 已落在 `main@33ea17a`；本节是 tag 之后的新改动，不能继续复用 `v0.6.0`。
+- 工作分支：`codex/unify-onboarding-setup-sop`。
+- 目标：提示词安装完成后与手工复制 Skill 后的首次 Hub 调用，都完整执行已安装的 `second-brain-hub/SETUP.md`。
+- 真实边界：通用手工复制没有统一的安装后钩子，因此它在第一次调用 Hub 时进入同一 SOP；提示词安装则在复制完成后直接执行该 SOP。
+
+### 已完成改动
+
+- `SETUP.md` 成为安装、首次运行、重设和配置修复的唯一初始化事实源。
+- `workflow-onboarding.md` 只保留运行时适配职责：暂存 `pending_request`、调用 `SETUP.md`、接收统一结果、重新通过业务写入门控并恢复原请求。
+- 中英文 README 的安装提示词均委托已安装的 `second-brain-hub/SETUP.md`，不再重复初始化实现，也不创建合成测试笔记。
+- 新增安装入口与运行时入口共用 `SETUP.md` 的 onboarding 夹具，并在主验证器中阻止两套流程再次漂移。
+
+### 本轮验证
+
+- Skill 结构：`quick_validate.py` 通过。
+- 初始化成功验证：`PASS=6 FAIL=0 SKIP=1`，唯一 SKIP 是未启用真实文件系统检查时的预期项。
+- 主结构验证：通过；onboarding 用例 23 个，固定上下文 `7607 / 10000 bytes`。
+- 真实行为：缺配置用例 `b15 x 3` 由独立只读 `codex exec` 会话生成，再用正式评分器复核；综合分、运行通过率、连续成功率和安全率均为 `100%`，质量门禁为 `True`。
+- `git diff --check`：通过。
+- 当前发布 ZIP：`D:\aiCoding\projects\second-brain\artifacts\skillhub\second-brain-hub.zip`，43,572 bytes，SHA-256 `CC3A2575EB44DD9008F4BFDC771F5CE3919D78F282FE977C62A20FB010C9AEB7`。
+- ZIP 审计：35 个条目，仅含 `second-brain-hub/`，包含 `SKILL.md` 与 `SETUP.md`，无测试文件、测试标记或反斜杠路径。
+
+### 合并与下一 tag
+
+1. 审查并合并 `codex/unify-onboarding-setup-sop` 的 PR。
+2. 在合并后的 `main` 上重新运行初始化验证、主结构验证、打包和 ZIP 审计；如果合并后代码没有新增变化，可复用本节的 `b15 x 3` 行为报告作为本 PR 的定向证据，但下一次完整发版仍应按发布门禁决定是否重跑 17 个行为用例。
+3. 根据本次发布范围确定新 tag；若只包含本兼容修复，建议 `v0.6.1`。不得移动或覆盖现有 `v0.6.0` tag。
+4. 只在合并后的 `main` 提交创建并推送新 tag，随后核对远端 tag SHA 和最终 ZIP 哈希。
