@@ -549,6 +549,8 @@ $requiredOnboardingCases = @(
     "onboard-setup-completes-state",
     "onboard-pure-setup-no-synthetic-note",
     "onboard-installed-skill-script-path",
+    "onboard-install-entry-uses-setup-sop",
+    "onboard-runtime-entry-uses-setup-sop",
     "ritual-windows-path-json",
     "ritual-posix-path-json",
     "ritual-special-chars-json",
@@ -577,9 +579,28 @@ $onboardingProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/secon
 foreach ($gate in @("onboarding-path-confirmed", "onboarding-limited-write-scope", "onboarding-resume-original-request")) {
     if ($onboardingProtocol -notmatch [regex]::Escape("<HARD-GATE id=`"$gate`">")) { throw "Onboarding protocol is missing HARD-GATE '$gate'" }
 }
+$onboardingAdapterMarker = "onboarding-adapter-only: setup-source=../SETUP.md"
+if ($onboardingProtocol -notmatch [regex]::Escape($onboardingAdapterMarker) -or $onboardingProtocol -notmatch [regex]::Escape("[../SETUP.md](../SETUP.md)")) {
+    throw "Runtime onboarding must delegate to the installed SETUP.md as its only setup source"
+}
+foreach ($duplicatedSetupToken in @("hub-state.example.json", "init-workspace.mjs", "storage_mode=markdown")) {
+    if ($onboardingProtocol -match [regex]::Escape($duplicatedSetupToken)) { throw "Runtime onboarding duplicates SETUP implementation token '$duplicatedSetupToken'" }
+}
 $setupProtocol = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/SETUP.md"
-foreach ($requiredToken in @('"completed": true', '<hub_root>/scripts/init-workspace.mjs', 'setup-write-scope: directories-and-config-only', 'workflow-onboarding.md')) {
+foreach ($requiredToken in @('"completed": true', '<hub_root>/scripts/init-workspace.mjs', 'setup-write-scope: directories-and-config-only', 'workflow-onboarding.md', 'setup-source-of-truth: install-and-runtime', 'setup_status=success')) {
     if ($setupProtocol -notmatch [regex]::Escape($requiredToken)) { throw "SETUP.md is missing required initialization rule '$requiredToken'" }
+}
+$setupEntryCases = @($onboardingCases | Where-Object { $_.id -in @("onboard-install-entry-uses-setup-sop", "onboard-runtime-entry-uses-setup-sop") })
+if ($setupEntryCases.Count -ne 2 -or @($setupEntryCases | Where-Object { $_.expected_setup_source -ne "second-brain-hub/SETUP.md" }).Count -ne 0) {
+    throw "Install and runtime onboarding cases must share second-brain-hub/SETUP.md"
+}
+$readmeZh = Get-Content -Raw -Encoding UTF8 -LiteralPath "README.md"
+$readmeEn = Get-Content -Raw -Encoding UTF8 -LiteralPath "README.en.md"
+foreach ($readme in @($readmeZh, $readmeEn)) {
+    if ($readme -notmatch [regex]::Escape("second-brain-hub/SETUP.md")) { throw "README installation guidance must delegate to second-brain-hub/SETUP.md" }
+}
+if ($readmeEn -match [regex]::Escape("installation verification") -or $readmeEn -match [regex]::Escape('Copy-Item <second-brain-hub-skill-dir>\hub-state.example.json')) {
+    throw "English README still contains a divergent setup or synthetic-note path"
 }
 $minimalWorkspace = Get-Content -Raw -Encoding UTF8 -LiteralPath "skills/second-brain-hub/references/minimal-workspace.md"
 if ($minimalWorkspace -notmatch [regex]::Escape('<HARD-GATE id="minimal-workspace-safe-target">')) { throw "Minimal workspace protocol is missing its safe-target gate" }

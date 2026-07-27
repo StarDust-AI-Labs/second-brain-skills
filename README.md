@@ -165,7 +165,7 @@ second-brain/
 - **Agent 自适应安装**：直接复制顶层 `skills/` 下的 6 个目录；重构前的方法论档案已归档到 `docs/archive/methodology-legacy/`，不随 Skill 安装分发，不要安装为平级 Skill。
 - **运行时边界**：`scripts/`、`tests/`、`docs/`、`books/` 和 `third-party/` 仅用于开发、验证、文档与许可证归档，用户运行第二大脑时不需要安装，也不需要 Python。
 - **多 agent 同步**：如果你同时使用多个 agent 产品，修改 Skill 内容后请确保从顶层 `skills/` 重新复制到各 agent 的目标目录。
-- **配置模板**：`skills/second-brain-hub/hub-state.example.json` 是配置模板，安装时复制生成 `hub-state.json`。
+- **配置模板**：`skills/second-brain-hub/hub-state.example.json` 只由 `second-brain-hub/SETUP.md` 在初始化时读取并生成本地 `hub-state.json`；普通用户不手工复制或编辑。
 - **本地运行态配置**：`hub-state.json` 保存存储模式、Vault 或 Markdown 工作区路径、引导状态、偏好和 12 问题清单，属于本地文件，不提交到版本库。
 - **Vault 运行态状态**：Obsidian 模式可在 `{vault_path}/.obsidian/hub-state.json` 保存 Vault 内运行记录；Markdown 模式只使用 Hub 旁的本地状态。
 
@@ -177,48 +177,9 @@ second-brain/
 记一下：这是我的第一条第二大脑笔记
 ```
 
-如果尚未配置，Hub 会用一个问题让你选择：已有 Obsidian Vault、已有 Markdown 文件夹，或创建最小 Markdown 第二大脑。配置完成后会自动继续保存上面的原始笔记，不需要重新输入。
+如果尚未配置，Hub 会通过运行时适配层完整执行已安装目录中的 `second-brain-hub/SETUP.md`，用同一套 SOP 让你选择已有 Obsidian Vault、已有 Markdown 文件夹，或创建最小 Markdown 第二大脑。配置完成后会自动继续保存上面的原始笔记，不需要重新输入。
 
-如需预先手工配置 Obsidian 模式，可复制模板并填写：
-
-```powershell
-Copy-Item <second-brain-hub-skill-dir>\hub-state.example.json <second-brain-hub-skill-dir>\hub-state.json
-```
-
-然后编辑本地 `hub-state.json`：
-
-```json
-{
-  "preferences": {
-    "storage_mode": "obsidian",
-    "workspace_path": "<你的 Obsidian Vault 绝对路径>",
-    "workspace_name": "<你的 Obsidian Vault 名称>",
-    "vault_path": "<你的 Obsidian Vault 绝对路径>",
-    "vault_name": "<你的 Obsidian Vault 名称>"
-  }
-}
-```
-
-纯 Markdown 模式只需设置：
-
-```json
-{
-  "preferences": {
-    "storage_mode": "markdown",
-    "workspace_path": "<Markdown 工作区绝对路径>",
-    "workspace_name": "<工作区名称>"
-  }
-}
-```
-
-也可以使用环境变量：
-
-```powershell
-$env:SECOND_BRAIN_VAULT_PATH = "<你的 Obsidian Vault 绝对路径>"
-$env:SECOND_BRAIN_VAULT_NAME = "<你的 Obsidian Vault 名称>"
-```
-
-Markdown 模式对应 `SECOND_BRAIN_STORAGE_MODE=markdown`、`SECOND_BRAIN_WORKSPACE_PATH` 和 `SECOND_BRAIN_WORKSPACE_NAME`。
+即使你是手工复制 Skill，也不需要复制模板或编辑 JSON；第一次使用时仍会进入同一份 `SETUP.md`。如果想在第一次记笔记前完成设置，直接对 Agent 说：“完整读取已安装的 `second-brain-hub/SETUP.md`，按 SOP 帮我初始化知识库。”
 
 ***
 

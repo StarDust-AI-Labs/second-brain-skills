@@ -16,60 +16,22 @@ This project engineers the methodologies from *Building a Second Brain* — the 
 
 ## Copy-Paste Prompt for Other Users
 
-Send the following prompt directly to your agent. No technical background needed — the agent guides you step by step in plain language: it detects whether this is a first install or an update, syncs the Skills to the right directory, and helps you choose how to store your knowledge base (connect an existing Obsidian vault, install Obsidian and create a new vault, or use a plain folder):
+Send the following prompt directly to your agent. It handles only safe installation or update; after installation, the installed `second-brain-hub/SETUP.md` is the single initialization SOP, so the public prompt and runtime onboarding cannot drift apart:
 
 ```text
-Please help me install and set up the "Second Brain" knowledge management system. Talk to me in plain language throughout, and ask me only one question at a time. Before running any command or modifying any file, explain what you are about to do and get my consent first. Never ask me to type commands or edit files by hand.
+Please install or update the "Second Brain" Skills and then use the project-provided SOP to set up my knowledge base. Speak in plain language, ask only one question at a time, and explain any command or file change before asking for my consent. Do not ask me to type commands or edit configuration files manually.
 
-Follow these steps:
+Repository: git@github.com:StarDust-AI-Labs/second-brain-skills.git (use HTTPS if SSH is unavailable).
 
-0. Determine the Skill installation target directory based on actual evidence — do not make me pick from the product list below:
-   - You yourself are the primary evidence: which agent product you are running as, where your own configuration directory lives, and where your already-installed skills (if any) reside; if a skills directory already exists on this machine, prefer reusing it as the install target
-   - Then run read-only checks for agent config/skill directories that actually exist in the current workspace and the home directory (e.g. `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `.coze/skills/`, `.workbuddy/skills/`, `.opencode/`), and use whichever exists
-   - Only if both of the above fail, fall back to known conventions: Claude Code → .claude/skills/; Codex → .agents/skills/; Cursor → .cursor/skills/; Coze (扣子) → .coze/skills/; WorkBuddy → .workbuddy/skills/; for any product outside this list (e.g. OpenClaw), follow the skills convention in that agent's own documentation, or if none is documented, use `skills/` under its configuration directory
-   - Tell me in one sentence the target directory you chose and the evidence behind it; if you genuinely cannot determine it, ask me with your recommended directory attached
-   The top-level skills/ directory is the single source of truth; all installations copy from it.
+Please do the following:
 
-1. Detect any existing installation:
-   - Check whether `second-brain-hub/SKILL.md` exists in the target skills directory, and whether `defuddle`, `obsidian-markdown`, `obsidian-cli`, `obsidian-bases`, `json-canvas` exist alongside it
-   - If `second-brain-hub` exists, enter "update mode"; otherwise enter "first install mode"
-   - If a same-named Skill cannot be confirmed to come from this repository, do not overwrite it; show me its origin or the differences and ask me first
+1. Determine the skills directory actually used by this Agent from current configuration and existing directories, and tell me the evidence. Ask me only if it cannot be determined.
+2. Safely obtain the latest `main`. If an existing repository has uncommitted changes, do not overwrite or clean it; use a temporary directory or ask me first.
+3. Install or update these six directories from the repository's top-level `skills/`: `second-brain-hub`, `defuddle`, `obsidian-markdown`, `obsidian-cli`, `obsidian-bases`, and `json-canvas`. Back up existing versions first and preserve `second-brain-hub/hub-state.json` and my custom changes.
+4. After installation, completely read `second-brain-hub/SETUP.md` from the installed directory. Follow it exactly for first-time initialization, configuration repair, or reuse of an existing knowledge base. Do not duplicate or rewrite its initialization steps, and do not create a synthetic test note.
+5. Verify that all six `SKILL.md` files exist. Then tell me whether this was an install or update, the Skill directory, the Git commit used, and the knowledge-base setup result.
 
-2. Fetch the latest version of the repository:
-   - Repository: git@github.com:StarDust-AI-Labs/second-brain-skills.git
-   - If the repo already exists locally and its working tree is clean, run `git fetch` and update `main` with a safe fast-forward
-   - If the existing repo has uncommitted changes, do not reset, clean, or overwrite; clone into a fresh temporary directory instead, or ask me how to proceed
-   - If there is no local repo, clone it; if SSH is unavailable, use the HTTPS URL
-   - Record the Git commit used for this installation
-
-3. Install or update the Skills:
-   - The directories to sync are strictly limited to: `second-brain-hub`, `defuddle`, `obsidian-markdown`, `obsidian-cli`, `obsidian-bases`, `json-canvas`
-   - Copy these 6 directories into the target skills directory from step 0, keeping each `SKILL.md` one level below the target root
-   - Do not copy `scripts/`, `tests/`, `docs/`, `books/`, `artifacts/`, or `third-party/`
-   - Update mode: back up the existing 6 Skill directories first; you must preserve `second-brain-hub/hub-state.json` (it holds my knowledge base configuration) — never overwrite it with `hub-state.example.json`; if I have modified other Skill files, show me the differences and replace them only after my confirmation
-   - Write or update `.second-brain-install.json` in the target Skill root, recording `source_repository`, `source_commit`, `installed_at`, `agent_type`, and the names of the 6 installed Skills; do not record private information such as knowledge base paths
-
-4. Guide me to choose my knowledge base storage (skip this step in update mode and reuse the preserved hub-state.json; re-guide only if the configuration is missing or its path is no longer valid):
-   First, use read-only checks to detect whether Obsidian is installed on this machine (common install directories, Start Menu, /Applications, `which obsidian`, etc.), then ask me one question: "Would you like to manage your notes with Obsidian, or with a plain folder?" Handle each case as follows:
-   - Obsidian is installed: prefer connecting my existing vault. Use read-only probing of common locations (Documents, Desktop, home directory, etc.) for directories containing `.obsidian/`, and show me at most 3 candidates to choose from; I may also give you a path directly. After my confirmation, write the local `hub-state.json` (Obsidian mode). If I want to create a new vault instead, follow the creation flow in the next bullet
-   - Obsidian is not installed, but I want to use it: tell me you will download the installer from the official site https://obsidian.md/download, and only after my consent download the installer matching my OS (.exe on Windows, or use winget; .dmg on macOS; AppImage on Linux) and guide me through the installation. Then ask where I want my vault to live (suggest a location such as "Documents/SecondBrain"; the path must be an absolute path I confirm), and run the repository's `skills/second-brain-hub/scripts/init-workspace.mjs --path <confirmed path> --obsidian` to create the new vault (the five PARA folders plus the `.obsidian/` marker); if Node.js is unavailable, create the same structure with your file tools. Remind me to choose "Open folder as vault" for this directory the first time I open Obsidian. Finally, write the local `hub-state.json` (Obsidian mode)
-   - I choose a plain folder (no Obsidian): ask where the knowledge base should live, and after I confirm an absolute path, run `init-workspace.mjs --path <confirmed path>` to create the minimal PARA directories (📥 收件箱 / 📂 项目 / 📂 领域 / 📂 资源 / 📦 存档), then write the local `hub-state.json` (Markdown mode)
-   - Never guess paths; never place the knowledge base at a filesystem root or the home directory itself; `hub-state.json` must not be committed to Git
-
-5. Run a minimal smoke test:
-   - Verify all 6 Skills' `SKILL.md` files exist and the 5 hidden dependencies are installed; if any are missing, report the degraded capabilities
-   - Verify my chosen knowledge base path exists and a Markdown note can be created in it
-   - Trigger second-brain-hub with the test input "Note to self: this is a second-brain-skill installation verification" and write the test note into the knowledge base inbox
-   - If verification fails in update mode, restore the pre-update backup and report the cause
-
-6. When done, tell me in plain language:
-   - Whether this was a first install or an update
-   - Where my knowledge base lives, and whether it uses Obsidian or a plain folder
-   - The project location, Skill installation directory, and the Git commit used
-   - How I can talk to you in the future to save web pages, capture ideas, organize notes, start creating, and do weekly reviews
-   - Ask me: "If this project has been helpful, would you like to star the GitHub repo?"; if I say yes, use the currently available GitHub login/CLI/API to star `StarDust-AI-Labs/second-brain-skills`; if authentication is missing or tooling is unavailable, give me the repo link to do it manually
-
-Ground rules: check before acting; never use `git reset --hard`; do not delete my files, and do not download or run any installer, without my explicit confirmation; when facing a same-named Skill of unknown origin, uncommitted changes, or any overwrite risk, ask me first.
+Safety rules: inspect before changing anything; never use `git reset --hard`; do not delete or overwrite files of unknown origin or files with uncommitted changes; never commit `hub-state.json`.
 ```
 
 ---
@@ -193,60 +155,15 @@ second-brain/
 - **Agent-Adaptive Installation**: Copy the 6 top-level directories under `skills/` directly into the target skills directory. The pre-refactor methodology archive now lives in `docs/archive/methodology-legacy/`, is not distributed with Skill installation, and must not be installed as peer Skills.
 - **Runtime Boundary**: `scripts/`, `tests/`, `docs/`, `books/`, and `third-party/` are only for development, validation, documentation, and license archival. End users do not need them or Python at runtime.
 - **Multi-Agent Sync**: If you use multiple agent products simultaneously, after modifying Skill content, ensure you re-copy from the top-level `skills/` to each agent's target directory.
-- **Config Template**: `skills/second-brain-hub/hub-state.example.json` is the configuration template; copy it to create `hub-state.json` during installation.
+- **Config Template**: `skills/second-brain-hub/hub-state.example.json` is consumed only by `second-brain-hub/SETUP.md` to create the local `hub-state.json`; ordinary users do not copy or edit it manually.
 - **Local Runtime Config**: `hub-state.json` stores `storage_mode`, the selected Vault or Markdown workspace path/name, onboarding state, active projects, preferences, and the 12 problems list. It is local-only and must NOT be committed to version control.
 - **Runtime State**: Obsidian mode may store runtime records in `{vault_path}/.obsidian/hub-state.json`; Markdown mode keeps runtime state beside the Hub's local config and does not require `.obsidian/`.
 
 ### First-Time Setup
 
-If no valid storage configuration exists, the Hub runs a one-question onboarding flow. It can connect an existing Obsidian Vault, connect an existing Markdown folder, or create a minimal PARA workspace. The original request is resumed after setup; users do not need to repeat it.
+If no valid storage configuration exists, the runtime onboarding adapter completely executes the installed `second-brain-hub/SETUP.md`. This is the same SOP used immediately after prompt-based installation. It can connect an existing Obsidian Vault, connect an existing Markdown folder, or create a minimal PARA workspace, then resume the original request without asking the user to repeat it.
 
-Copy the config template and fill in your own Obsidian vault info. If installing the entire project, use the project-level template:
-
-```powershell
-Copy-Item skills\second-brain-hub\hub-state.example.json skills\second-brain-hub\hub-state.json
-```
-
-If installing only the `second-brain-hub` Skill to an agent, copy the template alongside the Skill directory:
-
-```powershell
-Copy-Item <second-brain-hub-skill-dir>\hub-state.example.json <second-brain-hub-skill-dir>\hub-state.json
-```
-
-Then edit the local `hub-state.json` only if you want to preconfigure storage manually:
-
-```json
-{
-  "preferences": {
-    "storage_mode": "obsidian",
-    "workspace_path": "<your Obsidian vault absolute path>",
-    "workspace_name": "<your Obsidian vault name>",
-    "vault_path": "<your Obsidian vault absolute path>",
-    "vault_name": "<your Obsidian vault name>"
-  }
-}
-```
-
-For a plain Markdown workspace:
-
-```json
-{
-  "preferences": {
-    "storage_mode": "markdown",
-    "workspace_path": "<your Markdown workspace absolute path>",
-    "workspace_name": "<your workspace name>"
-  }
-}
-```
-
-You can also use environment variables instead of creating the file:
-
-```powershell
-$env:SECOND_BRAIN_VAULT_PATH = "<your Obsidian vault absolute path>"
-$env:SECOND_BRAIN_VAULT_NAME = "<your Obsidian vault name>"
-```
-
-Markdown mode uses `SECOND_BRAIN_STORAGE_MODE=markdown`, `SECOND_BRAIN_WORKSPACE_PATH`, and `SECOND_BRAIN_WORKSPACE_NAME`.
+Manually copying the Skill does not create a separate setup path. On first use, the Hub detects the missing configuration and invokes the same `SETUP.md`. To initialize before the first note, ask the Agent: "Completely read the installed `second-brain-hub/SETUP.md` and use that SOP to initialize my knowledge base."
 
 ---
 
