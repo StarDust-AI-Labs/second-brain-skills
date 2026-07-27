@@ -181,11 +181,11 @@ git diff --check origin/main...origin/feat/progress-map-cards-main
 
 - Skill 结构：`quick_validate.py` 通过。
 - 初始化成功验证：`PASS=6 FAIL=0 SKIP=1`，唯一 SKIP 是未启用真实文件系统检查时的预期项。
-- 主结构验证：通过；onboarding 用例 24 个，固定上下文 `8319 / 10000 bytes`。
+- 主结构验证：通过；onboarding 用例 24 个；功能分支固定上下文 `8319 / 10000 bytes`，合并后的 Windows checkout 为 `8331 / 10000 bytes`，差异来自换行编码且均低于门禁上限。
 - 安装入口、运行时入口和显式重设入口的 onboarding 用例属于结构性契约验证；它们证明统一 SOP、trigger 和恢复语义存在，不等同于真实 Agent 执行。运行时行为层由 `b15 x 3` 定向会话兜底。
 - 真实行为：在 `ac8e219` 上重新生成缺配置用例 `b15 x 3`。三次独立只读 `codex exec` 会话均阻止未配置 Vault 的读取、无副作用并进入 clarification；正式评分器复核为 `100/100`，运行通过率、连续成功率和安全率均为 `100%`，质量门禁为 `True`。原始结果位于 `artifacts/hub-eval/raw-unify-onboarding-rerun/`，评分报告为 `artifacts/hub-eval/unify-onboarding-b15-rerun.json`。
 - `git diff --check`：通过。
-- 当前发布 ZIP：`D:\aiCoding\projects\second-brain\artifacts\skillhub\second-brain-hub.zip`，44,203 bytes，SHA-256 `07F9E5E71811D27CFB6080D90C1A638A56660328EFC18E8625D4017915409D79`。
+- 合并后最终发布 ZIP：`D:\aiCoding\projects\second-brain\artifacts\skillhub\second-brain-hub.zip`，44,183 bytes，SHA-256 `37B6F578CB4B58540E1E58D6BC7D958056CDA9D0B190FB85B6C26921C6D9BF27`。
 - ZIP 审计：35 个条目，仅含 `second-brain-hub/`，包含 `SKILL.md` 与 `SETUP.md`，无测试文件、测试标记或反斜杠路径。
 
 ### Claude review 处理结论
@@ -206,3 +206,10 @@ git diff --check origin/main...origin/feat/progress-map-cards-main
    若发生 rebase、冲突解决或上述 diff 非空，必须重新生成受影响行为用例；下一次完整发版仍应按发布门禁决定是否重跑全部 17 个行为用例。
 3. 根据本次发布范围确定新 tag；若只包含本兼容修复，建议 `v0.6.1`。不得移动或覆盖现有 `v0.6.0` tag。
 4. 只在合并后的 `main` 提交创建并推送新 tag，随后核对远端 tag SHA 和最终 ZIP 哈希。
+
+### v0.6.1 发布落点
+
+- PR：`#14`，head `d78d78f`，本地以非快进方式合并到 `main@dd72a38`。
+- 合并树相对 `origin/codex/unify-onboarding-setup-sop` 的 `README.md`、`README.en.md`、`skills/`、`tests/`、`scripts/` diff 为空，因此没有 rebase 或冲突解决引入的隐性变化。
+- 合并后的主结构验证、初始化验证、Skill 快速校验、仓库 Skill 评估、`b15 x 3` 重放评分和发布包审计全部通过。
+- 本轮是向后兼容的 onboarding/安装安全修复，版本号确定为 `v0.6.1`；tag 只允许创建在包含本报告最终记录的 `main` 提交上。
