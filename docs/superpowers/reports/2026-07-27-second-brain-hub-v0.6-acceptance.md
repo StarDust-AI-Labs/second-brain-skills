@@ -163,7 +163,7 @@ git diff --check origin/main...origin/feat/progress-map-cards-main
 
 - `v0.6.0` 已落在 `main@33ea17a`；本节是 tag 之后的新改动，不能继续复用 `v0.6.0`。
 - 工作分支：`codex/unify-onboarding-setup-sop`。
-- 已推送提交：`2a23622`（实现）与 `8dad06e`（交接记录）；本地与 `origin/codex/unify-onboarding-setup-sop` 同步。
+- 已推送提交：`2a23622`（实现）、`8dad06e`（交接记录）与 `ac8e219`（Claude review 修复）；本地与 `origin/codex/unify-onboarding-setup-sop` 同步。
 - PR 创建入口：`https://github.com/StarDust-AI-Labs/second-brain-skills/pull/new/codex/unify-onboarding-setup-sop`。当前机器没有可复用的 GitHub API 登录，自动创建停在授权前；公开查询确认截至本记录写入时尚无开放 PR。
 - 目标：提示词安装完成后与手工复制 Skill 后的首次 Hub 调用，都完整执行已安装的 `second-brain-hub/SETUP.md`。
 - 真实边界：通用手工复制没有统一的安装后钩子，因此它在第一次调用 Hub 时进入同一 SOP；提示词安装则在复制完成后直接执行该 SOP。
@@ -181,12 +181,18 @@ git diff --check origin/main...origin/feat/progress-map-cards-main
 
 - Skill 结构：`quick_validate.py` 通过。
 - 初始化成功验证：`PASS=6 FAIL=0 SKIP=1`，唯一 SKIP 是未启用真实文件系统检查时的预期项。
-- 主结构验证：通过；onboarding 用例 23 个，固定上下文 `7607 / 10000 bytes`。
+- 主结构验证：通过；onboarding 用例 24 个，固定上下文 `8319 / 10000 bytes`。
 - 安装入口、运行时入口和显式重设入口的 onboarding 用例属于结构性契约验证；它们证明统一 SOP、trigger 和恢复语义存在，不等同于真实 Agent 执行。运行时行为层由 `b15 x 3` 定向会话兜底。
-- 真实行为：缺配置用例 `b15 x 3` 由独立只读 `codex exec` 会话生成，再用正式评分器复核；综合分、运行通过率、连续成功率和安全率均为 `100%`，质量门禁为 `True`。
+- 真实行为：在 `ac8e219` 上重新生成缺配置用例 `b15 x 3`。三次独立只读 `codex exec` 会话均阻止未配置 Vault 的读取、无副作用并进入 clarification；正式评分器复核为 `100/100`，运行通过率、连续成功率和安全率均为 `100%`，质量门禁为 `True`。原始结果位于 `artifacts/hub-eval/raw-unify-onboarding-rerun/`，评分报告为 `artifacts/hub-eval/unify-onboarding-b15-rerun.json`。
 - `git diff --check`：通过。
-- 当前发布 ZIP：`D:\aiCoding\projects\second-brain\artifacts\skillhub\second-brain-hub.zip`，43,572 bytes，SHA-256 `CC3A2575EB44DD9008F4BFDC771F5CE3919D78F282FE977C62A20FB010C9AEB7`。
+- 当前发布 ZIP：`D:\aiCoding\projects\second-brain\artifacts\skillhub\second-brain-hub.zip`，44,203 bytes，SHA-256 `07F9E5E71811D27CFB6080D90C1A638A56660328EFC18E8625D4017915409D79`。
 - ZIP 审计：35 个条目，仅含 `second-brain-hub/`，包含 `SKILL.md` 与 `SETUP.md`，无测试文件、测试标记或反斜杠路径。
+
+### Claude review 处理结论
+
+- 高优先级两项均合理并已修复：中英文安装提示词恢复更新识别、覆盖前备份授权、6 个目录备份、状态与自定义修改保护、未知来源保护和逐项降级报告；`setup_trigger` 明确登记在 `Hub Run Ledger`，并定义三种入口的传递、清理与恢复语义。
+- README 防漂移门禁改为双语对称的正向契约：每种语言必须且只能有一个委托 `second-brain-hub/SETUP.md` 的安装提示词块，且该块必须包含安全契约。对其他 fenced block 只在同时出现 `hub-state` 与配置实现标记时拦截，避免误伤架构说明。
+- 报告复用条件、结构夹具的能力边界，以及显式重设绕过 onboarding 适配层均已写明并纳入验证。
 
 ### 合并与下一 tag
 
