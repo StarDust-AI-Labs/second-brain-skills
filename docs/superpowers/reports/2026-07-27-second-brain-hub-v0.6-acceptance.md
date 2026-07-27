@@ -163,6 +163,8 @@ git diff --check origin/main...origin/feat/progress-map-cards-main
 
 - `v0.6.0` 已落在 `main@33ea17a`；本节是 tag 之后的新改动，不能继续复用 `v0.6.0`。
 - 工作分支：`codex/unify-onboarding-setup-sop`。
+- 已推送提交：`2a23622`（本地与 `origin/codex/unify-onboarding-setup-sop` 同步）。
+- PR 创建入口：`https://github.com/StarDust-AI-Labs/second-brain-skills/pull/new/codex/unify-onboarding-setup-sop`。当前机器没有可复用的 GitHub API 登录，自动创建停在授权前；公开查询确认截至本记录写入时尚无开放 PR。
 - 目标：提示词安装完成后与手工复制 Skill 后的首次 Hub 调用，都完整执行已安装的 `second-brain-hub/SETUP.md`。
 - 真实边界：通用手工复制没有统一的安装后钩子，因此它在第一次调用 Hub 时进入同一 SOP；提示词安装则在复制完成后直接执行该 SOP。
 
