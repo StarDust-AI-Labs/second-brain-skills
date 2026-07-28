@@ -1,6 +1,7 @@
 import React from "react";
 import { Composition } from "remotion";
 import { Shot1Clutter } from "./shots/Shot1Clutter";
+import { Shot2Tangle } from "./shots/Shot2Tangle";
 
 /**
  * 第二大脑 SKILL 宣传片 · 镜头序列
@@ -37,6 +38,14 @@ export const Root: React.FC = () => {
         id="Shot1"
         component={Shot1Clutter}
         durationInFrames={SHOTS.shot1.duration}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Shot2"
+        component={Shot2Tangle}
+        durationInFrames={SHOTS.shot2.duration}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}
