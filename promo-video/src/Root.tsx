@@ -3,6 +3,7 @@ import { Composition } from "remotion";
 import { Shot1Clutter } from "./shots/Shot1Clutter";
 import { Shot1Apple } from "./shots/Shot1Apple";
 import { Shot2Tangle } from "./shots/Shot2Tangle";
+import { HubAwakeningV2 } from "./v2/HubAwakening";
 
 /**
  * 第二大脑 SKILL 宣传片 · 镜头序列
@@ -55,6 +56,14 @@ export const Root: React.FC = () => {
         id="Shot2"
         component={Shot2Tangle}
         durationInFrames={SHOTS.shot2.duration}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="HubAwakeningV2"
+        component={HubAwakeningV2}
+        durationInFrames={150}
         fps={FPS}
         width={WIDTH}
         height={HEIGHT}
