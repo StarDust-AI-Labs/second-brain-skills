@@ -1,6 +1,7 @@
 import React from "react";
 import { Composition } from "remotion";
 import { Shot1Clutter } from "./shots/Shot1Clutter";
+import { Shot1Apple } from "./shots/Shot1Apple";
 import { Shot2Tangle } from "./shots/Shot2Tangle";
 
 /**
@@ -37,6 +38,14 @@ export const Root: React.FC = () => {
       <Composition
         id="Shot1"
         component={Shot1Clutter}
+        durationInFrames={SHOTS.shot1.duration}
+        fps={FPS}
+        width={WIDTH}
+        height={HEIGHT}
+      />
+      <Composition
+        id="Shot1Apple"
+        component={Shot1Apple}
         durationInFrames={SHOTS.shot1.duration}
         fps={FPS}
         width={WIDTH}
