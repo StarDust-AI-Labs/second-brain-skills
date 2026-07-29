@@ -8,6 +8,7 @@
     "dev:v2": "remotion studio src/index-v2.ts",
     "render": "remotion render src/index.ts Promo out/promo.mp4",
     "render:v2": "remotion render src/index-v2.ts HubAwakeningRebuild out/v2-hub-awakening-rebuild.mp4 --codec=h264 --crf=16",
+    "render:v2:shot04": "remotion render src/index-v2.ts CodeWorkflowJourney out/v2-shot04-code-workflow.mp4 --codec=h264 --crf=16",
     "still": "remotion still"
   },
   "dependencies": {
