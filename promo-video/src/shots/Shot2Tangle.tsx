@@ -98,14 +98,12 @@ export const Shot2Tangle: React.FC = () => {
           return (
             <ShardCard
               key={i}
+              seed={s}
               x={x + jx}
               y={y + jy}
               rot={rot}
               scale={scale}
-              w={s.w}
-              h={s.h}
               opacity={1}
-              hasNotif={s.hasNotif}
               gray={die}
             />
           );
