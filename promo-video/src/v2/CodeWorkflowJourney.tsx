@@ -166,7 +166,7 @@ const DistillStage: React.FC<{frame: number}> = ({frame}) => {
   const compress = phase(local, 42, 70, easeInOut);
   return (
     <AbsoluteFill style={{opacity}}>
-      <div style={{position: "absolute", left: 512, top: 190, width: 760, height: 650, transform: `perspective(1200px) rotateY(${interpolate(sheetIn, [0, 1], [12, -5], clamp)}deg) translateX(${interpolate(sheetIn, [0, 1], [90, 0], clamp)}px) scale(${interpolate(compress, [0, 1], [1, 0.92], clamp)})`, transformOrigin: "center center", opacity: sheetIn}}>
+      <div style={{position: "absolute", left: 512, top: 154, width: 760, height: 620, transform: `perspective(1200px) rotateY(${interpolate(sheetIn, [0, 1], [12, -5], clamp)}deg) translateX(${interpolate(sheetIn, [0, 1], [90, 0], clamp)}px) scale(${interpolate(compress, [0, 1], [1, 0.92], clamp)})`, transformOrigin: "center center", opacity: sheetIn}}>
         <div style={{position: "absolute", inset: 0, border: "1px solid rgba(79,105,132,.62)", background: "linear-gradient(145deg, rgba(15,25,39,.96), rgba(4,8,15,.92))", boxShadow: "0 30px 80px rgba(0,0,0,.42)"}} />
         <div style={{position: "absolute", left: 48, top: 42, fontFamily: FONTS.mono, fontSize: 12, color: COLORS.cyan, letterSpacing: 0}}>SOURCE / KNOWLEDGE-WORKFLOW.MD</div>
         <div style={{position: "absolute", left: 48, top: 92, fontSize: 30, fontWeight: 760}}>让信息成为可复用的知识</div>
@@ -241,16 +241,16 @@ const ExpressStage: React.FC<{frame: number}> = ({frame}) => {
 };
 
 const stageMeta = [
-  {from: 0, to: 72, index: "01", en: "CAPTURE", cn: "捕获"},
-  {from: 58, to: 132, index: "02", en: "ORGANIZE", cn: "组织"},
-  {from: 116, to: 194, index: "03", en: "DISTILL", cn: "提炼"},
-  {from: 174, to: 240, index: "04", en: "EXPRESS", cn: "表达"},
+  {from: 0, to: 60, index: "01", en: "CAPTURE", cn: "捕获"},
+  {from: 60, to: 120, index: "02", en: "ORGANIZE", cn: "组织"},
+  {from: 120, to: 180, index: "03", en: "DISTILL", cn: "提炼"},
+  {from: 180, to: 240, index: "04", en: "EXPRESS", cn: "表达"},
 ] as const;
 
 const StageIdentity: React.FC<{frame: number}> = ({frame}) => (
   <div style={{position: "absolute", left: 112, top: 94, width: 720, height: 92}}>
     {stageMeta.map((stage) => {
-      const opacity = stageOpacity(frame, stage.from, stage.to);
+      const opacity = phase(frame, stage.from - 4, stage.from + 4, easeInOut) * (1 - phase(frame, stage.to - 4, stage.to + 4, easeInOut));
       const enter = phase(frame, stage.from - 4, stage.from + 10);
       return <div key={stage.en} style={{position: "absolute", inset: 0, opacity, transform: `translateY(${interpolate(enter, [0, 1], [12, 0], clamp)}px)`}}>
         <div style={{display: "flex", alignItems: "center", gap: 16, fontFamily: FONTS.mono, color: COLORS.cyan, letterSpacing: 0}}>
