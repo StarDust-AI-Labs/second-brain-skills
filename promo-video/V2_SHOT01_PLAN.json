@@ -1,0 +1,21 @@
+{
+  "plan_id": "promo-v2-shot01-information-flood",
+  "status": "builder-ready",
+  "duration_s": 4,
+  "duration_frames": 120,
+  "fps": 30,
+  "single_dominant_motion_idea": "真实信息载体从四周高速掠入并绕核心失控旋转，最终在一次抽空式压缩中坍成灰黑核心。",
+  "copy": "你保存了很多。",
+  "beats": [
+    {"frames": [0, 24], "name": "输入钩子", "visual": "语音、网页、PDF、聊天和视频片段在前 0.8 秒内连续出现"},
+    {"frames": [25, 78], "name": "信息风暴", "visual": "真实内容围绕核心加速堆积，摄影机持续推进"},
+    {"frames": [79, 103], "name": "压缩", "visual": "所有载体向核心坍缩，颜色与语义迅速丢失"},
+    {"frames": [104, 119], "name": "静止", "visual": "灰黑核心保持半拍静止，衔接 Shot 02"}
+  ],
+  "acceptance_criteria": [
+    "第 15 帧前至少出现三种真实信息类型",
+    "信息载体包含可辨识语义，不使用纯占位线条",
+    "主标题清晰可读且不遮挡风暴核心",
+    "末 16 帧核心位置、尺寸与 Shot 02 首帧一致"
+  ]
+}

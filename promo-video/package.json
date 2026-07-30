@@ -8,8 +8,14 @@
     "dev:v2": "remotion studio src/index-v2.ts",
     "render": "remotion render src/index.ts Promo out/promo.mp4",
     "render:v2": "remotion render src/index-v2.ts HubAwakeningRebuild out/v2-hub-awakening-rebuild.mp4 --codec=h264 --crf=16",
+    "render:v2:shot01": "remotion render src/index-v2.ts InformationFlood out/v2-shot01-information-flood.mp4 --codec=h264 --crf=16",
+    "render:v2:shot02": "remotion render src/index-v2.ts CollectionIsNotKnowledge out/v2-shot02-collection-is-not-knowledge.mp4 --codec=h264 --crf=16",
     "render:v2:shot04": "remotion render src/index-v2.ts CodeWorkflowJourney out/v2-shot04-code-workflow.mp4 --codec=h264 --crf=16",
     "render:v2:shot05": "remotion render src/index-v2.ts IntentToResults out/v2-shot05-intent-to-results.mp4 --codec=h264 --crf=16",
+    "render:v2:shot06": "remotion render src/index-v2.ts KnowledgeCrystallization out/v2-shot06-knowledge-crystallization.mp4 --codec=h264 --crf=16",
+    "render:v2:shot07": "remotion render src/index-v2.ts BrandLockup out/v2-shot07-brand-lockup.mp4 --codec=h264 --crf=16",
+    "render:v2:core": "remotion render src/index-v2.ts PromoV2Core out/v2-core-shots03-07.mp4 --codec=h264 --crf=16",
+    "render:v2:full": "remotion render src/index-v2.ts PromoV2Full out/v2-full-35s.mp4 --codec=h264 --crf=16",
     "still": "remotion still"
   },
   "dependencies": {

@@ -1,0 +1,21 @@
+{
+  "plan_id": "promo-v2-shot02-collection-is-not-knowledge",
+  "status": "builder-ready",
+  "duration_s": 4,
+  "duration_frames": 120,
+  "fps": 30,
+  "single_dominant_motion_idea": "摄影机缓慢逼近一个无连接、无输出的灰黑核心，直到内部首次出现青色扫描裂缝。",
+  "copy": "但收藏，不等于学会。",
+  "status": ["UNPROCESSED / 247", "CONNECTIONS / 0", "OUTPUT / 0"],
+  "beats": [
+    {"frames": [0, 40], "name": "问题锁定", "visual": "灰黑核心与三项失败状态建立因果"},
+    {"frames": [41, 86], "name": "逼近", "visual": "核心持续放大，漂浮状态逐渐失去活力"},
+    {"frames": [87, 119], "name": "扫描启动", "visual": "内部青色裂纹逐段点亮，外部文案降亮"}
+  ],
+  "acceptance_criteria": [
+    "核心为灰黑、不透明且无生命感",
+    "未处理、连接为零、输出为零三项状态全部清晰可读",
+    "第 87 帧前不出现高亮青色，裂纹是唯一模式变化",
+    "末帧核心中心与 Shot 03 首帧对齐在约 (1040,504)"
+  ]
+}

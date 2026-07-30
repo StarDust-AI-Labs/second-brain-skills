@@ -49,7 +49,7 @@ const outputs = [
 export const CodeWorkflowJourney: React.FC = () => {
   const frame = useCurrentFrame();
   const cameraPush = interpolate(frame, [0, 18, 228, DURATION - 1], [0.96, 1.02, 1.075, 1.13], {...clamp, easing: easeInOut});
-  const cameraX = interpolate(frame, [0, 60, 120, 180, DURATION - 1], [0, -18, 12, -14, 0], {...clamp, easing: easeInOut});
+  const cameraX = interpolate(frame, [0, 28, 60, 120, 180, DURATION - 1], [136, 0, -18, 12, -14, 0], {...clamp, easing: easeInOut});
   const cameraY = interpolate(frame, [0, 60, 120, 180, DURATION - 1], [0, 8, -6, 10, 0], {...clamp, easing: easeInOut});
 
   return (
@@ -93,9 +93,9 @@ const EntryIris: React.FC<{frame: number}> = ({frame}) => {
   const crackGlow = interpolate(frame, [0, 5, 13, 28], [0.7, 1, 0.78, 0], clamp);
   return (
     <AbsoluteFill style={{opacity: fade, pointerEvents: "none"}}>
-      <div style={{position: "absolute", left: 0, top: 0, bottom: 0, width: `calc(50% - ${gap / 2}px)`, background: "linear-gradient(90deg, #010205, #07101A 78%, #122432)", clipPath: "polygon(0 0, 100% 0, 96% 18%, 100% 37%, 95% 51%, 100% 68%, 96% 84%, 100% 100%, 0 100%)", transform: `scaleX(${recoil})`, transformOrigin: "left center", boxShadow: "16px 0 40px rgba(0,229,255,.08)"}} />
-      <div style={{position: "absolute", right: 0, top: 0, bottom: 0, width: `calc(50% - ${gap / 2}px)`, background: "linear-gradient(270deg, #010205, #07101A 78%, #122432)", clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%, 4% 84%, 0 68%, 5% 51%, 0 37%, 4% 18%)", transform: `scaleX(${recoil})`, transformOrigin: "right center", boxShadow: "-16px 0 40px rgba(0,229,255,.08)"}} />
-      <div style={{position: "absolute", left: "50%", top: 54, bottom: 54, width: 3 + open * 2, transform: `translateX(-50%) scaleY(${0.94 + prepare * 0.06})`, background: COLORS.cyan, opacity: crackGlow, boxShadow: "0 0 8px #00E5FF, 0 0 22px rgba(0,229,255,.55)"}} />
+      <div style={{position: "absolute", left: 0, top: 0, bottom: 0, width: `calc(57% - ${gap / 2}px)`, background: "linear-gradient(90deg, #010205, #07101A 78%, #122432)", clipPath: "polygon(0 0, 100% 0, 96% 18%, 100% 37%, 95% 51%, 100% 68%, 96% 84%, 100% 100%, 0 100%)", transform: `scaleX(${recoil})`, transformOrigin: "left center", boxShadow: "16px 0 40px rgba(0,229,255,.08)"}} />
+      <div style={{position: "absolute", right: 0, top: 0, bottom: 0, width: `calc(43% - ${gap / 2}px)`, background: "linear-gradient(270deg, #010205, #07101A 78%, #122432)", clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%, 4% 84%, 0 68%, 5% 51%, 0 37%, 4% 18%)", transform: `scaleX(${recoil})`, transformOrigin: "right center", boxShadow: "-16px 0 40px rgba(0,229,255,.08)"}} />
+      <div style={{position: "absolute", left: "57%", top: 54, bottom: 54, width: 3 + open * 2, transform: `translateX(-50%) scaleY(${0.94 + prepare * 0.06})`, background: COLORS.cyan, opacity: crackGlow, boxShadow: "0 0 8px #00E5FF, 0 0 22px rgba(0,229,255,.55)"}} />
     </AbsoluteFill>
   );
 };

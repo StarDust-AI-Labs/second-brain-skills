@@ -1,0 +1,27 @@
+{
+  "plan_id": "promo-v2-shot07-brand-lockup",
+  "status": "builder-ready",
+  "duration_s": 3,
+  "duration_frames": 90,
+  "fps": 30,
+  "canvas": {"w": 1920, "h": 1080, "aspect": "16:9", "safe_inset_px": 64},
+  "single_dominant_motion_idea": "知识晶体从高潮位置收拢为品牌标记，品牌信息按层级精准锁定，最终干净切黑。",
+  "copy": {
+    "title": "第二大脑 · Skill 生态",
+    "subtitle": "AI Agent 驱动的个人知识工作流系统",
+    "cta": "让知识，从收藏走向创造",
+    "tags": "OBSIDIAN / MARKDOWN / AGENT-NATIVE"
+  },
+  "beats": [
+    {"frames": [0, 28], "name": "标记归位", "visual": "承接 Shot 06 晶体，向左缩小并锁定为品牌标记"},
+    {"frames": [18, 58], "name": "品牌显影", "visual": "主标题、定位和 CTA 依次扫入"},
+    {"frames": [56, 80], "name": "稳定呼吸", "visual": "晶体与知识网络保持极弱呼吸"},
+    {"frames": [81, 89], "name": "切黑", "visual": "整体亮度快速、干净地归零"}
+  ],
+  "acceptance_criteria": [
+    "首帧晶体位置和材质与 Shot 06 末帧一致",
+    "品牌名、产品定位、CTA 和技术标签全部连续可读至少 18 帧",
+    "品牌层级清晰，CTA 不与主标题争夺第一视觉焦点",
+    "末帧为干净黑场，无残留发光边缘"
+  ]
+}

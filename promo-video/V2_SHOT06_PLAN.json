@@ -1,0 +1,26 @@
+{
+  "plan_id": "promo-v2-shot06-knowledge-crystallization",
+  "status": "builder-ready",
+  "duration_s": 4,
+  "duration_frames": 120,
+  "fps": 30,
+  "canvas": {"w": 1920, "h": 1080, "aspect": "16:9", "safe_inset_px": 64},
+  "single_dominant_motion_idea": "冷青知识节点加速聚合，在一次克制的暖金相变中凝结为承载文章、方案和视频脚本的知识晶体。",
+  "beats": [
+    {"frames": [0, 34], "name": "聚合", "visual": "承接 Shot 05 的节点与信息薄片，沿不同曲率向右侧中心收拢"},
+    {"frames": [35, 67], "name": "相变", "visual": "网络密度上升，冷青从中心向外逐步转为暖金"},
+    {"frames": [68, 96], "name": "结晶", "visual": "12 个黑金切面错峰锁合，内部闪现文章、方案、视频脚本"},
+    {"frames": [97, 119], "name": "稳定", "visual": "晶体稳定呼吸并保持向 Shot 07 的品牌标记姿态"}
+  ],
+  "copy": [
+    {"frames": [14, 78], "text": "知识管理的终点，不是收藏。"},
+    {"frames": [66, 119], "text": "是创造。"}
+  ],
+  "acceptance_criteria": [
+    "前 35 帧强调色保持冷青，暖金只从成果相变开始出现",
+    "节点聚合、相变、切面锁合和稳定四个阶段均有清晰动作",
+    "晶体必须呈现不透明切面与暖金内核，不可读成发光圆球",
+    "文章、方案、视频脚本三种成果至少各清晰出现一次",
+    "末帧晶体位置与尺寸可直接衔接 Shot 07 品牌收束"
+  ]
+}
