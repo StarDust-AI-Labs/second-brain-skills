@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content"
+        />
+
+        <!-- PWA Meta Tags -->
+        <meta name="theme-color" content="#ffffff" />
+        <meta name="description" content="AI-powered development assistant" />
+
+        <!-- iOS PWA Meta Tags -->
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="HAPI" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+
+        <!-- Favicon -->
+        <link rel="icon" href="/favicon.ico" sizes="48x48" />
+        <link rel="icon" href="/icon.svg" sizes="any" type="image/svg+xml" />
+
+        <!-- Safari Pinned Tab -->
+        <link rel="mask-icon" href="/mask-icon.svg" color="#111827" />
+
+        <script>
+            (function () {
+                try {
+                    var raw = localStorage.getItem('hapi-font-scale')
+                    var scale = Number(raw)
+                    if (scale === 0.8 || scale === 0.9 || scale === 1 || scale === 1.1 || scale === 1.2) {
+                        document.documentElement.style.setProperty('--app-font-scale', String(scale))
+                    }
+                } catch (error) {
+                    // Ignore storage errors.
+                }
+            })()
+        </script>
+        <script>
+            (function () {
+                var lightColor = '#ffffff'
+                var darkColor = '#1c1c1e'
+                var oledColor = '#000000'
+                var themeBackgrounds = {
+                    notion: { light: '#fafafa', dark: '#191919' },
+                    one: { light: '#fbfbff', dark: '#1f2433' },
+                    proof: { light: '#f8f7f2', dark: '#18231f' },
+                    raycast: { light: '#ffffff', dark: '#201617' },
+                    'rose-pine': { light: '#fffaf3', dark: '#191724' },
+                    solarized: { light: '#fdf6e3', dark: '#002b36' },
+                    vercel: { light: '#ffffff', dark: '#000000' },
+                    'vs-code-plus': { light: '#ffffff', dark: '#1e1e1e' },
+                    xcode: { light: '#f7f9ff', dark: '#1f2024' },
+                    linear: { light: '#f7f7fb', dark: '#08090d' },
+                    lobster: { light: '#fff7f4', dark: '#161821' },
+                    material: { light: '#fffbfe', dark: '#1c1b1f' },
+                    matrix: { light: '#f5fff7', dark: '#030806' },
+                    monokai: { light: '#f8f7ef', dark: '#272822' },
+                    'night-owl': { light: '#fbfdff', dark: '#011627' },
+                    nord: { light: '#eceff4', dark: '#2e3440' },
+                }
+
+                function getInitialScheme() {
+                    try {
+                        var appearance = localStorage.getItem('hapi-appearance')
+                        if (appearance === 'dark' || appearance === 'light' || appearance === 'oled') return appearance
+                    } catch (error) {
+                        // Ignore storage errors.
+                    }
+
+                    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+                        ? 'dark'
+                        : 'light'
+                }
+
+                var scheme = getInitialScheme()
+                var colorTheme = 'default'
+                try {
+                    var storedColorTheme = localStorage.getItem('hapi-color-theme')
+                    if (storedColorTheme && themeBackgrounds[storedColorTheme]) colorTheme = storedColorTheme
+                } catch (error) {
+                    // Ignore storage errors.
+                }
+                var paletteScheme = scheme === 'light' ? 'light' : 'dark'
+                var color = colorTheme === 'default'
+                    ? (scheme === 'oled' ? oledColor : (scheme === 'dark' ? darkColor : lightColor))
+                    : themeBackgrounds[colorTheme][paletteScheme]
+                document.documentElement.setAttribute('data-theme', scheme)
+                document.documentElement.setAttribute('data-color-theme', colorTheme)
+                document.documentElement.style.backgroundColor = color
+                document.querySelector('meta[name="theme-color"]').setAttribute('content', color)
+            })()
+        </script>
+        <!-- Prevent flash of mismatched background on app launch -->
+        <style>
+            html { background: #fff }
+            html[data-theme="dark"] { background: #1c1c1e; color-scheme: dark }
+            html[data-theme="oled"] { background: #000; color-scheme: dark }
+            html[data-color-theme]:not([data-color-theme="default"]) { background: inherit }
+        </style>
+
+        <title>HAPI</title>
+      <script type="module" crossorigin src="/assets/index-D5to7wqZ.js"></script>
+      <link rel="modulepreload" crossorigin href="/assets/vendor-assistant-COJXKNyK.js">
+      <link rel="modulepreload" crossorigin href="/assets/vendor-voice-CalYGbxd.js">
+      <link rel="modulepreload" crossorigin href="/assets/vendor-terminal-DNQjppGp.js">
+      <link rel="stylesheet" crossorigin href="/assets/vendor-assistant-CpKl2eGN.css">
+      <link rel="stylesheet" crossorigin href="/assets/vendor-terminal-Dv47L9lv.css">
+      <link rel="stylesheet" crossorigin href="/assets/index-Dr3TsqXO.css">
+    <link rel="manifest" href="/manifest.webmanifest"></head>
+    <body>
+        <div id="root"></div>
+    </body>
+</html>
