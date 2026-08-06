@@ -239,4 +239,49 @@ ngrok 隧道在 8/3 ~ 8/6 期间连续运行，期间用户首次访问时点击
 | 修复方案 | 本地 bundle-proxy + JS bundle 三处 patch（fetch / socket.io / EventSource） |
 | 修复成本 | 零费用、零注册、零前端代码改动 |
 | 修复完成时间 | 2026-08-06 17:15 |
-| 记录人 | Marvis
+| 记录人 | Marvis |
+
+## 十三、复核与正式修复（2026-08-07 00:27）
+
+后续现场复核发现，第十一节的临时方案并不是可持续修复：
+
+- `bundle-proxy.py` 和 patched bundle 位于聊天工具的临时目录，没有纳入仓库；
+- 代理使用 Python `urllib` 转发普通 HTTP，不能正确透传 WebSocket Upgrade；
+- ngrok 进程已经退出，`127.0.0.1:4040` 不可访问，公网域名完全离线；
+- `3007` 上残留的 Python 进程只能证明临时代理尚存，不能证明公网链路可用；
+- 同源 EventSource 和 WebSocket 会携带浏览器 cookie。"不能设置自定义 header"不能推出"不会携带 cookie"，因此第六、十节对长连接必然被拦截的表述不能作为最终根因结论。
+
+### 已实施
+
+1. 将 ngrok `3.39.10` 放到稳定位置 `%LOCALAPPDATA%\ngrok\ngrok.exe`；
+2. 恢复原生链路 `ngrok -> http://127.0.0.1:3006`，不再经过 `3007` 注入代理；
+3. 固定公网地址仍为 `https://foyer-water-pacifist.ngrok-free.dev`；
+4. ngrok stdout/stderr 落盘到 `%LOCALAPPDATA%\ngrok\logs\`；
+5. 新增 `scripts/hapi-remote-tunnel.ps1`，支持启动、状态检查、停止，以及安装每 5 分钟自愈的计划任务。
+
+### 运维命令
+
+```powershell
+# 查看 HAPI 与隧道状态
+.\scripts\hapi-remote-tunnel.ps1 Status
+
+# 启动或修复隧道
+.\scripts\hapi-remote-tunnel.ps1 Start
+
+# 安装登录启动 + 每 5 分钟健康自愈任务
+.\scripts\hapi-remote-tunnel.ps1 InstallTask
+```
+
+### 已验证
+
+- 本地 HAPI `GET /`：200，5714 字节；
+- ngrok 管理接口：active，upstream 为 `http://127.0.0.1:3006`；
+- 公网地址加 `ngrok-skip-browser-warning: 69420`：200，返回 5714 字节 HAPI 页面；
+- 公网认证、`/api/machines`、`/api/sessions`：均为 200；
+- Socket.IO polling：200，返回有效 sid 并声明可升级 WebSocket；
+- 真实 `wss://.../socket.io/?EIO=4&transport=websocket`：连接状态 Open，收到 Engine.IO open frame；
+- Windows 自愈任务：主动停止 ngrok 后成功拉起新进程，最近执行结果为 0；
+- 旧 `3007` Python 代理：已终止，不再保留双链路；
+- iPad Safari UA 首次访问：返回 ngrok 免费版 2803 字节警告页，说明首次访问仍需点击一次 **Visit Site**。
+
+> 长期建议：若希望彻底消除首次警告页，启用 Tailscale Funnel（本机 Tailscale 已登录）或使用无警告页的正式公网域名。临时 patch bundle 不再推荐。
