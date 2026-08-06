@@ -183,3 +183,60 @@ ngrok 隧道在 8/3 ~ 8/6 期间连续运行，期间用户首次访问时点击
 即使用 ngrok 付费版消除了拦截页，ngrok 进程的不稳定重启仍然是隐患。建议同时：
 - 将 ngrok 配置为 Windows 服务或计划任务自动重启
 - 或切换到 Cloudflare Tunnel / Tailscale 等更稳定的隧道方案
+
+## 十一、修复实施（2026-08-06 17:15）
+
+### 修复策略
+
+免注册、免付费方案：在 hapi hub 与 ngrok 之间插入本地代理层（端口 3007），拦截 JS bundle 请求并返回 patched 版本。
+
+### Bundle 三处 Patch
+
+| 注入点 | 位置 | 修改内容 |
+|--------|------|---------|
+| Fetch API 客户端 (`Ld.request`) | `u&&i.set("authorization",...)` 之后 | 插入 `i.set("ngrok-skip-browser-warning","69420")` |
+| Socket.IO Manager (`Pp`) | `{path:"/socket.io/"` 之前 | 插入 `extraHeaders:{"ngrok-skip-browser-warning":"69420"}` |
+| EventSource | Bundle 开头 | 注入 fetch-based polyfill，劫持 `new EventSource()`，对 ngrok 域名自动加 skip header |
+
+### 架构变更
+
+```
+之前: iPad → ngrok云端 → ngrok agent → hub:3006
+现在: iPad → ngrok云端 → ngrok agent → proxy:3007 → hub:3006
+                                           ↑
+                              拦截 /assets/index-*.js
+                              返回 patched bundle
+```
+
+### 部署状态
+
+| 组件 | 状态 |
+|------|------|
+| hapi hub (PID 23268, :3006) | ✅ 运行中 |
+| bundle-proxy (PID 自动, :3007) | ✅ 运行中 |
+| ngrok (PID 30076, → :3007) | ✅ 运行中 |
+| 隧道 URL | https://foyer-water-pacifist.ngrok-free.dev（域名未变） |
+| Patched bundle 验证 | ✅ 1779152 bytes，含 ngrok-skip-browser-warning header |
+
+### 远程设备操作
+
+在 iPad 上重新访问 https://foyer-water-pacifist.ngrok-free.dev：
+1. 如看到 ngrok 拦截页，点击 "Visit Site"（仅此一次）
+2. 页面加载后，patched bundle 自动生效
+3. 后续即使 ngrok 重启、cookie 失效，patched bundle 发起的请求自带 skip header，不受拦截页影响
+
+### 注意事项
+
+- bundle-proxy 脚本位于 `C:\Users\24424\AppData\Roaming\Tencent\Marvis\User\oAN1i2UTJrlp8XU_bgFrsrjK6Mhc\workspace\conv_19fd63f82b7_2d6d58ce1a40\temp\bundle-proxy.py`
+- 若系统重启，需重新启动 bundle-proxy 和 ngrok（ngrok 需指向 3007）
+- 若 hapi hub 更新（bundle 文件名变化），需重新 patch 新 bundle
+
+## 十二、总结
+
+| 项目 | 内容 |
+|------|------|
+| 根因 | ngrok 免费版浏览器拦截页阻断 SSE/WebSocket 长连接；ngrok 8/6 15:12 重启导致 cookie 失效触发 |
+| 修复方案 | 本地 bundle-proxy + JS bundle 三处 patch（fetch / socket.io / EventSource） |
+| 修复成本 | 零费用、零注册、零前端代码改动 |
+| 修复完成时间 | 2026-08-06 17:15 |
+| 记录人 | Marvis
