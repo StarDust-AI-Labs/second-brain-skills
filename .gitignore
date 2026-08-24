@@ -3,6 +3,10 @@
 *.zip
 *.txt
 
+# 前端构建产物（含大型二进制，如 Remotion 打包的 Chrome）
+node_modules/
+promo-video/node_modules/
+
 # Obsidian
 .obsidian/workspace*.json
 .obsidian/workspace-mobile.json
