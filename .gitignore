@@ -23,5 +23,8 @@
 # Local evaluation reports
 artifacts/
 
+# Hub runtime local run ledgers (generated at runtime)
+**/hub-runs/
+
 # 本地代理说明，不纳入版本控制（仅仓库根目录）
 /AGENT.md
