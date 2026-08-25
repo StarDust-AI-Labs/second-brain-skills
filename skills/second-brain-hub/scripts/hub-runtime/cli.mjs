@@ -265,6 +265,10 @@ export function cmdCommit(flags, { contracts = loadContracts(), now = new Date()
   transition(ledger, "WRITE_COMMITTED", { at: now });
   const writeStep = writeStepOf(scene);
   if (writeStep && !ledger.steps.completed.includes(writeStep)) ledger.steps.completed.push(writeStep);
+  for (const [key, value] of Object.entries(flags.output)) {
+    ledger.steps.outputs[key] = value;
+    recordEvent(ledger, "output", `${key}=${value}`, now);
+  }
   ledger.commit = { committed: true, receipt: { ok: true, path: target, ...receipt, at: now.toISOString() } };
   recordEvent(ledger, "write-committed", `${writeStep}: ${target}`, now);
   saveLedger(stateDir, ledger);

@@ -6,11 +6,18 @@ import { spawnSync } from "node:child_process";
 
 const repository = path.resolve(import.meta.dirname, "..");
 const installer = path.join(repository, "skills", "second-brain-hub", "scripts", "install.mjs");
+const portableInstaller = path.join(repository, "install.mjs");
 const sourceSkills = path.join(repository, "skills");
 const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "second-brain-install-"));
 
 function run(args) {
   const result = spawnSync(process.execPath, [installer, ...args], { encoding: "utf8" });
+  assert.equal(result.stderr.includes("Error"), false, result.stderr);
+  return { ...result, json: JSON.parse(result.stdout) };
+}
+
+function runPortable(args) {
+  const result = spawnSync(process.execPath, [portableInstaller, ...args], { encoding: "utf8" });
   assert.equal(result.stderr.includes("Error"), false, result.stderr);
   return { ...result, json: JSON.parse(result.stdout) };
 }
@@ -45,6 +52,7 @@ try {
   for (const skill of ["second-brain-hub", "defuddle", "obsidian-markdown", "obsidian-cli", "obsidian-bases", "json-canvas"]) {
     assert.equal(fs.existsSync(path.join(target, skill, "SKILL.md")), true, `${skill} should be installed`);
   }
+  assert.equal(fs.existsSync(path.join(target, "second-brain-hub", "hub-runs")), false);
   assert.equal(fs.existsSync(path.join(vault, ".obsidian")), true);
   assert.equal(fs.existsSync(path.join(target, ".second-brain-install.json")), true);
   const statePath = path.join(target, "second-brain-hub", "hub-state.json");
@@ -67,6 +75,15 @@ try {
   assert.equal(fs.readdirSync(target).some((name) => name.startsWith(".second-brain-backup-")), true);
   const preserved = JSON.parse(fs.readFileSync(statePath, "utf8").replace(/^\uFEFF/, ""));
   assert.equal(preserved.preferences.workspace_name, "Preserved State");
+
+  const portableDryRun = runPortable([
+    "--skills-dir", path.join(temporaryRoot, "portable-agent-skills"),
+    "--source-dir", sourceSkills,
+    "--dry-run",
+    "--agent", "test-agent",
+  ]);
+  assert.equal(portableDryRun.status, 2);
+  assert.equal(portableDryRun.json.status, "need-input");
 
   const unsafe = run([
     "--skills-dir", path.parse(temporaryRoot).root,

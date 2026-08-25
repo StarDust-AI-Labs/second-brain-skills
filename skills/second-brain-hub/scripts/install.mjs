@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const SKILLS = [
   "second-brain-hub",
@@ -21,10 +22,7 @@ const HIDDEN_DEPENDENCY_NAMES = new Set([
 ]);
 
 const EXIT = { ok: 0, failed: 1, needInput: 2 };
-const SCRIPT_DIR = path.dirname(new URL(import.meta.url).pathname);
-const SCRIPT_PATH = process.platform === "win32"
-  ? decodeURIComponent(SCRIPT_DIR).replace(/^\//, "")
-  : decodeURIComponent(SCRIPT_DIR);
+const SCRIPT_PATH = path.dirname(fileURLToPath(import.meta.url));
 
 function parseArgs(argv) {
   const flags = { _: [] };
@@ -181,7 +179,8 @@ function chooseRecommended(candidates) {
     if (candidate.toLowerCase().includes(".workbuddy")) score += 10;
     return { candidate, score };
   }).sort((a, b) => b.score - a.score);
-  if (scored.length === 1 || scored[0].score > scored[1].score) return scored[0].candidate;
+  if (scored.length === 1) return scored[0].candidate;
+  if (scored[0].score >= 100 && scored[0].score > scored[1].score) return scored[0].candidate;
   return null;
 }
 
@@ -196,6 +195,14 @@ function parseInitOutput(output) {
 function formatSelfCheck({ agent, mode, result, failedStage = "none", gitAvailable }) {
   const osName = process.platform === "win32" ? "windows" : process.platform === "darwin" ? "macos" : process.platform;
   return `【安装自检】platform=${agent} | os=${osName} | mode=${mode || "none"} | node=${process.version} | git=${gitAvailable ? "yes" : "no"} | result=${result} | failed_stage=${failedStage}`;
+}
+
+function sourceCopyFilter(source) {
+  const name = path.basename(source);
+  return name !== "hub-state.json"
+    && name !== "hub-runs"
+    && !name.startsWith(".second-brain-backup-")
+    && name !== ".second-brain-install.json";
 }
 
 function copySkillSet(sourceRoot, targetRoot, mode) {
@@ -221,7 +228,7 @@ function copySkillSet(sourceRoot, targetRoot, mode) {
   for (const name of SKILLS) {
     const source = path.join(sourceRoot, name);
     const target = path.join(targetRoot, name);
-    fs.cpSync(source, target, { recursive: true, force: true });
+    fs.cpSync(source, target, { recursive: true, force: true, filter: sourceCopyFilter });
   }
 
   if (existingState) {
@@ -315,7 +322,14 @@ function main(argv) {
   let exitCode = EXIT.ok;
   let reason = null;
 
-  const candidates = candidateDirectories();
+  try {
+    sourceRoot = findSourceRoot(flags["source-dir"]);
+  } catch (error) {
+    stage(stages, "stage-0-environment", "fail", error.message, "provide a valid --source-dir");
+    return finish({ stages, dryRun, exitCode: EXIT.failed, targetRoot, sourceRoot, selfCheck, reason: error.message });
+  }
+
+  const candidates = candidateDirectories().filter((candidate) => !sourceRoot || path.resolve(candidate) !== path.resolve(sourceRoot));
   let explicitTarget = null;
   try {
     explicitTarget = flags["skills-dir"] ? assertSafeDirectory(flags["skills-dir"], "skills-dir") : null;
@@ -351,12 +365,6 @@ function main(argv) {
   }
   stage(stages, "stage-1-mode", "ok", `${installMode} mode selected`, "locate local source Skills", { mode: installMode, existing_skills: existing });
 
-  try {
-    sourceRoot = findSourceRoot(flags["source-dir"]);
-  } catch (error) {
-    stage(stages, "stage-2-source", "fail", error.message, "provide a valid --source-dir");
-    return finish({ stages, dryRun, exitCode: EXIT.failed, targetRoot, sourceRoot, selfCheck, reason: error.message });
-  }
   if (!sourceRoot) {
     stage(stages, "stage-2-source", "need-input", "The installer could not locate a local source containing all six Skills", "rerun with --source-dir <absolute path>");
     return finish({ stages, dryRun, exitCode: EXIT.needInput, targetRoot, sourceRoot, selfCheck, reason: "source Skills not found" });

@@ -48,6 +48,21 @@
 
 ***
 
+## 本地安装包入口
+
+面向离线交付时，使用仓库或解压包根目录的 `install.mjs`。它由 Agent 调用，默认只预览；确认后才以 `--yes` 实际复制文件。核心初始化继续复用 `second-brain-hub/scripts/init-workspace.mjs`。
+
+```text
+node "<安装包目录>/install.mjs" --skills-dir "<当前 Agent 实际使用的 skills 目录>" --dry-run
+node "<安装包目录>/install.mjs" --skills-dir "<当前 Agent 实际使用的 skills 目录>" --vault "<用户确认的知识库绝对路径>" --mode obsidian --yes
+```
+
+脚本支持 Windows、macOS 和 Linux 上的 Node.js；若存在多个候选 skills 目录或已有来源不明的同名 Skill，会返回 `need-input`，由 Agent 用大白话向用户确认，而不是猜测或覆盖。
+
+开发者可运行 `scripts/build-offline-install-package.ps1` 生成包含根目录入口、6 个 Skill 和 ZIP 的离线交付包。
+
+***
+
 ## 架构概览
 
 > 四层架构：输入层 → Agent / Hub 层 → SKILL 层 → 存储层

@@ -175,6 +175,24 @@ test("只读场景：探索查询无需写入前置即可完成", () => {
   assert.equal(fin.json.card.includes("【位置】"), false);
 });
 
+test("写入提交登记输出后，提炼场景可以完成结算", () => {
+  const { dir, storagePath } = makeStateDir();
+  const start = run(["start", "--state-dir", dir]);
+  const runId = start.json.run_id;
+  run(["route", "--state-dir", dir, "--run-id", runId, "--scene", "distill", "--user-text", "提炼这篇笔记"]);
+  run(["step", "--state-dir", dir, "--run-id", runId, "--step", "obsidian-cli/search", "--evidence", "found", "--output", "selected_note=source.md"]);
+  run(["step", "--state-dir", dir, "--run-id", runId, "--step", "obsidian-cli/read", "--evidence", "read"]);
+  run(["step", "--state-dir", dir, "--run-id", runId, "--step", "progressive-summarization", "--evidence", "distilled", "--output", "distill_level=2"]);
+  const target = path.join(storagePath, "source.md");
+  fs.writeFileSync(target, "updated\n", "utf8");
+  const preflight = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--auth"]);
+  assert.equal(preflight.code, 0);
+  const committed = run(["commit", "--state-dir", dir, "--run-id", runId, "--token", preflight.json.write_token,
+    "--target-path", target, "--receipt", '{"operation":"edit"}', "--output", "updated_markdown=updated markdown"]);
+  assert.equal(committed.code, 0);
+  assert.equal(run(["finish", "--state-dir", dir, "--run-id", runId]).code, 0);
+});
+
 test("status 输出当前台账与地图卡", () => {
   const { dir } = makeStateDir();
   const runId = run(["start", "--state-dir", dir]).json.run_id;
