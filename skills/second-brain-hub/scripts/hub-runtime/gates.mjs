@@ -1,6 +1,7 @@
 // 写前置评估、失败关闭的写门禁、完成前验证器。
 import path from "node:path";
 import crypto from "node:crypto";
+import fs from "node:fs";
 
 export function normalize(p) {
   return path.resolve(p);
@@ -15,6 +16,40 @@ export function isInsideRoot(root, target) {
   return t.startsWith(r.endsWith(path.sep) ? r : r + path.sep);
 }
 
+function existingAncestor(p) {
+  let current = path.resolve(p);
+  while (!fs.existsSync(current)) {
+    const parent = path.dirname(current);
+    if (parent === current) return null;
+    current = parent;
+  }
+  return current;
+}
+
+export function realPathInsideRoot(root, target) {
+  try {
+    if (!fs.existsSync(root)) return { pass: true, note: "root existence deferred to runtime configuration" };
+    if (fs.lstatSync(root).isSymbolicLink()) return { pass: false, reason: "storage root cannot be a symbolic link or junction" };
+    const realRoot = fs.realpathSync(root);
+    const ancestor = existingAncestor(target);
+    if (!ancestor) return { pass: false, reason: "target has no existing ancestor" };
+    const realAncestor = fs.realpathSync(ancestor);
+    if (!isInsideRoot(realRoot, realAncestor) && realAncestor !== realRoot) {
+      return { pass: false, reason: "target resolves outside confirmed storage" };
+    }
+    let current = path.resolve(target);
+    while (current !== path.resolve(root)) {
+      if (fs.existsSync(current) && fs.lstatSync(current).isSymbolicLink()) {
+        return { pass: false, reason: "symbolic link or junction is not allowed" };
+      }
+      const parent = path.dirname(current);
+      if (parent === current) break;
+      current = parent;
+    }
+    return { pass: true, real_root: realRoot };
+  } catch (err) { return { pass: false, reason: `real path validation failed: ${err.message}` }; }
+}
+
 function gateTargetPath(ledger, targetPath) {
   if (!targetPath) return { pass: false, reason: "target_path missing" };
   if (!path.isAbsolute(targetPath)) return { pass: false, reason: "target_path must be absolute" };
@@ -23,19 +58,28 @@ function gateTargetPath(ledger, targetPath) {
   if (!isInsideRoot(ledger.storage_path, targetPath)) {
     return { pass: false, reason: "target outside confirmed storage or is storage root" };
   }
+  const real = realPathInsideRoot(ledger.storage_path, targetPath);
+  if (!real.pass) return real;
   return { pass: true };
 }
 
 function gateTemplate(templateContent, templatePath) {
   const content = templateContent ?? "";
-  const hasFrontmatter = /^---\r?\n[\s\S]*?\r?\n---/.test(content);
-  if (content && hasFrontmatter) return { pass: true };
-  if (templatePath) return { pass: true, note: "template file registered" };
-  return { pass: false, reason: "final_markdown with frontmatter required before write" };
+  if (!content) return { pass: false, reason: "final_markdown required before write" };
+  const frontmatter = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+  if (!frontmatter) return { pass: false, reason: "frontmatter required" };
+  const required = ["source", "captured", "status", "tags", "distill_level"];
+  if (required.some((key) => !new RegExp(`^${key}:`, "m").test(frontmatter[1]))) {
+    return { pass: false, reason: "required frontmatter fields missing" };
+  }
+  if (!/^#\s+.+/m.test(frontmatter[2])) {
+    return { pass: false, reason: "title required" };
+  }
+  return { pass: true, template_path: templatePath ?? null };
 }
 
 export function evaluatePreflight(ledger, scene, {
-  targetPath = null, templateContent = null, templatePath = null, auth = false,
+  targetPath = null, sourcePath = null, templateContent = null, templatePath = null, auth = false,
 } = {}) {
   const gates = {};
   const mode = scene.mode;
@@ -46,8 +90,8 @@ export function evaluatePreflight(ledger, scene, {
     gates["template-ready"] = gateTemplate(templateContent, templatePath);
   }
   if (mode === "move-or-delete") {
-    gates["destination-or-delete-confirmation"] = auth
-      ? { pass: true }
+    gates["destination-or-delete-confirmation"] = auth && sourcePath
+      ? { pass: true, source_path: sourcePath }
       : { pass: false, reason: "explicit per-item delete/move confirmation required" };
   }
   const write_allowed = Object.keys(gates).length > 0 && Object.values(gates).every((g) => g.pass);

@@ -35,6 +35,37 @@ Use a PowerShell line-number formatter instead of relying on `nl`.
 
 ---
 
+## [ERR-20260825-003] powershell-json-argument-escaping
+
+**Logged**: 2026-08-25T20:20:00+08:00
+**Priority**: low
+**Status**: resolved
+**Area**: tools
+
+### Summary
+The first Runtime commit attempt passed escaped JSON as a literal PowerShell argument, so the receipt parser rejected it.
+
+### Error
+`receipt is not valid JSON`
+
+### Context
+- Operation: commit the approved review note through Hub Runtime.
+- The file write had already completed; only the audit commit command failed.
+
+### Suggested Fix
+Build the receipt with PowerShell `ConvertTo-Json -Compress` and pass the resulting variable as one argument.
+
+### Metadata
+- Reproducible: yes
+- Related Files: none
+- Pattern-Key: tools.powershell-json-args
+
+### Resolution
+- **Resolved**: 2026-08-25T20:20:00+08:00
+- **Notes**: Retried with a structured JSON variable; no duplicate file write was performed.
+
+---
+
 ## [ERR-20260825-003] offline-installer-layout
 
 **Logged**: 2026-08-25T06:18:00+08:00

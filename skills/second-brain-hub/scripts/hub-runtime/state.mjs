@@ -81,18 +81,22 @@ export function runsDir(stateDir) {
 }
 
 export function ledgerPath(stateDir, runId) {
+  if (!/^run-\d{14}-[0-9a-f]{6}$/.test(runId || "")) throw new Error("invalid run_id");
   return path.join(runsDir(stateDir), `${runId}.json`);
 }
 
 export function saveLedger(stateDir, ledger) {
   fs.mkdirSync(runsDir(stateDir), { recursive: true });
   const file = ledgerPath(stateDir, ledger.run_id);
-  fs.writeFileSync(file, `${JSON.stringify(ledger, null, 2)}\n`, "utf8");
+  const temp = path.join(runsDir(stateDir), `.${ledger.run_id}.${process.pid}.${crypto.randomBytes(4).toString("hex")}.tmp`);
+  fs.writeFileSync(temp, `${JSON.stringify(ledger, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
+  fs.renameSync(temp, file);
   return file;
 }
 
 export function loadLedger(stateDir, runId) {
-  const file = ledgerPath(stateDir, runId);
+  let file;
+  try { file = ledgerPath(stateDir, runId); } catch { throw new Error(`run not found: ${runId}`); }
   if (!fs.existsSync(file)) throw new Error(`run not found: ${runId}`);
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
