@@ -4,6 +4,37 @@ Command failures and integration errors.
 
 ---
 
+## [ERR-20260825-002] cross-platform-line-number-tool
+
+**Logged**: 2026-08-25T16:00:00+08:00
+**Priority**: low
+**Status**: resolved
+**Area**: tools
+
+### Summary
+The review command assumed the Unix `nl` utility was available in PowerShell.
+
+### Error
+`nl : The term 'nl' is not recognized as the name of a cmdlet`
+
+### Context
+- Operation: print source files with line numbers during a Windows code review.
+- Environment: PowerShell on Windows.
+
+### Suggested Fix
+Use a PowerShell line-number formatter instead of relying on `nl`.
+
+### Metadata
+- Reproducible: yes
+- Related Files: none
+- Pattern-Key: tools.cross-platform-line-numbers
+
+### Resolution
+- **Resolved**: 2026-08-25T16:00:00+08:00
+- **Notes**: Switched the review commands to native PowerShell formatting.
+
+---
+
 ## [ERR-20260825-003] offline-installer-layout
 
 **Logged**: 2026-08-25T06:18:00+08:00
