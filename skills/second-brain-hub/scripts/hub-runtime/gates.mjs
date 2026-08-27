@@ -28,7 +28,8 @@ function existingAncestor(p) {
 
 export function realPathInsideRoot(root, target) {
   try {
-    if (!fs.existsSync(root)) return { pass: true, note: "root existence deferred to runtime configuration" };
+    if (!root) return { pass: false, reason: "storage root not configured" };
+    if (!fs.existsSync(root)) return { pass: false, reason: "storage root does not exist" };
     if (fs.lstatSync(root).isSymbolicLink()) return { pass: false, reason: "storage root cannot be a symbolic link or junction" };
     const realRoot = fs.realpathSync(root);
     const ancestor = existingAncestor(target);
@@ -63,7 +64,8 @@ function gateTargetPath(ledger, targetPath) {
   return { pass: true };
 }
 
-function gateTemplate(templateContent, templatePath) {
+// 模板/写入内容结构校验：frontmatter 必需字段 + 标题。preflight 与 write 共用同一标准。
+export function gateTemplate(templateContent, templatePath) {
   const content = templateContent ?? "";
   if (!content) return { pass: false, reason: "final_markdown required before write" };
   const frontmatter = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);

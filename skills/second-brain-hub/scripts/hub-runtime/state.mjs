@@ -10,6 +10,7 @@ export const STATES = [
 ];
 
 // 写入必经 PREFLIGHTED；只读/诊断场景可从 EXECUTING 直达完成。
+// WRITE_COMMITTED -> PREFLIGHTED 允许同一 run 内多轮 preflight→write（多文件写入）。
 const TRANSITIONS = {
   INIT: ["CONFIG_CHECKED"],
   CONFIG_CHECKED: ["INTENT_CLASSIFIED"],
@@ -17,8 +18,8 @@ const TRANSITIONS = {
   CONTRACT_LOADED: ["MAP_CARD_EMITTED"],
   MAP_CARD_EMITTED: ["EXECUTING", "PREFLIGHTED"],
   EXECUTING: ["PREFLIGHTED", "COMPLETION_CARD_EMITTED"],
-  PREFLIGHTED: ["WRITE_COMMITTED"],
-  WRITE_COMMITTED: ["COMPLETION_CARD_EMITTED"],
+  PREFLIGHTED: ["WRITE_COMMITTED", "COMPLETION_CARD_EMITTED"],
+  WRITE_COMMITTED: ["PREFLIGHTED", "COMPLETION_CARD_EMITTED"],
   COMPLETION_CARD_EMITTED: [],
 };
 
@@ -69,6 +70,7 @@ export function createLedger({ runId, storageMode = null, storagePath = null, st
       target_path: null, template_path: null,
     },
     commit: { committed: false, receipt: null },
+    writes: [],
     blocked_reason: null,
     events: [],
     created_at: now.toISOString(),

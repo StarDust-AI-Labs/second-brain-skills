@@ -24,6 +24,11 @@ test("合法转移：写入主链", () => {
   assert.ok(canTransition("WRITE_COMMITTED", "COMPLETION_CARD_EMITTED"));
 });
 
+test("合法转移：多轮写入与直接完成", () => {
+  assert.ok(canTransition("WRITE_COMMITTED", "PREFLIGHTED")); // 多文件写入循环
+  assert.ok(canTransition("PREFLIGHTED", "COMPLETION_CARD_EMITTED")); // 已提交写入后直接完成
+});
+
 test("非法转移被拒绝", () => {
   assert.equal(canTransition("INIT", "WRITE_COMMITTED"), false);
   assert.equal(canTransition("MAP_CARD_EMITTED", "WRITE_COMMITTED"), false);

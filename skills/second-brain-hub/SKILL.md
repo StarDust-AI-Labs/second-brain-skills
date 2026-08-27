@@ -15,7 +15,7 @@ description: 第二大脑唯一公开入口。用于记录灵感、保存网页�
 4. 从 `capability-contracts.json` 只取当前步骤涉及的能力。`reference` 相对 Hub 根目录；`skill` 按安装名调用。
 5. 外部工具状态未知或调用失败时才读 `dependencies.json`；缺失时读 [references/dependency-resolution.md](references/dependency-resolution.md) 选择 `primary`/`fallback`/`blocked`。
 6. 每完成一个必选步骤执行 `step --run-id <run_id> --step <id> --evidence <痕迹>`，输出用 `--output 键=值` 登记；条件步骤未执行时必须 `--skip --reason <证据>`。必选步骤不得改序或省略；地图卡一律原样展示。
-7. 写入、更新、移动或删除前读 [references/writing-pipeline.md](references/writing-pipeline.md) 并执行 `preflight`，仅当 `write_allowed=true` 才调用写入工具，并立即用 `write_token` 执行 `commit` 登记回执。门禁失败、阻塞或运行时不可用时停止写入并报告阻塞，不得直写。
+7. 写入、更新、移动或删除前读 [references/writing-pipeline.md](references/writing-pipeline.md) 并执行 `preflight`，仅当 `write_allowed=true` 才用 `write_token` 执行运行时 `write` 命令完成实际写入与回执登记，禁止用其他工具直写 Vault；多文件写入可在同一 run 内重复 `preflight→write`。门禁失败、阻塞或运行时不可用时停止写入并报告阻塞，不得直写。
 8. 全部步骤结算后执行 `finish --run-id <run_id>`；只有运行时返回完成卡才可宣布完成，`missing` 非空时先补齐再重试。禁止自行宣布完成。
 9. 决策卡、首次成功卡按需读 [references/output-visualization.md](references/output-visualization.md) 与 [references/output-cards.md](references/output-cards.md)；卡片以运行时输出为准。
 

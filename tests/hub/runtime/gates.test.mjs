@@ -1,14 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { createLedger } from "../../../skills/second-brain-hub/scripts/hub-runtime/state.mjs";
 import { loadContracts, getScene } from "../../../skills/second-brain-hub/scripts/hub-runtime/contracts.mjs";
-import { evaluatePreflight, checkWriteGate, validateCompletion, isInsideRoot }
+import { evaluatePreflight, checkWriteGate, validateCompletion, isInsideRoot, realPathInsideRoot }
   from "../../../skills/second-brain-hub/scripts/hub-runtime/gates.mjs";
 import { SKILL_ROOT } from "./helpers.mjs";
 
 const { route } = loadContracts(SKILL_ROOT);
 const NOW = new Date("2026-08-23T00:00:00Z");
+
+// realPathInsideRoot 现在要求存储根真实存在（失败关闭），单测使用真实临时根。
+function realRoot() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), "hub-gates-"));
+}
 
 function writeLedger(storagePath, sceneId = "inspiration") {
   const ledger = createLedger({ runId: "run-t", storageMode: "markdown", storagePath, now: NOW });
@@ -27,7 +34,7 @@ test("isInsideRoot 拒绝根目录、越界与遍历", () => {
 });
 
 test("写前置全部满足时签发令牌", () => {
-  const storagePath = path.join("/vault");
+  const storagePath = realRoot();
   const ledger = writeLedger(storagePath);
   const scene = getScene(route, "inspiration");
   const res = evaluatePreflight(ledger, scene, {
@@ -39,6 +46,12 @@ test("写前置全部满足时签发令牌", () => {
   assert.match(res.write_token, /^[0-9a-f]{16}$/);
   assert.equal(res.gates["target-path"].pass, true);
   assert.equal(res.gates["template-ready"].pass, true);
+});
+
+test("存储根不存在时真实路径校验失败关闭", () => {
+  const res = realPathInsideRoot(path.join(os.tmpdir(), "hub-gates-missing-root"), path.join(os.tmpdir(), "hub-gates-missing-root", "a.md"));
+  assert.equal(res.pass, false);
+  assert.match(res.reason, /storage root does not exist/);
 });
 
 test("缺少模板 / 目标为根 / 相对路径 都失败关闭", () => {
@@ -72,7 +85,7 @@ test("未配置存储时写前置拒绝", () => {
 });
 
 test("checkWriteGate：无 preflight / 令牌错误 / 被阻塞均拒绝", () => {
-  const storagePath = path.join("/vault");
+  const storagePath = realRoot();
   const ledger = writeLedger(storagePath);
   assert.equal(checkWriteGate(ledger).allowed, false);           // 未 preflight
   const scene = getScene(route, "inspiration");

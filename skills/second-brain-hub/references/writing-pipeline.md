@@ -2,14 +2,12 @@
 
 ## 运行时执行位
 
-第二大脑场景的写入、更新、移动、删除在 `hub-runtime` 内完成：
+第二大脑场景的写入、更新、移动、删除由 `hub-runtime` 的 `write` 命令实际执行，禁止外部工具直写：
 
-1. 写入前执行 `preflight --run-id <run_id> --target-path <绝对路径> [--template-file <渲染好的笔记文件>] [--auth]`；`write_allowed=true` 时运行时签发 `write_token`。
-2. 仅在取得授权后调用写入能力（`obsidian-cli` 或依赖协议的降级直写）。
-3. 写入成功后执行 `commit --run-id <run_id> --token <write_token> --target-path <路径> --receipt <回执JSON>`；运行时会核实目标文件真实存在后才登记回执。
-4. `write_allowed=false`、令牌缺失或运行阻塞：立即停止并报告阻塞原因，禁止直写或虚报成功。
-
-`--receipt` 最小形态：`{“tool”:”obsidian-cli”,”operation”:”create”,”ok”:true}`；移动/删除场景 `operation` 取 `move`/`delete`，删除的二次确认仍遵守下文规则。
+1. 写入前执行 `preflight --run-id <run_id> --target-path <绝对路径> [--template-file <渲染好的笔记文件>] [--confirm]`；`write_allowed=true` 时运行时签发一次性 `write_token`。
+2. 取得令牌后执行 `write --run-id <run_id> --token <write_token> --operation create|edit|move|delete [--target-path <路径>] [--source-path <路径>] [--content|--content-file <内容>]`；文件操作由运行时完成，并记录前后哈希与含一次性 `runtime_write_id` 的运行时回执。create/edit 的写入内容必须通过与 preflight 模板相同的 frontmatter 结构校验。
+3. 多文件写入（如笔记 + 状态回写）在同一 run 内重复 `preflight→write` 循环，每轮签发新令牌并重新校验真实路径。
+4. `write_allowed=false`、令牌缺失或运行阻塞：立即停止并报告阻塞原因，禁止直写或虚报成功。移动/删除的 `--confirm` 二次确认仍遵守下文规则，删除执行时须回传 preflight 签发的确认令牌（`--confirmation <token>`）。
 
 ## 写入前置
 
@@ -47,4 +45,4 @@ distill_level: 0
 
 ## 写入回执
 
-写入后保存：操作类型、工作区内路径、时间、模板状态和工具回执。工具失败时不要宣称成功。
+回执由运行时在 `write` 成功后自动生成并登记：操作类型、路径、时间、前后内容哈希、一次性 `runtime_write_id`。运行外写入没有回执，也不满足完成验证。工具失败时不要宣称成功。

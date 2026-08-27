@@ -6,10 +6,10 @@ import {
   createLedger, newRunId, transition, recordEvent, saveLedger, loadLedger,
 } from "./state.mjs";
 import { loadContracts, getScene, requiredChain, isWriteMode } from "./contracts.mjs";
-import { evaluatePreflight, checkWriteGate, validateCompletion, realPathInsideRoot } from "./gates.mjs";
+import { evaluatePreflight, checkWriteGate, validateCompletion, realPathInsideRoot, gateTemplate } from "./gates.mjs";
 import { renderMapCard, renderCompletionCard } from "./render.mjs";
 
-const BOOL_FLAGS = new Set(["skip", "help"]);
+const BOOL_FLAGS = new Set(["skip", "help", "confirm"]);
 
 export class UsageError extends Error {}
 
@@ -37,6 +37,28 @@ function emit(json) {
   console.log(JSON.stringify(json, null, 2));
 }
 
+// 旧版平铺结构（workspaceType/vaultPath 等顶层字段）自动迁移到 preferences 嵌套结构。
+function migrateLegacyConfig(stateDir, raw) {
+  if (!raw || typeof raw !== "object" || !raw.workspaceType) return raw;
+  const prefs = raw.preferences || {};
+  const vault = raw.vaultPath || raw.workspacePath || prefs.vault_path || prefs.workspace_path || null;
+  const mode = ["obsidian", "markdown"].includes(raw.workspaceType) ? raw.workspaceType : null;
+  if (!vault || !mode) return raw; // 无法迁移时交由后续校验失败关闭
+  const name = raw.vaultName || raw.workspaceName || prefs.vault_name || prefs.workspace_name || path.basename(vault);
+  raw.preferences = {
+    ...prefs,
+    storage_mode: mode,
+    workspace_path: vault,
+    workspace_name: name,
+    vault_path: vault,
+    vault_name: name,
+  };
+  try {
+    fs.writeFileSync(path.join(stateDir, "hub-state.json"), `${JSON.stringify(raw, null, 2)}\n`, "utf8");
+  } catch { /* 迁移写回失败时按只读处理，由 readConfig 后续校验兜底 */ }
+  return raw;
+}
+
 function readConfig(stateDir) {
   const file = path.join(stateDir, "hub-state.json");
   if (!fs.existsSync(file)) {
@@ -48,6 +70,7 @@ function readConfig(stateDir) {
   } catch {
     return { config_ok: false, reason: "hub-state.json is not valid JSON", storage_mode: null, storage_path: null, storage_name: null };
   }
+  raw = migrateLegacyConfig(stateDir, raw);
   const prefs = raw.preferences || {};
   const mode = prefs.storage_mode;
   if (!["obsidian", "markdown"].includes(mode)) {
@@ -80,7 +103,7 @@ function reject(ledger, stateDir, now, reason, extra = {}) {
   return { exit: 1, json: { ok: false, run_id: ledger.run_id, state: ledger.state, reason, ...extra } };
 }
 
-// 所有现行写入契约中，写入能力都是最后一个必选步骤；它由 commit 结算。
+// 所有现行写入契约中，写入能力都是最后一个必选步骤；它由运行时 write 结算。
 function writeStepOf(scene) {
   if (!isWriteMode(scene)) return null;
   return scene.required_steps[scene.required_steps.length - 1];
@@ -168,7 +191,7 @@ export function cmdStep(flags, { contracts = loadContracts(), now = new Date() }
       return reject(ledger, stateDir, now, `step needs --evidence: ${stepId}`);
     }
     if (writeStepOf(scene) === stepId) {
-      return reject(ledger, stateDir, now, `write step is settled by commit, not step: ${stepId}`);
+      return reject(ledger, stateDir, now, `write step is settled by runtime write, not step: ${stepId}`);
     }
     const order = scene.step_order.indexOf(stepId);
     for (const earlier of scene.step_order.slice(0, order)) {
@@ -195,7 +218,8 @@ export function cmdStep(flags, { contracts = loadContracts(), now = new Date() }
 export function cmdPreflight(flags, { contracts = loadContracts(), now = new Date() } = {}) {
   const { stateDir, ledger } = loadRun(flags);
   if (ledger.blocked_reason) return reject(ledger, stateDir, now, `blocked: ${ledger.blocked_reason}`);
-  if (!["MAP_CARD_EMITTED", "EXECUTING"].includes(ledger.state)) {
+  // WRITE_COMMITTED 允许再次 preflight：同一 run 内多轮 preflight→write（多文件写入）。
+  if (!["MAP_CARD_EMITTED", "EXECUTING", "WRITE_COMMITTED"].includes(ledger.state)) {
     return reject(ledger, stateDir, now, `cannot preflight in state ${ledger.state}`);
   }
   const scene = getScene(contracts.route, ledger.scene);
@@ -222,12 +246,12 @@ export function cmdPreflight(flags, { contracts = loadContracts(), now = new Dat
   const targetPath = flags["target-path"] ?? ledger.preflight.target_path;
   const sourcePath = flags["source-path"] ?? (getScene(contracts.route, ledger.scene).mode === "move-or-delete" ? targetPath : null);
   const res = evaluatePreflight(ledger, scene, {
-    targetPath, sourcePath, templateContent, templatePath: flags["template-file"] ?? null, auth: Boolean(flags.confirmation),
+    targetPath, sourcePath, templateContent, templatePath: flags["template-file"] ?? null, auth: Boolean(flags.confirm),
   });
   ledger.preflight = {
     checked: true, gates: res.gates, write_allowed: res.write_allowed, write_token: res.write_token,
     target_path: targetPath, source_path: sourcePath, template_path: flags["template-file"] ?? ledger.preflight.template_path,
-    confirmation_token: res.write_allowed && scene.mode === "move-or-delete" && flags.confirmation
+    confirmation_token: res.write_allowed && scene.mode === "move-or-delete" && flags.confirm
       ? crypto.randomBytes(8).toString("hex") : null,
   };
   if (res.write_allowed) {
@@ -247,46 +271,6 @@ export function cmdPreflight(flags, { contracts = loadContracts(), now = new Dat
   };
 }
 
-export function cmdCommit(flags, { contracts = loadContracts(), now = new Date() } = {}) {
-  const { stateDir, ledger } = loadRun(flags);
-  const gate = checkWriteGate(ledger, { token: flags.token ?? null, targetPath: flags["target-path"] ?? null });
-  if (!gate.allowed) return reject(ledger, stateDir, now, gate.reason);
-  if (ledger.state !== "PREFLIGHTED") return reject(ledger, stateDir, now, `cannot commit in state ${ledger.state}`);
-  const scene = getScene(contracts.route, ledger.scene);
-  let receipt = {};
-  if (flags.receipt) {
-    try {
-      receipt = JSON.parse(flags.receipt);
-    } catch {
-      return reject(ledger, stateDir, now, "receipt is not valid JSON");
-    }
-  }
-  if (receipt.ok === false) return reject(ledger, stateDir, now, "receipt reports failure; refusing to commit");
-  if (!receipt.runtime_write_id || receipt.runtime_write_id !== ledger.write?.id) {
-    return reject(ledger, stateDir, now, "commit requires a Runtime-generated write receipt");
-  }
-  // 失败关闭：创建/编辑类写入必须确认目标文件真实存在，禁止虚报成功。
-  const op = receipt.operation;
-  const target = flags["target-path"] ?? ledger.preflight.target_path;
-  if ((op === "create" || op === "edit" || op === undefined) && target && !fs.existsSync(target)) {
-    return reject(ledger, stateDir, now, `receipt target missing on disk: ${target}; refusing to commit`);
-  }
-  transition(ledger, "WRITE_COMMITTED", { at: now });
-  const writeStep = writeStepOf(scene);
-  if (writeStep && !ledger.steps.completed.includes(writeStep)) ledger.steps.completed.push(writeStep);
-  for (const [key, value] of Object.entries(flags.output)) {
-    ledger.steps.outputs[key] = value;
-    recordEvent(ledger, "output", `${key}=${value}`, now);
-  }
-  ledger.commit = { committed: true, receipt: { ok: true, path: target, ...receipt, at: now.toISOString() } };
-  recordEvent(ledger, "write-committed", `${writeStep}: ${target}`, now);
-  saveLedger(stateDir, ledger);
-  return {
-    exit: 0,
-    json: { ok: true, command: "commit", run_id: ledger.run_id, state: ledger.state, receipt: ledger.commit.receipt, card: renderMapCard(ledger, scene) },
-  };
-}
-
 function readWriteContent(flags) {
   if (flags["content-file"]) {
     if (!fs.existsSync(flags["content-file"])) throw new Error("content file not found");
@@ -295,6 +279,8 @@ function readWriteContent(flags) {
   return flags.content ?? null;
 }
 
+// 写入由 Runtime 实际执行：门禁 + 真实路径双重校验 + 内容结构校验 + 前后哈希回执。
+// 同一 run 可多轮 preflight→write；每轮 write 前都重新校验真实路径，防 TOCTOU。
 export function cmdWrite(flags, { contracts = loadContracts(), now = new Date() } = {}) {
   const { stateDir, ledger } = loadRun(flags);
   const gate = checkWriteGate(ledger, { token: flags.token ?? null, targetPath: flags["target-path"] ?? null });
@@ -316,6 +302,9 @@ export function cmdWrite(flags, { contracts = loadContracts(), now = new Date() 
     if (operation === "create" || operation === "edit") {
       const content = readWriteContent(flags);
       if (content === null) return reject(ledger, stateDir, now, "write requires --content or --content-file");
+      // 实际写入内容必须通过与 preflight 模板相同的结构校验，防止模板与内容脱钩。
+      const contentGate = gateTemplate(content, null);
+      if (!contentGate.pass) return reject(ledger, stateDir, now, `write content rejected: ${contentGate.reason}`);
       if (operation === "create" && fs.existsSync(target)) return reject(ledger, stateDir, now, "create target already exists");
       if (operation === "edit" && !fs.existsSync(target)) return reject(ledger, stateDir, now, "edit target missing");
       fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -334,11 +323,27 @@ export function cmdWrite(flags, { contracts = loadContracts(), now = new Date() 
   } catch (err) { return reject(ledger, stateDir, now, `write failed: ${err.message}`); }
   const after = before(target);
   const id = crypto.randomBytes(8).toString("hex");
-  ledger.write = { id, operation, source_path: source, target_path: target, before_sha256: beforeTarget ? crypto.createHash("sha256").update(beforeTarget).digest("hex") : null, after_sha256: after ? crypto.createHash("sha256").update(after).digest("hex") : null };
+  const writeRecord = {
+    id, operation, source_path: source, target_path: target,
+    before_sha256: beforeTarget ? crypto.createHash("sha256").update(beforeTarget).digest("hex") : null,
+    after_sha256: after ? crypto.createHash("sha256").update(after).digest("hex") : null,
+    at: now.toISOString(),
+  };
+  ledger.write = writeRecord;
+  ledger.writes = [...(ledger.writes || []), writeRecord];
   const receipt = { ok: true, runtime_write_id: id, tool: "hub-runtime", operation, path: target, at: now.toISOString() };
   transition(ledger, "WRITE_COMMITTED", { at: now });
   const writeStep = writeStepOf(scene);
   if (writeStep && !ledger.steps.completed.includes(writeStep)) ledger.steps.completed.push(writeStep);
+  // 写入路径自动登记为运行输出，打通 finish 完成验证（target_path 为写场景契约必需输出）。
+  if (!ledger.steps.outputs.target_path || ledger.steps.outputs.target_path !== target) {
+    ledger.steps.outputs.target_path = target;
+    recordEvent(ledger, "output", `target_path=${target}`, now);
+  }
+  if (source && ledger.steps.outputs.source_path !== source) {
+    ledger.steps.outputs.source_path = source;
+    recordEvent(ledger, "output", `source_path=${source}`, now);
+  }
   ledger.commit = { committed: true, receipt };
   for (const [key, value] of Object.entries(flags.output)) {
     ledger.steps.outputs[key] = value;
@@ -385,7 +390,7 @@ export function cmdStatus(flags, { contracts = loadContracts() } = {}) {
 
 const COMMANDS = {
   start: cmdStart, route: cmdRoute, step: cmdStep, preflight: cmdPreflight,
-  write: cmdWrite, commit: cmdCommit, gate: cmdGate, finish: cmdFinish, status: cmdStatus,
+  write: cmdWrite, gate: cmdGate, finish: cmdFinish, status: cmdStatus,
 };
 
 export function main(argv) {

@@ -29,7 +29,7 @@ function inspirationSteps(dir, runId, storagePath) {
   return { target, tpl, codes: [s1.code, s2.code, s3.code] };
 }
 
-test("黄金路径：灵感速记 start→route→step→preflight→commit→finish", () => {
+test("黄金路径：灵感速记 start→route→step→preflight→write→finish", () => {
   const { dir, storagePath } = makeStateDir();
   const start = run(["start", "--state-dir", dir]);
   assert.equal(start.code, 0);
@@ -44,7 +44,7 @@ test("黄金路径：灵感速记 start→route→step→preflight→commit→fi
   const { target, tpl, codes } = inspirationSteps(dir, runId, storagePath);
   assert.deepEqual(codes, [0, 0, 0]);
 
-  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl, "--auth"]);
+  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl, "--confirm"]);
   assert.equal(pre.code, 0);
   assert.equal(pre.json.write_allowed, true);
   assert.match(pre.json.card, /write_allowed=true/);
@@ -54,41 +54,40 @@ test("黄金路径：灵感速记 start→route→step→preflight→commit→fi
   assert.equal(gateDenied.code, 1);
   assert.equal(gateDenied.json.allowed, false);
 
-  // 真实写入发生后才允许 commit（回执目标必须真实存在）
-  const earlyCommit = run(["commit", "--state-dir", dir, "--run-id", runId, "--token", pre.json.write_token,
-    "--target-path", target, "--receipt", JSON.stringify({ tool: "obsidian-cli", operation: "create" })]);
-  assert.equal(earlyCommit.code, 1);
-  assert.match(earlyCommit.json.reason, /receipt target missing/);
-
-  fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, TEMPLATE, "utf8");
-  const commit = run(["commit", "--state-dir", dir, "--run-id", runId, "--token", pre.json.write_token,
-    "--target-path", target, "--receipt", JSON.stringify({ tool: "obsidian-cli", operation: "create" })]);
-  assert.equal(commit.code, 0);
-  assert.equal(commit.json.state, "WRITE_COMMITTED");
+  // 写入由 Runtime 实际执行，回执含一次性 runtime_write_id 与前后哈希
+  const write = run(["write", "--state-dir", dir, "--run-id", runId, "--token", pre.json.write_token,
+    "--operation", "create", "--target-path", target, "--content-file", tpl]);
+  assert.equal(write.code, 0);
+  assert.equal(write.json.receipt.tool, "hub-runtime");
+  assert.ok(write.json.receipt.runtime_write_id);
+  assert.equal(fs.readFileSync(target, "utf8"), TEMPLATE);
+  assert.equal(write.json.state, "WRITE_COMMITTED");
 
   const fin = run(["finish", "--state-dir", dir, "--run-id", runId, "--result", "已保存灵感笔记"]);
   assert.equal(fin.code, 0);
   assert.match(fin.json.card, /已完成 4\/4/);
   assert.match(fin.json.card, /【位置】/);
 
-  // 审计：台账持久化在运行目录，事件、跳过证据可追溯
+  // 审计：台账持久化在运行目录，事件、跳过证据、写入记录可追溯
   const ledger = JSON.parse(fs.readFileSync(path.join(dir, "hub-runs", `${runId}.json`), "utf8"));
   assert.equal(ledger.state, "COMPLETION_CARD_EMITTED");
   assert.ok(ledger.steps.skipped["capture-criteria"]);
   assert.ok(ledger.events.length >= 10);
+  assert.equal(ledger.writes.length, 1);
+  assert.ok(ledger.writes[0].before_sha256 === null);
+  assert.ok(ledger.writes[0].after_sha256);
 });
 
-test("失败关闭：跳过 preflight 直接 commit / gate 一律拒绝", () => {
+test("失败关闭：跳过 preflight 直接 write / gate 一律拒绝", () => {
   const { dir, storagePath } = makeStateDir();
   const runId = run(["start", "--state-dir", dir]).json.run_id;
   run(["route", "--state-dir", dir, "--run-id", runId, "--scene", "inspiration", "--user-text", "x"]);
   const target = path.join(storagePath, "a.md");
-  fs.writeFileSync(target, TEMPLATE, "utf8");
-  const commit = run(["commit", "--state-dir", dir, "--run-id", runId, "--token", "forged",
-    "--target-path", target, "--receipt", JSON.stringify({ ok: true, operation: "create" })]);
-  assert.equal(commit.code, 1);
-  assert.match(commit.json.reason, /preflight not completed/);
+  const write = run(["write", "--state-dir", dir, "--run-id", runId, "--token", "forged",
+    "--target-path", target, "--operation", "create", "--content", TEMPLATE]);
+  assert.equal(write.code, 1);
+  assert.match(write.json.reason, /preflight not completed/);
+  assert.equal(fs.existsSync(target), false); // 文件绝不能落盘
   const gate = run(["gate", "--state-dir", dir, "--run-id", runId]);
   assert.equal(gate.code, 1);
   assert.equal(gate.json.allowed, false);
@@ -99,14 +98,13 @@ test("失败关闭：错误令牌被拒绝", () => {
   const runId = run(["start", "--state-dir", dir]).json.run_id;
   run(["route", "--state-dir", dir, "--run-id", runId, "--scene", "inspiration", "--user-text", "x"]);
   const { target, tpl } = inspirationSteps(dir, runId, storagePath);
-  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl, "--auth"]);
+  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl, "--confirm"]);
   assert.equal(pre.code, 0);
-  fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, TEMPLATE, "utf8");
-  const commit = run(["commit", "--state-dir", dir, "--run-id", runId, "--token", "wrong-token",
-    "--target-path", target, "--receipt", JSON.stringify({ operation: "create" })]);
-  assert.equal(commit.code, 1);
-  assert.match(commit.json.reason, /invalid write token/);
+  const write = run(["write", "--state-dir", dir, "--run-id", runId, "--token", "wrong-token",
+    "--operation", "create", "--target-path", target, "--content-file", tpl]);
+  assert.equal(write.code, 1);
+  assert.match(write.json.reason, /invalid write token/);
+  assert.equal(fs.existsSync(target), false);
 });
 
 test("失败关闭：越序步骤与跳过必选步骤被拒绝", () => {
@@ -123,21 +121,20 @@ test("失败关闭：越序步骤与跳过必选步骤被拒绝", () => {
   assert.equal(writeViaStep.code, 0);
   const writeStep = run(["step", "--state-dir", dir, "--run-id", runId, "--step", "obsidian-cli/create", "--evidence", "直接写"]);
   assert.equal(writeStep.code, 1);
-  assert.match(writeStep.json.reason, /settled by commit/);
+  assert.match(writeStep.reason ?? writeStep.json.reason, /settled by runtime write/);
 });
 
-test("失败关闭：条件未结算时 preflight 拒绝；完成前验证拒绝伪造完成", () => {
-  const { dir } = makeStateDir();
+test("失败关闭：步骤未结算时 preflight 拒绝；完成前验证拒绝伪造完成", () => {
+  const { dir, storagePath } = makeStateDir();
   const runId = run(["start", "--state-dir", dir]).json.run_id;
   run(["route", "--state-dir", dir, "--run-id", runId, "--scene", "inspiration", "--user-text", "x"]);
   run(["step", "--state-dir", dir, "--run-id", runId, "--step", "hub.target-routing", "--evidence", "ok",
     "--output", `target_path=${path.join(dir, "vault", "a.md")}`]);
-  run(["step", "--state-dir", dir, "--run-id", runId, "--step", "obsidian-markdown", "--evidence", "ok"]);
-  // capture-criteria 尚未结算
-  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", path.join(dir, "vault", "a.md"), "--auth"]);
+  // capture-criteria 尚未结算：全序校验使 obsidian-markdown 无法越序执行，preflight 拒绝
+  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", path.join(dir, "vault", "a.md"), "--confirm"]);
   assert.equal(pre.code, 1);
-  assert.match(pre.json.reason, /conditional step unsettled/);
-  // 伪造完成：没有 commit 不允许 finish
+  assert.match(pre.json.reason, /required step not completed before preflight|conditional step unsettled/);
+  // 伪造完成：没有 runtime 写入不允许 finish
   const fin = run(["finish", "--state-dir", dir, "--run-id", runId]);
   assert.equal(fin.code, 1);
   assert.ok(fin.json.missing.length > 0);
@@ -175,7 +172,7 @@ test("只读场景：探索查询无需写入前置即可完成", () => {
   assert.equal(fin.json.card.includes("【位置】"), false);
 });
 
-test("写入提交登记输出后，提炼场景可以完成结算", () => {
+test("运行时编辑结算后，提炼场景可以完成结算", () => {
   const { dir, storagePath } = makeStateDir();
   const start = run(["start", "--state-dir", dir]);
   const runId = start.json.run_id;
@@ -184,13 +181,68 @@ test("写入提交登记输出后，提炼场景可以完成结算", () => {
   run(["step", "--state-dir", dir, "--run-id", runId, "--step", "obsidian-cli/read", "--evidence", "read"]);
   run(["step", "--state-dir", dir, "--run-id", runId, "--step", "progressive-summarization", "--evidence", "distilled", "--output", "distill_level=2"]);
   const target = path.join(storagePath, "source.md");
-  fs.writeFileSync(target, "updated\n", "utf8");
-  const preflight = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--auth"]);
+  fs.writeFileSync(target, "---\nsource: s\ncaptured: 2026-08-01 09:00\nstatus: inbox\ntags: []\ndistill_level: 1\n---\n\n# Source\n\n原文", "utf8");
+  const updated = "---\nsource: s\ncaptured: 2026-08-01 09:00\nstatus: distilled\ntags: [x]\ndistill_level: 2\n---\n\n# Source\n\n加粗重点";
+  const preflight = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--confirm"]);
   assert.equal(preflight.code, 0);
-  const committed = run(["commit", "--state-dir", dir, "--run-id", runId, "--token", preflight.json.write_token,
-    "--target-path", target, "--receipt", '{"operation":"edit"}', "--output", "updated_markdown=updated markdown"]);
-  assert.equal(committed.code, 0);
+  const write = run(["write", "--state-dir", dir, "--run-id", runId, "--token", preflight.json.write_token,
+    "--operation", "edit", "--target-path", target, "--content", updated, "--output", "updated_markdown=distilled v2"]);
+  assert.equal(write.code, 0);
+  assert.equal(fs.readFileSync(target, "utf8"), updated);
   assert.equal(run(["finish", "--state-dir", dir, "--run-id", runId]).code, 0);
+});
+
+test("写入路径自动登记 target_path 输出，write→finish 无需手动登记", () => {
+  const { dir, storagePath } = makeStateDir();
+  const runId = run(["start", "--state-dir", dir]).json.run_id;
+  run(["route", "--state-dir", dir, "--run-id", runId, "--scene", "inspiration", "--user-text", "x"]);
+  // 注意：不通过 step --output 登记 target_path，依赖 write 自动登记
+  run(["step", "--state-dir", dir, "--run-id", runId, "--step", "hub.target-routing", "--evidence", "ok"]);
+  run(["step", "--state-dir", dir, "--run-id", runId, "--step", "capture-criteria", "--skip", "--reason", "r"]);
+  const tpl = path.join(dir, "tpl.md");
+  fs.writeFileSync(tpl, TEMPLATE, "utf8");
+  run(["step", "--state-dir", dir, "--run-id", runId, "--step", "obsidian-markdown", "--evidence", "ok", "--output", "final_markdown=rendered"]);
+  const target = path.join(storagePath, "auto.md");
+  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl]);
+  assert.equal(pre.code, 0);
+  const write = run(["write", "--state-dir", dir, "--run-id", runId, "--token", pre.json.write_token,
+    "--operation", "create", "--target-path", target, "--content-file", tpl]);
+  assert.equal(write.code, 0);
+  const fin = run(["finish", "--state-dir", dir, "--run-id", runId]);
+  assert.equal(fin.code, 0, JSON.stringify(fin.json.missing));
+  const ledger = JSON.parse(fs.readFileSync(path.join(dir, "hub-runs", `${runId}.json`), "utf8"));
+  assert.equal(ledger.steps.outputs.target_path, target);
+});
+
+test("同一 run 内多轮 preflight→write 完成多文件写入", () => {
+  const { dir, storagePath } = makeStateDir();
+  const runId = run(["start", "--state-dir", dir]).json.run_id;
+  run(["route", "--state-dir", dir, "--run-id", runId, "--scene", "inspiration", "--user-text", "x"]);
+  const { target, tpl } = inspirationSteps(dir, runId, storagePath);
+  const target2 = path.join(storagePath, "second.md");
+
+  const pre1 = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl]);
+  assert.equal(pre1.code, 0);
+  const write1 = run(["write", "--state-dir", dir, "--run-id", runId, "--token", pre1.json.write_token,
+    "--operation", "create", "--target-path", target, "--content-file", tpl]);
+  assert.equal(write1.code, 0);
+  assert.equal(write1.json.state, "WRITE_COMMITTED");
+
+  // 第二轮：WRITE_COMMITTED → PREFLIGHTED → write
+  const pre2 = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target2, "--template-file", tpl]);
+  assert.equal(pre2.code, 0);
+  assert.equal(pre2.json.write_token !== pre1.json.write_token, true);
+  const write2 = run(["write", "--state-dir", dir, "--run-id", runId, "--token", pre2.json.write_token,
+    "--operation", "create", "--target-path", target2, "--content-file", tpl]);
+  assert.equal(write2.code, 0);
+
+  assert.equal(fs.existsSync(target), true);
+  assert.equal(fs.existsSync(target2), true);
+  const fin = run(["finish", "--state-dir", dir, "--run-id", runId]);
+  assert.equal(fin.code, 0);
+  const ledger = JSON.parse(fs.readFileSync(path.join(dir, "hub-runs", `${runId}.json`), "utf8"));
+  assert.equal(ledger.writes.length, 2);
+  assert.ok(ledger.writes.every((w) => w.runtime_write_id || w.id));
 });
 
 test("status 输出当前台账与地图卡", () => {
