@@ -55,7 +55,7 @@ export function newRunId(now = new Date()) {
 
 export function createLedger({ runId, storageMode = null, storagePath = null, storageName = null, now = new Date() }) {
   return {
-    schema_version: "1.0",
+    schema_version: "1.1",
     run_id: runId,
     scene: null,
     scene_label: null,
@@ -67,8 +67,13 @@ export function createLedger({ runId, storageMode = null, storagePath = null, st
     steps: { required_chain: [], completed: [], skipped: {}, outputs: {} },
     preflight: {
       checked: false, gates: {}, write_allowed: false, write_token: null,
-      target_path: null, template_path: null,
+      target_path: null, source_path: null, template_path: null,
+      confirmation_token: null, operation: null, preview_hash: null, write_cycle: null,
+      snapshot_hash: null, source_sha256: null,
     },
+    // 每轮 preflight→write 一个周期：
+    // awaiting_confirmation=第一阶段已出快照待用户确认；pending=已签发可执行令牌待 write。
+    write_cycles: [],
     commit: { committed: false, receipt: null },
     writes: [],
     blocked_reason: null,
@@ -76,6 +81,72 @@ export function createLedger({ runId, storageMode = null, storagePath = null, st
     created_at: now.toISOString(),
     updated_at: now.toISOString(),
   };
+}
+
+// awaiting_confirmation：危险操作第一阶段，已有 Runtime 快照但没有可执行令牌。
+// pending：已签发 write_token/confirmation_token，等待 write 结算。
+// committed：已结算；rejected：失败或未通过校验，仅作审计。
+const CYCLE_STATES = ["pending", "awaiting_confirmation", "committed", "rejected"];
+
+export function newCycleId() {
+  return `cyc-${crypto.randomBytes(6).toString("hex")}`;
+}
+
+export function previewHashOf(text) {
+  return crypto.createHash("sha256").update(String(text ?? ""), "utf8").digest("hex");
+}
+
+export function stableStringify(value) {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return JSON.stringify(value ?? null);
+  }
+  const keys = Object.keys(value).sort();
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(value[k])}`).join(",")}}`;
+}
+
+export function createWriteCycle({
+  id, operation, sourcePath = null, targetPath = null, preview = null,
+  previewHash = null, sourceSha256 = null, size = null, snapshotHash = null,
+  writeToken = null, confirmationToken = null, confirmationChallenge = null,
+  gates = {}, state = "pending", now = new Date(),
+}) {
+  if (!CYCLE_STATES.includes(state)) throw new Error(`unknown cycle state: ${state}`);
+  return {
+    id,
+    operation,
+    source_path: sourcePath ?? null,
+    target_path: targetPath ?? null,
+    // preview/preview_hash 只表示展示给用户的文本；文件快照由 source_sha256/size/snapshot_hash 表达。
+    preview: preview ?? null,
+    preview_hash: previewHash ?? null,
+    source_sha256: sourceSha256 ?? null,
+    size: size ?? null,
+    snapshot_hash: snapshotHash ?? null,
+    write_token: writeToken,
+    confirmation_token: confirmationToken ?? null,
+    confirmation_challenge: confirmationChallenge ?? null,
+    confirmation_challenge_used: false,
+    confirmation_used: false,
+    gates,
+    receipt: null,
+    state,
+    created_at: now.toISOString(),
+    settled_at: null,
+  };
+}
+
+export function findCycle(ledger, cycleId) {
+  return (ledger?.write_cycles || []).find((c) => c.id === cycleId) ?? null;
+}
+
+export function currentCycle(ledger) {
+  const cycles = ledger?.write_cycles || [];
+  return cycles.length ? cycles[cycles.length - 1] : null;
+}
+
+export function pendingCycle(ledger) {
+  const cycle = currentCycle(ledger);
+  return cycle && cycle.state === "pending" ? cycle : null;
 }
 
 export function runsDir(stateDir) {

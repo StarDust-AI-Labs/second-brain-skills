@@ -44,7 +44,7 @@ test("黄金路径：灵感速记 start→route→step→preflight→write→fin
   const { target, tpl, codes } = inspirationSteps(dir, runId, storagePath);
   assert.deepEqual(codes, [0, 0, 0]);
 
-  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl, "--confirm"]);
+  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl]);
   assert.equal(pre.code, 0);
   assert.equal(pre.json.write_allowed, true);
   assert.match(pre.json.card, /write_allowed=true/);
@@ -98,7 +98,7 @@ test("失败关闭：错误令牌被拒绝", () => {
   const runId = run(["start", "--state-dir", dir]).json.run_id;
   run(["route", "--state-dir", dir, "--run-id", runId, "--scene", "inspiration", "--user-text", "x"]);
   const { target, tpl } = inspirationSteps(dir, runId, storagePath);
-  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl, "--confirm"]);
+  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl]);
   assert.equal(pre.code, 0);
   const write = run(["write", "--state-dir", dir, "--run-id", runId, "--token", "wrong-token",
     "--operation", "create", "--target-path", target, "--content-file", tpl]);
@@ -131,7 +131,7 @@ test("失败关闭：步骤未结算时 preflight 拒绝；完成前验证拒绝
   run(["step", "--state-dir", dir, "--run-id", runId, "--step", "hub.target-routing", "--evidence", "ok",
     "--output", `target_path=${path.join(dir, "vault", "a.md")}`]);
   // capture-criteria 尚未结算：全序校验使 obsidian-markdown 无法越序执行，preflight 拒绝
-  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", path.join(dir, "vault", "a.md"), "--confirm"]);
+  const pre = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", path.join(dir, "vault", "a.md")]);
   assert.equal(pre.code, 1);
   assert.match(pre.json.reason, /required step not completed before preflight|conditional step unsettled/);
   // 伪造完成：没有 runtime 写入不允许 finish
@@ -183,7 +183,7 @@ test("运行时编辑结算后，提炼场景可以完成结算", () => {
   const target = path.join(storagePath, "source.md");
   fs.writeFileSync(target, "---\nsource: s\ncaptured: 2026-08-01 09:00\nstatus: inbox\ntags: []\ndistill_level: 1\n---\n\n# Source\n\n原文", "utf8");
   const updated = "---\nsource: s\ncaptured: 2026-08-01 09:00\nstatus: distilled\ntags: [x]\ndistill_level: 2\n---\n\n# Source\n\n加粗重点";
-  const preflight = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--confirm"]);
+  const preflight = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target]);
   assert.equal(preflight.code, 0);
   const write = run(["write", "--state-dir", dir, "--run-id", runId, "--token", preflight.json.write_token,
     "--operation", "edit", "--target-path", target, "--content", updated, "--output", "updated_markdown=distilled v2"]);
@@ -212,6 +212,41 @@ test("写入路径自动登记 target_path 输出，write→finish 无需手动�
   assert.equal(fin.code, 0, JSON.stringify(fin.json.missing));
   const ledger = JSON.parse(fs.readFileSync(path.join(dir, "hub-runs", `${runId}.json`), "utf8"));
   assert.equal(ledger.steps.outputs.target_path, target);
+});
+
+test("第二轮 preflight 未 write 时 finish 拒绝，write 后放行", () => {
+  const { dir, storagePath } = makeStateDir();
+  const runId = run(["start", "--state-dir", dir]).json.run_id;
+  run(["route", "--state-dir", dir, "--run-id", runId, "--scene", "inspiration", "--user-text", "x"]);
+  const { target, tpl } = inspirationSteps(dir, runId, storagePath);
+  const target2 = path.join(storagePath, "second.md");
+
+  const pre1 = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target, "--template-file", tpl]);
+  assert.equal(pre1.code, 0);
+  const write1 = run(["write", "--state-dir", dir, "--run-id", runId, "--token", pre1.json.write_token,
+    "--operation", "create", "--target-path", target, "--content-file", tpl]);
+  assert.equal(write1.code, 0);
+
+  // 第二轮只 preflight 不 write：pending 周期未结算 → finish 必须拒绝
+  const pre2 = run(["preflight", "--state-dir", dir, "--run-id", runId, "--target-path", target2, "--template-file", tpl]);
+  assert.equal(pre2.code, 0);
+  assert.equal(pre2.json.write_allowed, true);
+  const snapshot = run(["status", "--state-dir", dir, "--run-id", runId]);
+  assert.equal(snapshot.json.ledger.commit.committed, false); // 不得沿用上一轮 committed
+  const denied = run(["finish", "--state-dir", dir, "--run-id", runId]);
+  assert.equal(denied.code, 1);
+  assert.ok(denied.json.missing.some((m) => m.includes("pending write cycle not settled")), JSON.stringify(denied.json.missing));
+
+  // 第二轮 write 完成后 finish 成功，两个周期都已结算
+  const write2 = run(["write", "--state-dir", dir, "--run-id", runId, "--token", pre2.json.write_token,
+    "--operation", "create", "--target-path", target2, "--content-file", tpl]);
+  assert.equal(write2.code, 0);
+  const fin = run(["finish", "--state-dir", dir, "--run-id", runId]);
+  assert.equal(fin.code, 0, JSON.stringify(fin.json.missing));
+  const ledger = JSON.parse(fs.readFileSync(path.join(dir, "hub-runs", `${runId}.json`), "utf8"));
+  assert.equal(ledger.write_cycles.length, 2);
+  assert.deepEqual(ledger.write_cycles.map((c) => c.state), ["committed", "committed"]);
+  assert.ok(ledger.write_cycles.every((c) => c.receipt && c.receipt.operation === c.operation));
 });
 
 test("同一 run 内多轮 preflight→write 完成多文件写入", () => {

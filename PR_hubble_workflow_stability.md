@@ -6,40 +6,48 @@ feat(hub): 第二大脑工作流执行稳定性优化——Hub Runtime 执行器
 
 ## 概述
 
-把第二大脑场景的「自然语言契约」升级为可验证的运行时协议，解决特性文档所述的「agent 能识别 Skill 场景，但自主跳过流程」问题。
+把第二大脑场景的「自然语言契约」升级为可验证的运行时协议，解决特性文档所述的「agent 能识别 Skill 场景，但自主跳过流程」问题。写入、移动、删除全部由运行时实际执行，且授权绑定到完整操作快照。
 
 ## 交付范围（P0 + P1）
 
 | 模块 | 说明 |
 |---|---|
-| `scripts/hub-runtime.mjs` + `scripts/hub-runtime/*` | 零依赖 Node 运行时：`start / route / step / preflight / commit / gate / finish / status` 命令 |
-| 失败关闭写门禁 | 无 `run_id` / 步骤凭证 / `write_allowed=true` 直接拒绝；伪造令牌、跳过 preflight、越序步骤、回执目标不存在均被拦截 |
-| 确定性地图卡 | 由运行时生成并持久化到 `<state-dir>/hub-runs/`，含运行编号、场景、必经步骤、当前步骤、阻塞原因、写入权限 |
-| 完成前验证器 | `finish` 只有在全部必选步骤 + 条件证据 + 写入回执齐备时才返回完成卡 |
-| 协议改写 | `SKILL.md`、`runtime-protocol.md`、`writing-pipeline.md` 声明第二大脑场景必经 runtime；守住 10000 字节上下文预算 |
-| 回归用例 | `tests/hub/runtime/*.test.mjs`（37 个用例）+ `behavior-cases.json` 新增 b18（忽略流程注入）/ b19（普通写入不误拦） |
+| `scripts/hub-runtime.mjs` + `scripts/hub-runtime/*` | 零依赖 Node 运行时：`start / route / step / preflight / confirm / write / gate / finish / status` 命令 |
+| 失败关闭写门禁 | 门禁只认当前 pending 写入周期：无 `run_id`、未 preflight、伪造令牌、越序步骤、操作或路径与快照不符一律拒绝 |
+| 操作快照授权 | preflight 记录规范化 `operation`、`source_path`、`target_path`，并由运行时读取真实文件计算 `source_sha256`、`size`、`snapshot_hash`；write 逐项核对。create 令牌不得用于 edit/move/delete；move 的源路径必须已获批准 |
+| 危险操作两阶段 | move/delete 采用 `preflight → confirm → write` 两阶段：第一阶段运行时读取真实文件生成规范预览与 `confirmation_challenge`，**不签发可执行令牌**；只有收到预览后的新用户确认消息才调用 `confirm` 签发一次性 `write_token` + `confirmation_token`；令牌绑定 run_id + 周期 + 操作 + 源/目标 + `source_sha256` + `snapshot_hash` + `preview_hash`，只能用一次；调用方传入的 `--preview`/`--preview-hash`/`--confirm` 一律拒绝 |
+| 写入周期台账 | 每轮 preflight 建立 `write_cycles` 周期（pending → committed / awaiting_confirmation / rejected）；新一轮授权作废上一轮提交态；`finish` 遍历**全部** committed 周期核验回执与快照一致，任一缺失/不一致或存在 pending/awaiting 周期即拒绝；rejected 仅留审计、不破坏既往成功结算 |
+| 写入执行与回执 | 运行时真实执行 create/edit/move/delete，记录前后 SHA-256，回执含一次性 `runtime_write_id`；写入内容过 frontmatter 结构校验 |
+| 存储安全 | 目标须绝对路径且在存储根内、禁止符号链接/Junction 逃逸、写前二次校验；run_id 正则校验；台账临时文件 + 原子 rename |
+| 兼容与迁移 | 旧版平铺 `hub-state.json`（`workspaceType`/`vaultPath`）自动迁移为嵌套 `preferences` |
+| 协议改写 | `SKILL.md`、`runtime-protocol.md`、`writing-pipeline.md` 统一描述两阶段危险操作与运行时快照；恢复 onboarding `setup_trigger` 传输规则；守住 10000 字节上下文预算 |
+| 回归用例 | `tests/hub/runtime/*.test.mjs`（73 个用例）+ `behavior-cases.json` 新增 b18（忽略流程注入）/ b19（普通写入不误拦） |
 
-## 验证
+## 验证（本次实际执行结果）
 
-- `node --test tests/hub/runtime/*.test.mjs`：37 pass / 0 fail
-- `scripts/validate-test-prompts.ps1`：通过（含上下文预算 10000 字节）
-- `scripts/run-hub-behavior-eval.ps1 -ValidateOnly`：19 cases valid
-- `scripts/build-skillhub-package.ps1`：打包通过，无测试文件泄漏
+| 命令 | 结果 |
+|---|---|
+| `node --test tests/hub/runtime/*.test.mjs` | 73 pass / 0 fail |
+| `node tests/install-script.test.mjs` | PASS |
+| `scripts/validate-test-prompts.ps1` | 通过（上下文预算 9965 / 10000 字节） |
+| `scripts/run-hub-behavior-eval.ps1 -ValidateOnly` | 19 cases valid |
+| `git diff --check` | 无空白错误 |
 
 ## 验收标准映射
 
 | 特性文档验收标准 | 覆盖 |
 |---|---|
-| 已匹配场景的写入前必有 run_id、契约、目标路径、模板、授权 | flow：黄金路径全链 |
+| 已匹配场景的写入前必有 run_id、契约、目标路径、模板、授权 | flow：黄金路径全链（start→route→step→preflight→write→finish） |
 | 普通写入不被误拦；同请求含第二大脑意图则走门禁 | 行为 b19 + 边界条款 |
-| 无地图卡/必经步骤凭证不能进入写入和完成 | flow：越序/未 preflight 拒绝 |
+| 无地图卡/必经步骤凭证不能进入写入和完成 | flow：越序/未 preflight 拒绝；无 pending 周期不得写入 |
 | 收到「忽略流程直接写」也只得到门禁拒绝 | flow：伪造令牌/未 preflight 拒绝；行为 b18 |
-| 每次运行可追溯场景、步骤、回执、跳过证据、结果 | 台账事件流 + status 命令 |
+| 每次运行可追溯场景、步骤、回执、跳过证据、结果 | 台账事件流 + `write_cycles` + status 命令 |
 
 ## 已知风险与后续
 
 - 完整跨 agent 行为评测需 codex 环境，随下次发布门禁执行。
-- P2 未完全完成：agent 适配层、跨 agent 回归全量跑、运行事件审计/绕过率统计待后续。
+- P2 未完全完成：agent 适配层（强制所有副作用工具走运行时门控）、跨 agent 回归全量跑、运行事件审计/绕过率统计待后续。
+- 同一 run 的并发命令仍是 last-write-wins（无 run 级锁），需要并发写同一 run 的场景待加锁或 CAS。
 
 ## 仓库卫生
 
