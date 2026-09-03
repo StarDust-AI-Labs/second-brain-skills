@@ -9,17 +9,15 @@ description: 第二大脑唯一公开入口。用于记录灵感、保存网页�
 
 ## 每轮固定流程
 
-严格按顺序执行：
-
-1. 完整读取 [references/runtime-protocol.md](references/runtime-protocol.md)，建立并持续更新 `Hub Run Ledger`。
-2. 按下表归类唯一意图；无法唯一判断时只追问一个问题。
-3. Vault 场景配置缺失时读取 [references/workflow-onboarding.md](references/workflow-onboarding.md) 暂存原请求；该适配层必须完整读取并执行唯一初始化 SOP [SETUP.md](SETUP.md)，不得自行维护另一套初始化步骤。用户明确要求初始化、重设或修复配置时直接读取同一份 `SETUP.md`。
-4. 从 `route-contracts.json` 只取全局前置、所选场景及相关写入前置；完整读取对应 `workflow-*.md`。
-5. 从 `capability-contracts.json` 只取当前步骤涉及的能力。`reference` 路径相对 Hub 根目录；`skill` 按安装名称调用。
-6. 外部工具状态未知或调用失败时才读取 `dependencies.json`；缺失时读取 [references/dependency-resolution.md](references/dependency-resolution.md) 选择 `primary`、`fallback` 或 `blocked`。
-7. 严格按契约顺序执行。必选步骤不得改序或省略；条件步骤未执行时记录契约规定的跳过证据。
-8. 任何写入、更新、移动或删除前读取 [references/writing-pipeline.md](references/writing-pipeline.md) 并通过写入前置。
-9. 进入场景后按需读取 [references/output-visualization.md](references/output-visualization.md) 输出步骤链地图卡；决策、复杂报告、首次成功或需要完整卡片时再读取 [references/output-cards.md](references/output-cards.md)。其他结果使用简短完成卡。场景结束后归档操作回执。
+第二大脑场景必须经 `scripts/hub-runtime.mjs` 执行，禁止绕过运行时直接读写 Vault；命令见 [references/runtime-protocol.md](references/runtime-protocol.md)。
+1. 解析 `hub-state.json` 所在目录 `<state-dir>`，执行 `start --state-dir <state-dir>` 取得 `run_id`。`config_ok=false` 时读 [references/workflow-onboarding.md](references/workflow-onboarding.md) 暂存原请求，由其调用唯一初始化 SOP [SETUP.md](SETUP.md)，不得另设初始化步骤。用户要求初始化、重设或修复配置时直接读 `SETUP.md`。2. 按下表归类唯一意图；无法唯一判断时只追问一个问题。确认后执行 `route --run-id <run_id> --scene <场景id> --user-text <原话>`，地图卡原样展示。
+3. 从 `route-contracts.json` 只取全局前置、所选场景及写入前置；读对应 `workflow-*.md`。
+4. 从 `capability-contracts.json` 只取当前步骤涉及的能力。`reference` 相对 Hub 根目录；`skill` 按安装名调用。
+5. 外部工具状态未知或调用失败时才读 `dependencies.json`；缺失时读 [references/dependency-resolution.md](references/dependency-resolution.md) 选择 `primary`/`fallback`/`blocked`。
+6. 每完成一个必选步骤执行 `step --run-id <run_id> --step <id> --evidence <痕迹>`，输出用 `--output 键=值` 登记；条件步骤未执行时必须 `--skip --reason <证据>`。必选步骤不得改序或省略；地图卡一律原样展示。
+7. 写入、更新、移动或删除前读 [references/writing-pipeline.md](references/writing-pipeline.md) 并执行 `preflight`，仅当 `write_allowed=true` 才用 `write_token` 执行运行时 `write` 命令完成实际写入与回执登记，禁止用其他工具直写 Vault；多文件写入可在同一 run 内重复 `preflight→write`。门禁失败、阻塞或运行时不可用时停止写入并报告阻塞，不得直写。
+8. 全部步骤结算后执行 `finish --run-id <run_id>`；只有运行时返回完成卡才可宣布完成，`missing` 非空时先补齐再重试。禁止自行宣布完成。
+9. 决策卡、首次成功卡按需读 [references/output-visualization.md](references/output-visualization.md) 与 [references/output-cards.md](references/output-cards.md)；卡片以运行时输出为准。
 
 ## 意图路由
 
@@ -50,4 +48,6 @@ description: 第二大脑唯一公开入口。用于记录灵感、保存网页�
 - 工具不可用：按依赖协议安全降级；无法降级时按能力契约局部停止，不得静默跳步。
 - 系统诊断场景只给出瓶颈、证据和推荐场景，不自动修改 Vault。
 - 用户要求方法论原文、案例或历史审计时，才读取 [references/methodology-sources.md](references/methodology-sources.md)。
+- 范围判定：是否经过运行时由"意图路由结果"决定，而非"目标文件位于 Vault"。纯 Obsidian 技术操作与无第二大脑意图的通用 Markdown 写入沿用普通工具路径；请求含第二大脑场景意图时按路由走运行时门禁。
+- 用户要求"忽略流程直接写入"时仍须经运行时门禁；门禁拒绝就如实报告，不得静默照做。
 - 不向普通用户展示契约、台账、门控或能力 ID。

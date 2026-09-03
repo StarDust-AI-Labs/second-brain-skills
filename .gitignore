@@ -3,6 +3,10 @@
 *.zip
 *.txt
 
+# 前端构建产物（含大型二进制，如 Remotion 打包的 Chrome）
+node_modules/
+promo-video/node_modules/
+
 # Obsidian
 .obsidian/workspace*.json
 .obsidian/workspace-mobile.json
@@ -22,6 +26,9 @@
 
 # Local evaluation reports
 artifacts/
+
+# Hub runtime local run ledgers (generated at runtime)
+**/hub-runs/
 
 # 本地代理说明，不纳入版本控制（仅仓库根目录）
 /AGENT.md

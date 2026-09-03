@@ -83,6 +83,16 @@
 
 如果运行时缺失有效的存储模式和绝对工作区路径，Hub 必须先进入 onboarding，不应继续写入；Markdown 模式不要求 `.obsidian/`。
 
+### 1.5 Hub Runtime 自检
+
+工作流稳定性运行时位于 `skills/second-brain-hub/scripts/hub-runtime.mjs`（模块在 `scripts/hub-runtime/`），测试位于 `tests/hub/runtime/`：
+
+```powershell
+node --test tests/hub/runtime/*.test.mjs
+```
+
+通过标准：状态机、契约读取、写入门禁、地图卡渲染与端到端失败关闭用例全部通过。退出码契约：`0` 成功、`1` 门禁拒绝/验证失败、`2` 用法错误或阻塞。运行台账写入 `<state-dir>/hub-runs/`，不入库。
+
 ---
 
 ## 2. 人工端到端验收场景
